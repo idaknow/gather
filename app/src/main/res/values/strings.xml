@@ -32,6 +32,7 @@
     <string name="pref_header_fitness_app">Fitness App</string>
     <string name="pref_header_social_media_app">Social Media App</string>
     <string name="pref_header_sensors">Phone Sensors</string>
+    <string name="pref_header_food_app">Nutrition App</string>
 
     <string name="pref_title_sync_frequency">Sync frequency</string>
     <string-array name="pref_sync_frequency_titles">
@@ -68,7 +69,7 @@
     <string name="pref_title_system_sync_settings">System sync settings</string>
 
     <!-- Example settings for Notifications -->
-    <string name="pref_header_food_app">Food App</string>
+
 
     <string name="pref_title_new_message_notifications">New message notifications</string>
 
