@@ -4,19 +4,19 @@
          when checked/unchecked. -->
     <SwitchPreference
         android:defaultValue="false"
-        android:key="social_media_all"
-        android:title="@string/social_media_app_name" />
+        android:key="food_all"
+        android:title="@string/food_app_name" />
 
     <SwitchPreference
         android:defaultValue="false"
-        android:dependency="social_media_all"
-        android:key="social_media_events"
-        android:title="@string/social_media_app_events" />
+        android:dependency="food_all"
+        android:key="food_food"
+        android:title="@string/food_app_food" />
 
     <SwitchPreference
         android:defaultValue="false"
-        android:dependency="social_media_all"
-        android:key="social_media_status"
-        android:title="@string/social_media_app_status" />
+        android:dependency="food_all"
+        android:key="food_calories"
+        android:title="@string/food_app_calories" />
 
 </PreferenceScreen>
