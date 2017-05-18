@@ -12,14 +12,14 @@
         android:id="@+id/welcome_message"
         android:layout_width="239dp"
         android:layout_height="51dp"
-        android:text="Hello, Brittany!"
+        android:layout_marginBottom="8dp"
+        android:text="Hello, John!"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+        app:layout_constraintBottom_toTopOf="@+id/social_media_app_summary"
         app:layout_constraintHorizontal_bias="0.52"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/social_media_app_summary" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/social_media_app"
