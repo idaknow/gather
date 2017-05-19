@@ -1,0 +1,22 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. -->
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="social_media_all"
+        android:title="@string/social_media_app_name" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_all"
+        android:key="social_media_events"
+        android:title="@string/social_media_app_events" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_all"
+        android:key="social_media_status"
+        android:title="@string/social_media_app_status" />
+
+</PreferenceScreen>

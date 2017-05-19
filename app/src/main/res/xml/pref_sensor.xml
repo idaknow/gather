@@ -1,0 +1,22 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. -->
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="sensors_all"
+        android:title="@string/sensors_all" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="sensors_all"
+        android:key="sensors_location"
+        android:title="@string/sensors_location" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="sensors_all"
+        android:key="sensors_accelerometer"
+        android:title="@string/sensors_accelerometer" />
+
+</PreferenceScreen>

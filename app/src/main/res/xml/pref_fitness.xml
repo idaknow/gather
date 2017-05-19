@@ -1,0 +1,16 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. -->
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="fitness_all"
+        android:title="@string/fitness_app_name" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="fitness_all"
+        android:key="fitness_history"
+        android:title="@string/fitness_app_history" />
+
+</PreferenceScreen>
