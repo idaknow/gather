@@ -134,7 +134,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 || FitnessPreferenceFragment.class.getName().equals(fragmentName)
                 || FoodPreferenceFragment.class.getName().equals(fragmentName)
                 || SocialMediaPreferenceFragment.class.getName().equals(fragmentName)
-                || SensorPreferenceFragment.class.getName().equals(fragmentName)
                 ;
     }
 
@@ -218,28 +217,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_social_media);
-            setHasOptionsMenu(true);
-
-            //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class SensorPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);

@@ -22,9 +22,4 @@
         android:icon="@drawable/ic_local_dining_black_24dp"
         android:title="@string/pref_header_food_app" />
 
-    <header
-        android:fragment="part4project.uoa.gather.SettingsActivity$SensorPreferenceFragment"
-        android:icon="@drawable/ic_speaker_phone_black_24dp"
-        android:title="@string/pref_header_sensors" />
-
 </preference-headers>
