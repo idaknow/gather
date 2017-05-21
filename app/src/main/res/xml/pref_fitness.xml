@@ -11,6 +11,6 @@
         android:defaultValue="false"
         android:dependency="fitness_all"
         android:key="fitness_history"
-        android:title="@string/fitness_app_history" />
+        android:title="@string/fitness_app_activity" />
 
 </PreferenceScreen>
