@@ -19,4 +19,6 @@
         android:key="social_media_status"
         android:title="@string/social_media_app_status" />
 
+
+
 </PreferenceScreen>
