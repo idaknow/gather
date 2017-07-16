@@ -13,15 +13,33 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceScreen;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 
 import java.util.List;
+
+import static part4project.uoa.gather.R.id.social_media_all;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -217,13 +235,109 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
+
+        private LoginButton loginButton;
+        private CallbackManager callbackManager;
+        private AccessTokenTracker accessTokenTracker;
+        private AccessToken accessToken;
+        private ProfileTracker profileTracker;
+        private Profile profile;
+        private static final String TAG = "MyActivity";
+
+//        @Override
+//        public View onCreateView(
+//                LayoutInflater inflater,
+//                ViewGroup container,
+//                Bundle savedInstanceState) {
+//            View view = inflater.inflate(R.layout.com_facebook_login_fragment, container, false);
+//            addPreferencesFromResource(R.xml.pref_social_media);
+//
+//            loginButton = (LoginButton) view.findViewById(R.id.social_media_all);
+//            loginButton.setReadPermissions("email");
+//            // If using in a fragment
+//            loginButton.setFragment(this);
+//            // Other app specific specialization
+//
+//            // Callback registration
+//            loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+//                @Override
+//                public void onSuccess(LoginResult loginResult) {
+//                    // App code
+//                }
+//
+//                @Override
+//                public void onCancel() {
+//                    // App code
+//                }
+//                @Override
+//                public void onError(FacebookException exception) {
+//                    // App code
+//
+//                }
+//            });
+//            return view;
+//        }
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_social_media);
             setHasOptionsMenu(true);
 
+            callbackManager = CallbackManager.Factory.create();
+            //loginButton = (LoginButton) getView().findViewById(social_media_all);
+            //loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
+//            loginButton.setFragment(this);
+//
+            Preference pref = getPreferenceManager().findPreference("social_media_all");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+                        @Override
+                        public boolean onPreferenceClick(Preference preference) {
+                            LoginButton l = new LoginButton(getActivity());
+                            l.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
+                            l.performClick();
+                            return true;
+                        }
+                    });
+
+            accessTokenTracker = new AccessTokenTracker() {
+                @Override
+                protected void onCurrentAccessTokenChanged(
+                        AccessToken oldAccessToken,
+                        AccessToken currentAccessToken) {
+                    // Set the access token using
+                    // currentAccessToken when it's loaded or set.
+                    Log.d(TAG, "new access token");
+                    accessToken = currentAccessToken;
+                }
+            };
+
+            profileTracker = new ProfileTracker() {
+                @Override
+                protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+                    //profile = currentProfile;
+                }
+            };
+
+            // If the access token is available already assign it.
+            accessToken = AccessToken.getCurrentAccessToken();
+            //profile = Profile.getCurrentProfile();
+
             //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+        }
+
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            accessTokenTracker.stopTracking();
+            profileTracker.stopTracking();
         }
 
         @Override

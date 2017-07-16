@@ -28,12 +28,13 @@ import com.facebook.login.widget.LoginButton;
 
 public class MainActivity extends AppCompatActivity {
 
-    private LoginButton loginButton;
-    private CallbackManager callbackManager;
-    private AccessTokenTracker accessTokenTracker;
-    private AccessToken accessToken;
-    private ProfileTracker profileTracker;
-    private Profile profile;
+//    private LoginButton loginButton;
+//    private CallbackManager callbackManager;
+//    private AccessTokenTracker accessTokenTracker;
+//    private AccessToken accessToken;
+//    private ProfileTracker profileTracker;
+//    private Profile profile;
+//    private static final String TAG = "MyActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,32 +43,31 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FacebookSdk.sdkInitialize(this.getApplicationContext());
-
-        callbackManager = CallbackManager.Factory.create();
-        loginButton = (LoginButton) findViewById(R.id.login_button);
-        loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
-
-        accessTokenTracker = new AccessTokenTracker() {
-            @Override
-            protected void onCurrentAccessTokenChanged(
-                    AccessToken oldAccessToken,
-                    AccessToken currentAccessToken) {
-                // Set the access token using
-                // currentAccessToken when it's loaded or set.
-                accessToken = currentAccessToken;
-            }
-        };
-
-        profileTracker = new ProfileTracker() {
-            @Override
-            protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
-                //profile = currentProfile;
-            }
-        };
-
-        // If the access token is available already assign it.
-        accessToken = AccessToken.getCurrentAccessToken();
+//        callbackManager = CallbackManager.Factory.create();
+//        loginButton = (LoginButton) findViewById(R.id.login_button);
+//        loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
+//
+//        accessTokenTracker = new AccessTokenTracker() {
+//            @Override
+//            protected void onCurrentAccessTokenChanged(
+//                    AccessToken oldAccessToken,
+//                    AccessToken currentAccessToken) {
+//                // Set the access token using
+//                // currentAccessToken when it's loaded or set.
+//                Log.d(TAG, "new access token");
+//                accessToken = currentAccessToken;
+//            }
+//        };
+//
+//        profileTracker = new ProfileTracker() {
+//            @Override
+//            protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+//                //profile = currentProfile;
+//            }
+//        };
+//
+//        // If the access token is available already assign it.
+//        accessToken = AccessToken.getCurrentAccessToken();
         //profile = Profile.getCurrentProfile();
     }
 
@@ -92,12 +92,12 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
+//
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        callbackManager.onActivityResult(requestCode, resultCode, data);
+//    }
 
     /**
      * This function opens the settings menu
@@ -109,10 +109,10 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        accessTokenTracker.stopTracking();
-        profileTracker.stopTracking();
-    }
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        accessTokenTracker.stopTracking();
+//        profileTracker.stopTracking();
+//    }
 }
