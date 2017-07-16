@@ -235,13 +235,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    /**
+     * Initialised variables to be used by Facebook - Social Media App
+     */
     private static LoginButton loginButton;
     private static CallbackManager callbackManager;
     private static AccessTokenTracker accessTokenTracker;
     private static AccessToken accessToken;
     private static ProfileTracker profileTracker;
     private static Profile profile;
-    private static final String TAG = "MyActivity";
+    private static final String TAG = "Facebook"; // log Tag
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
@@ -252,74 +255,76 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_social_media);
             setHasOptionsMenu(true);
 
+            // added a callback manager for fb to use on login
             callbackManager = CallbackManager.Factory.create();
 
+            // creates the fb login button that is used, but doesn't actually put it on the screen. This is invoked when the switch preferences are
             loginButton = new LoginButton(getActivity());
+            // set permissions according to: email, status, posts, likes, events, fitness, profile and friends
             loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
-            //loginButton.setFragment(this);
+            // code called on success or failure
             loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
+                    // The code below enables/ disables switch preference according to whether they're
                     Set granted_permissions = loginResult.getRecentlyGrantedPermissions();
-                    for (Object i : granted_permissions){
-                        Log.d(TAG, i.toString());
+                    for (Object i : granted_permissions){ // loops through all the granted permissions
+                        Log.d(TAG, "granted permission " + i.toString()); //TESTING
                         SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                         if (granted_preference != null){
-                            Log.d(TAG, "granted preference = "+granted_preference.toString());
-                            granted_preference.setChecked(true);
-                        } else {
-                            Log.d(TAG, "granted to string is null");
+                            Log.d(TAG, "granted preference = "+granted_preference.toString()); //TESTING
+                            granted_preference.setChecked(true); // enables the switch preference
+                        } else { // ERROR: permission granted doesn't exist as a switch preference
+                            Log.d(TAG, "ERROR: Null granted permission " + i.toString());
                         }
                     }
                     Set denied_permissions = loginResult.getRecentlyDeniedPermissions();
-                    for (Object i : denied_permissions){
-                        Log.d(TAG, i.toString());
+                    for (Object i : denied_permissions){ // loops through all the denied permissions, disabling them accordingly
+                        Log.d(TAG, "denied permission " + i.toString());
                         SwitchPreference denied_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                         if (denied_preference != null){
                             Log.d(TAG, "denied_preference = "+denied_preference.toString());
                             denied_preference.setChecked(false);
-                        } else {
-                            Log.d(TAG, "denied to string is null");
+                        } else { // ERROR: permission denied doesn't exist as a switch preference
+                            Log.d(TAG, "ERROR: Null denied permission " + i.toString());
                         }
                     }
-
                 }
 
                 @Override
                 public void onCancel() {
-                    // App code
+                    // TODO: App code
                 }
 
                 @Override
                 public void onError(FacebookException exception) {
-                    // App code
+                    // TODO: App code
                 }
             });
-//
+
+            // this code implements a fb login button click method for each time the parent switch preference is clicked
             Preference pref = getPreferenceManager().findPreference("social_media_all");
-            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
-                        @Override
-                        public boolean onPreferenceClick(Preference preference) {
-                            loginButton.performClick();
-                            return true;
-                        }
-                    });
+                            @Override
+                            public boolean onPreferenceClick(Preference preference) {
+                                loginButton.performClick();
+                                return true;
+                            }
+                        });
 
-
-
+            // tracks the token representing who is logged in
             accessTokenTracker = new AccessTokenTracker() {
                 @Override
                 protected void onCurrentAccessTokenChanged(
                         AccessToken oldAccessToken,
                         AccessToken currentAccessToken) {
-                    // Set the access token using
-                    // currentAccessToken when it's loaded or set.
-                    Log.d(TAG, "new access token");
-                    accessToken = currentAccessToken;
+                    Log.d(TAG, "new access token"); // TESTING
+                    accessToken = currentAccessToken; // sets the access token variable to the current/ new one
                 }
             };
 
+            // tracks the profile logged in
             profileTracker = new ProfileTracker() {
                 @Override
                 protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
@@ -327,7 +332,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             };
 
-            // If the access token is available already assign it.
+            // If the access token is available already assign it
             accessToken = AccessToken.getCurrentAccessToken();
             profile = Profile.getCurrentProfile();
         }
