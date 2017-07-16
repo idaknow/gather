@@ -233,50 +233,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    private static LoginButton loginButton;
+    private static CallbackManager callbackManager;
+    private static AccessTokenTracker accessTokenTracker;
+    private static AccessToken accessToken;
+    private static ProfileTracker profileTracker;
+    private static Profile profile;
+    private static final String TAG = "MyActivity";
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
-
-        private LoginButton loginButton;
-        private CallbackManager callbackManager;
-        private AccessTokenTracker accessTokenTracker;
-        private AccessToken accessToken;
-        private ProfileTracker profileTracker;
-        private Profile profile;
-        private static final String TAG = "MyActivity";
-
-//        @Override
-//        public View onCreateView(
-//                LayoutInflater inflater,
-//                ViewGroup container,
-//                Bundle savedInstanceState) {
-//            View view = inflater.inflate(R.layout.com_facebook_login_fragment, container, false);
-//            addPreferencesFromResource(R.xml.pref_social_media);
-//
-//            loginButton = (LoginButton) view.findViewById(R.id.social_media_all);
-//            loginButton.setReadPermissions("email");
-//            // If using in a fragment
-//            loginButton.setFragment(this);
-//            // Other app specific specialization
-//
-//            // Callback registration
-//            loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-//                @Override
-//                public void onSuccess(LoginResult loginResult) {
-//                    // App code
-//                }
-//
-//                @Override
-//                public void onCancel() {
-//                    // App code
-//                }
-//                @Override
-//                public void onError(FacebookException exception) {
-//                    // App code
-//
-//                }
-//            });
-//            return view;
-//        }
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -285,9 +251,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             callbackManager = CallbackManager.Factory.create();
-            //loginButton = (LoginButton) getView().findViewById(social_media_all);
-            //loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
-//            loginButton.setFragment(this);
 //
             Preference pref = getPreferenceManager().findPreference("social_media_all");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -316,22 +279,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             profileTracker = new ProfileTracker() {
                 @Override
                 protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
-                    //profile = currentProfile;
+                    profile = currentProfile;
                 }
             };
 
             // If the access token is available already assign it.
             accessToken = AccessToken.getCurrentAccessToken();
-            //profile = Profile.getCurrentProfile();
-
-            //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+            profile = Profile.getCurrentProfile();
         }
 
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
-            callbackManager.onActivityResult(requestCode, resultCode, data);
-        }
+
 
         @Override
         public void onDestroy() {
@@ -349,5 +306,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 }
