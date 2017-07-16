@@ -246,6 +246,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static Profile profile;
     private static final String TAG = "Facebook"; // log Tag
 
+
+    // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
 
@@ -308,10 +310,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                             @Override
                             public boolean onPreferenceClick(Preference preference) {
+                                loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
                                 loginButton.performClick();
                                 return true;
                             }
                         });
+
+
 
             // tracks the token representing who is logged in
             accessTokenTracker = new AccessTokenTracker() {
@@ -337,6 +342,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             profile = Profile.getCurrentProfile();
         }
 
+        // removest the fb access token and profile token tracker when the activity is destroyed
         @Override
         public void onDestroy() {
             super.onDestroy();
@@ -355,6 +361,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    // this implements changing the tokens accordingly, allowing for login & logout
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

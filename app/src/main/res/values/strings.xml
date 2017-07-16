@@ -18,7 +18,7 @@
 
     <!-- Social Media settings -->
     <string name="pref_header_social_media_app">Social Media App</string>
-    <string name="social_media_app_name">Social Media App Name</string>
+    <string name="social_media_app_name">Facebook</string>
     <string name="social_media_app_public_profile">Public Profile</string>
     <string name="social_media_app_email">Email</string>
     <string name="social_media_app_events">Events</string>
