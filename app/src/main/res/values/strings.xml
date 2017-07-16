@@ -19,8 +19,13 @@
     <!-- Social Media settings -->
     <string name="pref_header_social_media_app">Social Media App</string>
     <string name="social_media_app_name">Social Media App Name</string>
+    <string name="social_media_app_public_profile">Public Profile</string>
+    <string name="social_media_app_email">Email</string>
     <string name="social_media_app_events">Events</string>
-    <string name="social_media_app_status">Status</string>
+    <string name="social_media_app_friends">Friends</string>
+    <string name="social_media_app_likes">Likes</string>
+    <string name="social_media_app_fitness">Fitness</string>
+    <string name="social_media_app_posts">Posts</string>
 
     <!-- Facebook API -->
     <string name="facebook_app_id">875295565956699</string>

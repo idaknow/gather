@@ -14,6 +14,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.preference.SwitchPreference;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
@@ -38,6 +39,7 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
 import java.util.List;
+import java.util.Set;
 
 import static part4project.uoa.gather.R.id.social_media_all;
 
@@ -251,18 +253,60 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             callbackManager = CallbackManager.Factory.create();
+
+            loginButton = new LoginButton(getActivity());
+            loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
+            //loginButton.setFragment(this);
+            loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    Set granted_permissions = loginResult.getRecentlyGrantedPermissions();
+                    for (Object i : granted_permissions){
+                        Log.d(TAG, i.toString());
+                        SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
+                        if (granted_preference != null){
+                            Log.d(TAG, "granted preference = "+granted_preference.toString());
+                            granted_preference.setChecked(true);
+                        } else {
+                            Log.d(TAG, "granted to string is null");
+                        }
+                    }
+                    Set denied_permissions = loginResult.getRecentlyDeniedPermissions();
+                    for (Object i : denied_permissions){
+                        Log.d(TAG, i.toString());
+                        SwitchPreference denied_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
+                        if (denied_preference != null){
+                            Log.d(TAG, "denied_preference = "+denied_preference.toString());
+                            denied_preference.setChecked(false);
+                        } else {
+                            Log.d(TAG, "denied to string is null");
+                        }
+                    }
+
+                }
+
+                @Override
+                public void onCancel() {
+                    // App code
+                }
+
+                @Override
+                public void onError(FacebookException exception) {
+                    // App code
+                }
+            });
 //
             Preference pref = getPreferenceManager().findPreference("social_media_all");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
                         @Override
                         public boolean onPreferenceClick(Preference preference) {
-                            LoginButton l = new LoginButton(getActivity());
-                            l.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
-                            l.performClick();
+                            loginButton.performClick();
                             return true;
                         }
                     });
+
+
 
             accessTokenTracker = new AccessTokenTracker() {
                 @Override
@@ -287,8 +331,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             accessToken = AccessToken.getCurrentAccessToken();
             profile = Profile.getCurrentProfile();
         }
-
-
 
         @Override
         public void onDestroy() {

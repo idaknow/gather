@@ -11,13 +11,43 @@
     <SwitchPreference
         android:defaultValue="false"
         android:dependency="social_media_all"
-        android:key="social_media_events"
+        android:key="public_profile"
+        android:title="@string/social_media_app_public_profile" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_all"
+        android:key="email"
+        android:title="@string/social_media_app_email" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_all"
+        android:key="user_friends"
+        android:title="@string/social_media_app_friends" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_all"
+        android:key="user_likes"
+        android:title="@string/social_media_app_likes" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_all"
+        android:key="user_actions.fitness"
+        android:title="@string/social_media_app_fitness" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_all"
+        android:key="user_events"
         android:title="@string/social_media_app_events" />
 
     <SwitchPreference
         android:defaultValue="false"
         android:dependency="social_media_all"
-        android:key="social_media_status"
-        android:title="@string/social_media_app_status" />
+        android:key="user_posts"
+        android:title="@string/social_media_app_posts" />
 
 </PreferenceScreen>
