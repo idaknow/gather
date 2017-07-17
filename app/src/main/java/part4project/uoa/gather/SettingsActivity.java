@@ -4,6 +4,8 @@ package part4project.uoa.gather;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInstaller;
+import android.content.pm.PackageInstaller.Session;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -27,17 +29,24 @@ import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -245,6 +254,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static ProfileTracker profileTracker;
     private static Profile profile;
     private static final String TAG = "Facebook"; // log Tag
+    private static final List<String> PERMISSIONS = Arrays.asList("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
 
 
     // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
@@ -263,34 +273,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // creates the fb login button that is used, but doesn't actually put it on the screen. This is invoked when the switch preferences are
             loginButton = new LoginButton(getActivity());
             // set permissions according to: email, status, posts, likes, events, fitness, profile and friends
-            loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
+            loginButton.setReadPermissions(PERMISSIONS);
             // code called on success or failure
             loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     // The code below enables/ disables switch preference according to whether they're
-                    Set granted_permissions = loginResult.getRecentlyGrantedPermissions();
-                    for (Object i : granted_permissions){ // loops through all the granted permissions
-                        Log.d(TAG, "granted permission " + i.toString()); //TESTING
-                        SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
-                        if (granted_preference != null){
-                            Log.d(TAG, "granted preference = "+granted_preference.toString()); //TESTING
-                            granted_preference.setChecked(true); // enables the switch preference
-                        } else { // ERROR: permission granted doesn't exist as a switch preference
-                            Log.d(TAG, "ERROR: Null granted permission " + i.toString());
-                        }
-                    }
-                    Set denied_permissions = loginResult.getRecentlyDeniedPermissions();
-                    for (Object i : denied_permissions){ // loops through all the denied permissions, disabling them accordingly
-                        Log.d(TAG, "denied permission " + i.toString());
-                        SwitchPreference denied_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
-                        if (denied_preference != null){
-                            Log.d(TAG, "denied_preference = "+denied_preference.toString());
-                            denied_preference.setChecked(false);
-                        } else { // ERROR: permission denied doesn't exist as a switch preference
-                            Log.d(TAG, "ERROR: Null denied permission " + i.toString());
-                        }
-                    }
+                    Set grantedPermissions = loginResult.getRecentlyGrantedPermissions();
+                    Set deniedPermissions = loginResult.getRecentlyDeniedPermissions();
+                    updatePermissionSwitchPreferences(grantedPermissions, deniedPermissions);
                 }
 
                 @Override
@@ -310,13 +301,43 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                             @Override
                             public boolean onPreferenceClick(Preference preference) {
-                                loginButton.setReadPermissions("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
+                                loginButton.setReadPermissions(PERMISSIONS);
                                 loginButton.performClick();
+                                Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_LONG).show();
                                 return true;
                             }
                         });
 
+            for (String i : PERMISSIONS){
+                Preference permission = getPreferenceManager().findPreference(i);
+                permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
+                        SwitchPreference switchPreference = (SwitchPreference) preference;
+                        if (!switchPreference.isChecked()){
+                            GraphRequest req = new GraphRequest(
+                                    accessToken,
+                                    "/me/permissions/" + preference.getKey(),
+                                    null,
+                                    HttpMethod.DELETE, new GraphRequest.Callback() {
+                                @Override
+                                public void onCompleted(GraphResponse response) {
+                                    Log.d(TAG,"Successful completion of asynch call");
+                                }
+                            });
+                            req.executeAsync();
+                        } else {
+                            LoginManager.getInstance().logInWithReadPermissions(
+                                    getActivity(),
+                                    Arrays.asList(preference.getKey()));
+                        }
+                        Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
+                        return true;
+                    }
+                });
+            }
 
             // tracks the token representing who is logged in
             accessTokenTracker = new AccessTokenTracker() {
@@ -340,6 +361,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // If the access token is available already assign it
             accessToken = AccessToken.getCurrentAccessToken();
             profile = Profile.getCurrentProfile();
+
+            // update permissions depending on permissions from accessToken
+            if (accessToken != null) {
+                updatePermissionSwitchPreferences(accessToken.getPermissions(), accessToken.getDeclinedPermissions());
+            }
         }
 
         // removest the fb access token and profile token tracker when the activity is destroyed
@@ -358,6 +384,30 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 return true;
             }
             return super.onOptionsItemSelected(item);
+        }
+
+        // updates switch preferences permissions according to granted/ denied permissions
+        public void updatePermissionSwitchPreferences(Set grantedPermissions, Set deniedPermissions){
+            for (Object i : grantedPermissions){ // loops through all the granted permissions
+                Log.d(TAG, "granted permission " + i.toString()); //TESTING
+                SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
+                if (granted_preference != null){
+                    Log.d(TAG, "granted preference = "+granted_preference.toString()); //TESTING
+                    granted_preference.setChecked(true); // enables the switch preference
+                } else { // ERROR: permission granted doesn't exist as a switch preference
+                    Log.d(TAG, "ERROR: Null granted permission " + i.toString());
+                }
+            }
+            for (Object i : deniedPermissions){ // loops through all the denied permissions, disabling them accordingly
+                Log.d(TAG, "denied permission " + i.toString());
+                SwitchPreference denied_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
+                if (denied_preference != null){
+                    Log.d(TAG, "denied_preference = "+denied_preference.toString());
+                    denied_preference.setChecked(false);
+                } else { // ERROR: permission denied doesn't exist as a switch preference
+                    Log.d(TAG, "ERROR: Null denied permission " + i.toString());
+                }
+            }
         }
     }
 
