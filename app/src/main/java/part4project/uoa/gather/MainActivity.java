@@ -106,7 +106,8 @@ public class MainActivity extends AppCompatActivity {
         int likes = 1;
         int events = 2;
 
-        int count = 0; // the number of times something fitness related is liked/ posted about
+        int countPostsEvents = 0; // the number of times something fitness related is liked/ posted about
+        int countEvents = 0;
         Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString()); //TESTING
 
             try { // catch JSON exception
@@ -116,31 +117,41 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "posts object = " + postsObject.toString());
                 JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
                 Log.d(TAG, "posts array = " + postsArray.toString());
-                count+=loopThroughResponse(postsArray,"message"); // adds to count the number of times keywords are used in posts
+                countPostsEvents+=loopThroughResponse(postsArray,"message"); // adds to count the number of times keywords are used in posts
 
                 // gets  user's LIKES data
                 JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(likes));
                 Log.d(TAG, "likes object = " + likesObject.toString());
                 JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
                 Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
-                count+=loopThroughResponse(likesArray,"name"); // adds to count the number of times keywords are used in likes
+                countPostsEvents+=loopThroughResponse(likesArray,"name"); // adds to count the number of times keywords are used in likes
 
                 // gets  user's EVENTS data
                 JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(events));
                 Log.d(TAG, "events object = " + eventsObject.toString());
                 JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
                 Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
-                count+=loopThroughResponse(eventsArray,"description"); // adds to count the number of times keywords are used in event descriptions
+                countEvents = loopThroughResponse(eventsArray,"description"); // adds to count the number of times keywords are used in event descriptions
 
             } catch (JSONException e){} //TODO add error response
 
         // format string responses plurals accordingly to the output count
-        if (count == 0){
-            return "You have not posted or liked posts about fitness related things.";
-        } else if (count == 1){
-            return "You have posted or liked about " + count + " fitness related thing.";
+        String outputString;
+        if (countPostsEvents == 0){ //POSTS AND LIKES
+            outputString = "You have not posted or liked posts about fitness related things ";
+        } else if (countPostsEvents == 1){
+            outputString = "You have posted or liked about " + countPostsEvents + " fitness related thing ";
+        } else {
+            outputString = "You have posted or liked about " + countPostsEvents + " fitness related things ";
         }
-        return "You have posted or liked about " + count + " fitness related things.";
+        if (countEvents == 0){ //EVENTS
+            outputString += "and attended no events.";
+        } else if (countEvents == 1){
+            outputString += "and attended " + countEvents + " health related events.";
+        } else {
+            outputString += "and attended " + countEvents + " health related events.";
+        }
+        return outputString;
     }
 
     /**
