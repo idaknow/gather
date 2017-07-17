@@ -315,8 +315,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
-                        SwitchPreference switchPreference = (SwitchPreference) preference;
-                        if (!switchPreference.isChecked()){
+                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+                        if (!switchPreference.isChecked()){ // if it's changed to not checked, the permission must be revoked
                             GraphRequest req = new GraphRequest(
                                     accessToken,
                                     "/me/permissions/" + preference.getKey(),
@@ -328,7 +328,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 }
                             });
                             req.executeAsync();
-                        } else {
+                        } else { // asks for the permission when it's enabled again
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
                                     Arrays.asList(preference.getKey()));
