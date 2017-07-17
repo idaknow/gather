@@ -43,7 +43,7 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Facebook"; // log Tag
-    private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run");
+    private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
 
-        if (accessToken != null) {
+        if (accessToken != null && accessToken.getPermissions().contains("user_posts")) {
             GraphRequest req = new GraphRequest(
                     accessToken,
                     "/me/",
@@ -65,43 +65,65 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Successful completion of asynch call");
                     TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
                     String outputString = transformFacebookPosts(response.getJSONObject());
+                    Log.d(TAG, "output : " + response.getJSONObject().toString());
                     facebook.setText(outputString);
                 }
             });
             Bundle parameters = new Bundle();
-            parameters.putString("fields", "posts");
+            parameters.putString("fields", "posts,likes");
             req.setParameters(parameters);
             req.executeAsync();
         }
     }
 
     public String transformFacebookPosts(JSONObject jsonObject){
+        int posts = 0;
+        int likes = 1;
         Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString());
         int count = 0;
             try {
-                JSONObject data = (JSONObject) jsonObject.get(jsonObject.names().getString(0));
-                JSONArray values = (JSONArray) data.get(data.names().getString(0));
+                JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(posts));
+                Log.d(TAG, "posts object = " + postsObject.toString());
+                JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
+                Log.d(TAG, "posts array = " + postsArray.toString());
 
+                count+=loopThroughResponse(postsArray,"message");
 
-                for(int i = 0; i<values.length(); i++){
-                    Log.d(TAG, "values = " + values.get(i) );//+ " value = " + values.getString(values.getString(i)));
-                    JSONObject value = (JSONObject) values.get(i);
-                    Object message = value.get("message");
-                    Log.d(TAG, message.toString());
-                    //TODO: search for key words in the message
-                    for (String string : KEYWORDS){
-                        if (message.toString().contains(string)){
-                            count++;
-                        }
-                    }
-                }
+                JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(likes));
+                Log.d(TAG, "likes object = " + likesObject.toString());
+                JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
+                Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
+
+                count+=loopThroughResponse(likesArray,"name");
+
             } catch (JSONException e){} //TODO
         if (count == 0){
-            return "You have not posted about fitness related things.";
+            return "You have not posted or liked posts about fitness related things.";
         } else if (count == 1){
-            return "You have posted about " + count + " fitness related thing.";
+            return "You have posted or liked about " + count + " fitness related thing.";
         }
-        return "You have posted about " + count + " fitness related things.";
+        return "You have posted or liked about " + count + " fitness related things.";
+    }
+
+    public int loopThroughResponse(JSONArray array, String getValue){
+        int count = 0;
+        try {
+            for (int j = 0; j < array.length(); j++) {
+                Log.d(TAG, "values = " + array.get(j));
+                JSONObject obj = (JSONObject) array.get(j);
+                Object value = obj.get(getValue);
+                Log.d(TAG, value.toString());
+                //TODO: search for key words in the message
+                for (String string : KEYWORDS) {
+                    if (value.toString().contains(string)) {
+                        count++;
+                    }
+                }
+            }
+        } catch (JSONException e){
+
+        }
+        return count;
     }
 
     @Override
