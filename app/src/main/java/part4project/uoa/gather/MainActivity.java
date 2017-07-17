@@ -67,28 +67,30 @@ public class MainActivity extends AppCompatActivity {
 
         Set<String> grantedPermissions = facebookAccessToken.getPermissions(); // gets all granted permissions
         String requestedData = "";
-        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes")){
-            requestedData+="posts,likes";
-        }
+        //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly
+        // TODO: currently assumes gets all
+        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
+            requestedData+="posts,likes,events";
 
-        GraphRequest req = new GraphRequest(
-                facebookAccessToken,
-                "/me/",
-                null,
-                HttpMethod.GET, new GraphRequest.Callback() {
-            @Override
-            public void onCompleted(GraphResponse response) {
-                Log.d(TAG, "Successful completion of asynch call");
-                TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-                String outputString = transformFacebookPosts(response.getJSONObject());
-                Log.d(TAG, "output : " + response.getJSONObject().toString());
-                facebook.setText(outputString);
-            }
-        });
-        Bundle parameters = new Bundle();
-        parameters.putString("fields", requestedData);
-        req.setParameters(parameters);
-        req.executeAsync();
+            GraphRequest req = new GraphRequest(
+                    facebookAccessToken,
+                    "/me/",
+                    null,
+                    HttpMethod.GET, new GraphRequest.Callback() {
+                @Override
+                public void onCompleted(GraphResponse response) {
+                    Log.d(TAG, "Successful completion of asynch call");
+                    TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
+                    String outputString = transformFacebookPosts(response.getJSONObject());
+                    Log.d(TAG, "output : " + response.getJSONObject().toString());
+                    facebook.setText(outputString);
+                }
+            });
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", requestedData);
+            req.setParameters(parameters);
+            req.executeAsync();
+        }
     }
 
     /**
@@ -102,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
         // array values
         int posts = 0;
         int likes = 1;
+        int events = 2;
+
         int count = 0; // the number of times something fitness related is liked/ posted about
         Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString()); //TESTING
 
@@ -120,6 +124,13 @@ public class MainActivity extends AppCompatActivity {
                 JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
                 Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
                 count+=loopThroughResponse(likesArray,"name"); // adds to count the number of times keywords are used in likes
+
+                // gets  user's EVENTS data
+                JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(events));
+                Log.d(TAG, "events object = " + eventsObject.toString());
+                JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
+                Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
+                count+=loopThroughResponse(eventsArray,"description"); // adds to count the number of times keywords are used in event descriptions
 
             } catch (JSONException e){} //TODO add error response
 
