@@ -13,6 +13,8 @@ import android.view.MenuItem;
 import android.content.Intent;
 import android.view.ViewGroup;
 import android.util.Log;
+import android.view.ViewManager;
+import android.widget.TextView;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -20,6 +22,9 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.appevents.AppEventsLogger;
@@ -28,6 +33,8 @@ import com.facebook.login.widget.LoginButton;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "Facebook"; // log Tag
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +42,21 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        GraphRequest req = new GraphRequest(
+                accessToken,
+                "/me?fields=posts.limit(5)",
+                null,
+                HttpMethod.GET, new GraphRequest.Callback() {
+                    @Override
+                    public void onCompleted(GraphResponse response) {
+                        Log.d(TAG,"Successful completion of asynch call");
+                        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
+                        facebook.setText(response.getJSONObject().toString());
+                    }
+                });
+        req.executeAsync();
     }
 
     @Override
