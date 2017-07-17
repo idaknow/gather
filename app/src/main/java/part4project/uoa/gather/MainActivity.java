@@ -31,9 +31,19 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Facebook"; // log Tag
+    private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,21 +52,56 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        GraphRequest req = new GraphRequest(
-                accessToken,
-                "/me?fields=posts.limit(5)",
-                null,
-                HttpMethod.GET, new GraphRequest.Callback() {
-                    @Override
-                    public void onCompleted(GraphResponse response) {
-                        Log.d(TAG,"Successful completion of asynch call");
-                        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-                        facebook.setText(response.getJSONObject().toString());
+
+        if (accessToken != null) {
+            GraphRequest req = new GraphRequest(
+                    accessToken,
+                    "/me/",
+                    null,
+                    HttpMethod.GET, new GraphRequest.Callback() {
+                @Override
+                public void onCompleted(GraphResponse response) {
+                    Log.d(TAG, "Successful completion of asynch call");
+                    TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
+                    String outputString = transformFacebookPosts(response.getJSONObject());
+                    facebook.setText(outputString);
+                }
+            });
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "posts");
+            req.setParameters(parameters);
+            req.executeAsync();
+        }
+    }
+
+    public String transformFacebookPosts(JSONObject jsonObject){
+        Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString());
+        int count = 0;
+            try {
+                JSONObject data = (JSONObject) jsonObject.get(jsonObject.names().getString(0));
+                JSONArray values = (JSONArray) data.get(data.names().getString(0));
+
+
+                for(int i = 0; i<values.length(); i++){
+                    Log.d(TAG, "values = " + values.get(i) );//+ " value = " + values.getString(values.getString(i)));
+                    JSONObject value = (JSONObject) values.get(i);
+                    Object message = value.get("message");
+                    Log.d(TAG, message.toString());
+                    //TODO: search for key words in the message
+                    for (String string : KEYWORDS){
+                        if (message.toString().contains(string)){
+                            count++;
+                        }
                     }
-                });
-        req.executeAsync();
+                }
+            } catch (JSONException e){} //TODO
+        if (count == 0){
+            return "You have not posted about fitness related things.";
+        } else if (count == 1){
+            return "You have posted about " + count + " fitness related thing.";
+        }
+        return "You have posted about " + count + " fitness related things.";
     }
 
     @Override
