@@ -52,28 +52,43 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-
-        if (accessToken != null && accessToken.getPermissions().contains("user_posts")) {
-            GraphRequest req = new GraphRequest(
-                    accessToken,
-                    "/me/",
-                    null,
-                    HttpMethod.GET, new GraphRequest.Callback() {
-                @Override
-                public void onCompleted(GraphResponse response) {
-                    Log.d(TAG, "Successful completion of asynch call");
-                    TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-                    String outputString = transformFacebookPosts(response.getJSONObject());
-                    Log.d(TAG, "output : " + response.getJSONObject().toString());
-                    facebook.setText(outputString);
-                }
-            });
-            Bundle parameters = new Bundle();
-            parameters.putString("fields", "posts,likes");
-            req.setParameters(parameters);
-            req.executeAsync();
+        // gets the facebook access token and applies to it get update the main activities summary
+        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+        if (facebookAccessToken != null) {
+            facebookSummary(facebookAccessToken);
         }
+    }
+
+    /**
+     * This method is called to update the summary on Facebook if there exists an Access Token for Facebook
+     * @param facebookAccessToken : the valid access token
+     */
+    public void facebookSummary(AccessToken facebookAccessToken){
+
+        Set<String> grantedPermissions = facebookAccessToken.getPermissions(); // gets all granted permissions
+        String requestedData = "";
+        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes")){
+            requestedData+="posts,likes";
+        }
+
+        GraphRequest req = new GraphRequest(
+                facebookAccessToken,
+                "/me/",
+                null,
+                HttpMethod.GET, new GraphRequest.Callback() {
+            @Override
+            public void onCompleted(GraphResponse response) {
+                Log.d(TAG, "Successful completion of asynch call");
+                TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
+                String outputString = transformFacebookPosts(response.getJSONObject());
+                Log.d(TAG, "output : " + response.getJSONObject().toString());
+                facebook.setText(outputString);
+            }
+        });
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", requestedData);
+        req.setParameters(parameters);
+        req.executeAsync();
     }
 
     /**
