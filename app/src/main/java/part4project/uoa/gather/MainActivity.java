@@ -76,27 +76,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * This takes the input jsonObject which is the reponse from the GraphAPI request
+     * It then transforms this data into a useful summary text string to return to the user
+     * It currently just calculates the amount of times the user includes keywords, such as "fitness" in their fb actions such as posts
+     * @param jsonObject : The response object from the Graph API successful request
+     * @return String : the string to output on the summary page
+     */
     public String transformFacebookPosts(JSONObject jsonObject){
+        // array values
         int posts = 0;
         int likes = 1;
-        Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString());
-        int count = 0;
-            try {
+        int count = 0; // the number of times something fitness related is liked/ posted about
+        Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString()); //TESTING
+
+            try { // catch JSON exception
+
+                // gets user's POST data
                 JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(posts));
                 Log.d(TAG, "posts object = " + postsObject.toString());
                 JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
                 Log.d(TAG, "posts array = " + postsArray.toString());
+                count+=loopThroughResponse(postsArray,"message"); // adds to count the number of times keywords are used in posts
 
-                count+=loopThroughResponse(postsArray,"message");
-
+                // gets  user's LIKES data
                 JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(likes));
                 Log.d(TAG, "likes object = " + likesObject.toString());
                 JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
                 Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
+                count+=loopThroughResponse(likesArray,"name"); // adds to count the number of times keywords are used in likes
 
-                count+=loopThroughResponse(likesArray,"name");
+            } catch (JSONException e){} //TODO add error response
 
-            } catch (JSONException e){} //TODO
+        // format string responses plurals accordingly to the output count
         if (count == 0){
             return "You have not posted or liked posts about fitness related things.";
         } else if (count == 1){
@@ -105,24 +117,28 @@ public class MainActivity extends AppCompatActivity {
         return "You have posted or liked about " + count + " fitness related things.";
     }
 
-    public int loopThroughResponse(JSONArray array, String getValue){
-        int count = 0;
+    /**
+     * This loops through the given array and looks for key words in it, such as "Fitness"
+     * @param array : of the user's fb data
+     * @param dataType : the type of data it is, such as "message" or "name"
+     * @return an integer value representing the number of matches
+     */
+    public int loopThroughResponse(JSONArray array, String dataType){
+        int count = 0; // counter of number of times a keyword is matches
         try {
-            for (int j = 0; j < array.length(); j++) {
-                Log.d(TAG, "values = " + array.get(j));
+            for (int j = 0; j < array.length(); j++) { // loops through each element in the array
+                Log.d(TAG, "values = " + array.get(j)); //TESTING
                 JSONObject obj = (JSONObject) array.get(j);
-                Object value = obj.get(getValue);
-                Log.d(TAG, value.toString());
-                //TODO: search for key words in the message
-                for (String string : KEYWORDS) {
-                    if (value.toString().contains(string)) {
-                        count++;
+                Object value = obj.get(dataType); //gets the parameter according to the data type
+                Log.d(TAG, value.toString()); // TESTING
+
+                for (String string : KEYWORDS) { // loops through target keywords
+                    if (value.toString().contains(string)) { // checks if the target string is contained within the current object string
+                        count++; // increases the count if there's a match
                     }
                 }
             }
-        } catch (JSONException e){
-
-        }
+        } catch (JSONException e){} //TODO add error response
         return count;
     }
 
