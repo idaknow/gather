@@ -236,7 +236,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static LoginButton loginButton;
     private static CallbackManager callbackManager;
     private static AccessTokenTracker accessTokenTracker;
-    private static AccessToken accessToken;
+    public static AccessToken accessToken;
     private static ProfileTracker profileTracker;
     private static Profile profile;
     private static final String TAG = "Facebook"; // log Tag
@@ -301,8 +301,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
-                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
-                        if (!switchPreference.isChecked()){ // if it's changed to not checked, the permission must be revoked
+                        final SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+                        if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
                             GraphRequest req = new GraphRequest(
                                     accessToken,
                                     "/me/permissions/" + preference.getKey(),
@@ -310,7 +310,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                     HttpMethod.DELETE, new GraphRequest.Callback() {
                                 @Override
                                 public void onCompleted(GraphResponse response) {
-                                    Log.d(TAG,"Successful completion of asynch call");
+                                    Log.d(TAG, "Successful completion of asynch call ");
+                                    Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                                 }
                             });
                             req.executeAsync();
@@ -318,8 +319,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
                                     Arrays.asList(preference.getKey()));
+                            Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                         }
-                        Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                         return true;
                     }
                 });
@@ -332,6 +333,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         AccessToken oldAccessToken,
                         AccessToken currentAccessToken) {
                     Log.d(TAG, "new access token"); // TESTING
+                    //AccessToken.setCurrentAccessToken(currentAccessToken);
                     accessToken = currentAccessToken; // sets the access token variable to the current/ new one
                 }
             };
@@ -340,16 +342,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             profileTracker = new ProfileTracker() {
                 @Override
                 protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+                    Profile.setCurrentProfile(currentProfile);
                     profile = currentProfile;
                 }
             };
 
-            // If the access token is available already assign it
-            accessToken = AccessToken.getCurrentAccessToken();
-            profile = Profile.getCurrentProfile();
-
             // update permissions depending on permissions from accessToken
             if (accessToken != null) {
+                //accessToken.
+            } else {
+                accessToken = AccessToken.getCurrentAccessToken(); // If the access token is available already assign it
+                profile = Profile.getCurrentProfile();
                 updatePermissionSwitchPreferences(accessToken.getPermissions(), accessToken.getDeclinedPermissions());
             }
         }

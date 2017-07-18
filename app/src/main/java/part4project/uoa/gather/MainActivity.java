@@ -37,12 +37,14 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
-        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+        AccessToken facebookAccessToken = SettingsActivity.accessToken;
         TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
         if (facebookAccessToken != null) {
             facebook.setText("Loading...");
             facebookFitnessCount = 0; // reset to default
-            facebookSummary(facebookAccessToken);
+            if (!facebookSummary()){
+                facebook.setText("Unable to retrieve data as required permissions are disabled. Enable facebook permissions in Settings.");
+            }
         } else {
             facebook.setText("Unable to retrieve data as you are not logged in. Enable facebook in Settings.");
         }
@@ -50,18 +52,18 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * This method is called to update the summary on Facebook if there exists an Access Token for Facebook
-     * @param facebookAccessToken : the valid access token
      */
-    public void facebookSummary(final AccessToken facebookAccessToken){
+    public boolean facebookSummary(){
 
-        final Set<String> grantedPermissions = facebookAccessToken.getPermissions(); // gets all granted permissions
+        Set<String> grantedPermissions = getFBGrantedPermissions(); // gets all granted permissions
+        Set<String> deniedPermissions = getFBDeniedPermissions();
         String requestedData = "";
-        //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly
-        // TODO: currently assumes gets all
-        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
+
+        //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly - currently assumes gets all
+        if (!deniedPermissions.contains("user_posts") && !deniedPermissions.contains("user_events") && !deniedPermissions.contains("user_likes") && grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
             requestedData+="posts,likes,events";
             GraphRequest req = new GraphRequest(
-                    facebookAccessToken,
+                    AccessToken.getCurrentAccessToken(),
                     "/me/",
                     null,
                     HttpMethod.GET, new GraphRequest.Callback() {
@@ -73,26 +75,40 @@ public class MainActivity extends AppCompatActivity {
                         String outputString = transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
                         Log.d(TAG, "output : " + response.getJSONObject().toString());
                         facebook.setText(outputString);
-                        if (grantedPermissions.contains("user_actions.fitness")){
-                            transformFacebookFitness(facebookAccessToken); // this uses user_actions.fitness
+                        if (getFBGrantedPermissions().contains("user_actions.fitness")){
+                            transformFacebookFitness(); // this uses user_actions.fitness
                         }
                     }
                 }
             });
             Bundle parameters = new Bundle();
-            parameters.putString("fields", requestedData);
+            parameters.putString("fields", requestedData); // adds requested permissions
             req.setParameters(parameters);
             req.executeAsync();
+            return true;
         }
+        return false;
+    }
+
+    public Set<String> getFBGrantedPermissions(){
+        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+        Set<String> grantedPermissions = facebookAccessToken.getPermissions();
+        return grantedPermissions;
+    }
+
+    public Set<String> getFBDeniedPermissions(){
+        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+        Set<String> deniedPermissions = facebookAccessToken.getDeclinedPermissions();
+        return deniedPermissions;
     }
 
     /**
      * This gets the user's data from fitness actions and counts them up
      * fitness actions include: bikes, walks & runs
      * Adds up the amount of data to a global variable
-     * @param facebookAccessToken : the current Access Token from Facebook
      */
-    public void transformFacebookFitness(AccessToken facebookAccessToken){
+    public void transformFacebookFitness(){
+        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
         // the callback used by each
         GraphRequest.Callback callback = new GraphRequest.Callback() {
             @Override
@@ -179,28 +195,31 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString()); //TESTING
 
             try { // catch JSON exception
-
-                // gets user's POST data
-                JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(posts));
-                Log.d(TAG, "posts object = " + postsObject.toString());
-                JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
-                Log.d(TAG, "posts array = " + postsArray.toString());
-                countPostsEvents+=loopThroughResponse(postsArray,"message"); // adds to count the number of times keywords are used in posts
-
-                // gets  user's LIKES data
-                JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(likes));
-                Log.d(TAG, "likes object = " + likesObject.toString());
-                JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
-                Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
-                countPostsEvents+=loopThroughResponse(likesArray,"name"); // adds to count the number of times keywords are used in likes
-
-                // gets  user's EVENTS data
-                JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(events));
-                Log.d(TAG, "events object = " + eventsObject.toString());
-                JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
-                Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
-                countEvents = loopThroughResponse(eventsArray,"description"); // adds to count the number of times keywords are used in event descriptions
-
+                Log.d(TAG, "length = " +jsonObject.length());
+                if(jsonObject.length() > 1) {
+                    // gets user's POST data
+                    JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(posts));
+                    Log.d(TAG, "posts object = " + postsObject.toString());
+                    JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
+                    Log.d(TAG, "posts array = " + postsArray.toString());
+                    countPostsEvents += loopThroughResponse(postsArray, "message"); // adds to count the number of times keywords are used in posts
+                }
+                if (jsonObject.length() > 2) {
+                    // gets  user's LIKES data
+                    JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(likes));
+                    Log.d(TAG, "likes object = " + likesObject.toString());
+                    JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
+                    Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
+                    countPostsEvents += loopThroughResponse(likesArray, "name"); // adds to count the number of times keywords are used in likes
+                }
+                if (jsonObject.length() > 3) {
+                    // gets  user's EVENTS data
+                    JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(events));
+                    Log.d(TAG, "events object = " + eventsObject.toString());
+                    JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
+                    Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
+                    countEvents = loopThroughResponse(eventsArray, "description"); // adds to count the number of times keywords are used in event descriptions
+                }
             } catch (JSONException e){} //TODO add error response
 
         // format string responses plurals accordingly to the output count
