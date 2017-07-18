@@ -23,6 +23,7 @@ import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
+import com.facebook.GraphRequestBatch;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.Profile;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Facebook"; // log Tag
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian");
+    private static int facebookFitnessCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
      * This method is called to update the summary on Facebook if there exists an Access Token for Facebook
      * @param facebookAccessToken : the valid access token
      */
-    public void facebookSummary(AccessToken facebookAccessToken){
+    public void facebookSummary(final AccessToken facebookAccessToken){
 
         Set<String> grantedPermissions = facebookAccessToken.getPermissions(); // gets all granted permissions
         String requestedData = "";
@@ -71,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
         // TODO: currently assumes gets all
         if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
             requestedData+="posts,likes,events";
-
             GraphRequest req = new GraphRequest(
                     facebookAccessToken,
                     "/me/",
@@ -79,11 +80,14 @@ public class MainActivity extends AppCompatActivity {
                     HttpMethod.GET, new GraphRequest.Callback() {
                 @Override
                 public void onCompleted(GraphResponse response) {
-                    Log.d(TAG, "Successful completion of asynch call");
-                    TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-                    String outputString = transformFacebookPosts(response.getJSONObject());
-                    Log.d(TAG, "output : " + response.getJSONObject().toString());
-                    facebook.setText(outputString);
+                    if (response != null) {
+                        Log.d(TAG, "Successful completion of asynch call");
+                        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
+                        String outputString = transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
+                        transformFacebookFitness(facebookAccessToken); // this uses user_actions.fitness
+                        Log.d(TAG, "output : " + response.getJSONObject().toString());
+                        facebook.setText(outputString);
+                    }
                 }
             });
             Bundle parameters = new Bundle();
@@ -94,13 +98,88 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * This gets the user's data from fitness actions and counts them up
+     * fitness actions include: bikes, walks & runs
+     * Adds up the amount of data to a global variable
+     * @param facebookAccessToken : the current Access Token from Facebook
+     */
+    public void transformFacebookFitness(AccessToken facebookAccessToken){
+        // the callback used by each
+        GraphRequest.Callback callback = new GraphRequest.Callback() {
+            @Override
+            public void onCompleted(GraphResponse response) {
+                Log.d(TAG, "Successful completion of asynch call"); // TESTING
+                Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
+                fitnessDataCount(response.getJSONObject()); // uses the response data to count the amount of fitness actions
+            }
+        };
+        // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
+        GraphRequestBatch batch = new GraphRequestBatch(
+                new GraphRequest(
+                        facebookAccessToken,
+                        "/me/fitness.bikes",
+                        null,
+                        HttpMethod.GET
+                        , callback
+                ),
+                new GraphRequest(
+                        facebookAccessToken,
+                        "/me/fitness.walk",
+                        null,
+                        HttpMethod.GET
+                        , callback
+                ),
+                new GraphRequest(
+                        facebookAccessToken,
+                        "/me/fitness.runs",
+                        null,
+                        HttpMethod.GET
+                        , callback
+                )
+        );
+        // adds a callback which uses the incremented count to output to the text on the front screen to the user
+        batch.addCallback(new GraphRequestBatch.Callback() {
+            @Override
+            public void onBatchCompleted(GraphRequestBatch graphRequests) {
+                // Application code for when the batch finishes
+                Log.d(TAG,"Graph Batch Executed"); // TESTING
+                TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
+                String outputString = (String) facebook.getText(); // gets the current text
+                if (facebookFitnessCount == 1){ // updates the current text of the facebook summary, takes account of plural of the sentence
+                    outputString += "You have completed " + facebookFitnessCount + " facebook fitness action.";
+                } else {
+                    outputString += "You have completed " + facebookFitnessCount + " facebook fitness actions.";
+                }
+                facebook.setText(outputString); // sets the output text
+            }
+        });
+        batch.executeAsync();
+    }
+
+    /**
+     * This is called on each callback to increment the facebook fitness count accordingly
+     * @param jsonObject : the data response object
+     */
+    public void fitnessDataCount(JSONObject jsonObject){
+        try {
+            JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
+            if (array != null){ // increment count if data object is not empty, depending on length of it
+                Log.d(TAG, "fitness object = " + array.toString());
+                facebookFitnessCount+= array.length();
+            } else {
+                Log.d(TAG, "fitness object is null");
+            }
+        } catch (JSONException e){} //TODO: Error handling
+    }
+
+    /**
      * This takes the input jsonObject which is the reponse from the GraphAPI request
      * It then transforms this data into a useful summary text string to return to the user
      * It currently just calculates the amount of times the user includes keywords, such as "fitness" in their fb actions such as posts
      * @param jsonObject : The response object from the Graph API successful request
      * @return String : the string to output on the summary page
      */
-    public String transformFacebookPosts(JSONObject jsonObject){
+    public String transformFacebookPostsEventsLikes(JSONObject jsonObject){
         // array values
         int posts = 0;
         int likes = 1;
@@ -197,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return openSettings();
         }
-
         return super.onOptionsItemSelected(item);
     }
 
