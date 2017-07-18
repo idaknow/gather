@@ -268,21 +268,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     // The code below enables/ disables switch preference according to whether they're
-                    List grantedPermissions = new LinkedList<String>(loginResult.getRecentlyGrantedPermissions());
-                    List deniedPermissions = new LinkedList<String>(loginResult.getRecentlyDeniedPermissions());
-                    grantedFBPermissions = (List) grantedPermissions;
-                    deniedFBPermissions = (List) deniedPermissions;
+                    grantedFBPermissions = new LinkedList<String>(loginResult.getRecentlyGrantedPermissions());
+                    deniedFBPermissions = new LinkedList<String>(loginResult.getRecentlyDeniedPermissions());
                     updatePermissionSwitchPreferences();
                 }
 
                 @Override
                 public void onCancel() {
-                    // TODO: App code
+                    // TODO: Somehow get the SwitchPreference and change it back to what it was before
+                    Log.d(TAG, "Login Button Cancel");
                 }
 
                 @Override
                 public void onError(FacebookException exception) {
-                    // TODO: App code
+                    // TODO: Somehow get the SwitchPreference and change it back to what it was before
+                    Log.d(TAG, "Login Button Error");
                 }
             });
 
@@ -315,7 +315,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 @Override
                                 public void onCompleted(GraphResponse response) {
                                     Log.d(TAG, "Successful completion of asynch call ");
-                                    accessToken = AccessToken.getCurrentAccessToken();
+                                    if (response.getError()== null && response.getJSONObject() != null){
+                                        accessToken = AccessToken.getCurrentAccessToken();
+                                    } else { //TODO: Handle Errors & Test
+                                        Log.d(TAG, "response request " + response.getRequest());
+                                    }
                                 }
                             });
                             req.executeAsync();
@@ -329,10 +333,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
                                     Arrays.asList(preference.getKey()));
-                            Log.d(TAG, "Access Token Permissions access_token is = " + accessToken.getPermissions());
-                            Log.d(TAG, "Access Token Permissions System is = " + AccessToken.getCurrentAccessToken().getPermissions());
-                            grantedFBPermissions.add(preference.getKey().toString());
-                            deniedFBPermissions.remove(preference.getKey().toString());
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
                             Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                         }
@@ -347,14 +347,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 protected void onCurrentAccessTokenChanged(
                         AccessToken oldAccessToken,
                         AccessToken currentAccessToken) {
-                    Log.d(TAG, "new access token"); // TESTING
-                    Log.d(TAG, "new permissions current " + AccessToken.getCurrentAccessToken().getPermissions());
-                    Log.d(TAG, "new permissions old" + oldAccessToken.getPermissions());
-                    Log.d(TAG, "new permissions current new old" + currentAccessToken.getPermissions());
+                    Log.d(TAG, "New access token. Perrmissions current " + currentAccessToken.getPermissions());
                     AccessToken.setCurrentAccessToken(currentAccessToken);
-                    Log.d(TAG, "new permissions current " + AccessToken.getCurrentAccessToken().getPermissions());
                     accessToken = currentAccessToken; // sets the access token variable to the current/ new one
-                    Log.d(TAG, "new permissions current " + accessToken.getPermissions());
                     grantedFBPermissions = new LinkedList<>(accessToken.getPermissions());
                     deniedFBPermissions = new LinkedList<>(accessToken.getPermissions());
                 }
