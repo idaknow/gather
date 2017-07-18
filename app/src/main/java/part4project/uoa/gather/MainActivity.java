@@ -56,8 +56,12 @@ public class MainActivity extends AppCompatActivity {
 
         // gets the facebook access token and applies to it get update the main activities summary
         AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
         if (facebookAccessToken != null) {
+            facebook.setText("Loading...");
             facebookSummary(facebookAccessToken);
+        } else {
+            facebook.setText("Unable to retrieve data as you are not logged in. Enable facebook in Settings.");
         }
     }
 
