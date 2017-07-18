@@ -19,7 +19,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -28,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Facebook"; // log Tag
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
+    private static AccessToken fbToken;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +41,12 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
-        AccessToken facebookAccessToken = SettingsActivity.accessToken;
+        AccessToken fbToken = SettingsActivity.accessToken;
         TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-        if (facebookAccessToken != null) {
+        if (fbToken == null){ // second chance
+            fbToken = AccessToken.getCurrentAccessToken();
+        }
+        if (fbToken != null) {
             facebook.setText("Loading...");
             facebookFitnessCount = 0; // reset to default
             if (!facebookSummary()){
@@ -55,12 +62,12 @@ public class MainActivity extends AppCompatActivity {
      */
     public boolean facebookSummary(){
 
-        Set<String> grantedPermissions = getFBGrantedPermissions(); // gets all granted permissions
-        Set<String> deniedPermissions = getFBDeniedPermissions();
+        List<String> grantedPermissions = getFBGrantedPermissions(); // gets all granted permissions
+        List<String> deniedPermissions = getFBDeniedPermissions();
         String requestedData = "";
 
         //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly - currently assumes gets all
-        if (!deniedPermissions.contains("user_posts") && !deniedPermissions.contains("user_events") && !deniedPermissions.contains("user_likes") && grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
+        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
             requestedData+="posts,likes,events";
             GraphRequest req = new GraphRequest(
                     AccessToken.getCurrentAccessToken(),
@@ -90,16 +97,22 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    public Set<String> getFBGrantedPermissions(){
-        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
-        Set<String> grantedPermissions = facebookAccessToken.getPermissions();
-        return grantedPermissions;
+    public List<String> getFBGrantedPermissions(){
+        if (SettingsActivity.accessToken == null){
+            AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+            List<String> list =  new LinkedList<String>(facebookAccessToken.getPermissions());
+            return list;
+        }
+        return SettingsActivity.grantedFBPermissions;
     }
 
-    public Set<String> getFBDeniedPermissions(){
-        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
-        Set<String> deniedPermissions = facebookAccessToken.getDeclinedPermissions();
-        return deniedPermissions;
+    public List<String> getFBDeniedPermissions(){
+        if (SettingsActivity.accessToken == null){
+            AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+            List<String> list =  new LinkedList<String>(facebookAccessToken.getPermissions());
+            return list;
+        }
+        return SettingsActivity.deniedFBPermissions;
     }
 
     /**

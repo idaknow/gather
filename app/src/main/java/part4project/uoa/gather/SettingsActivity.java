@@ -33,6 +33,8 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -241,7 +243,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static Profile profile;
     private static final String TAG = "Facebook"; // log Tag
     private static final List<String> PERMISSIONS = Arrays.asList("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
-
+    public static List<String> grantedFBPermissions = new LinkedList<String>();
+    public static List<String> deniedFBPermissions  = new LinkedList<String>();
 
     // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -265,9 +268,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     // The code below enables/ disables switch preference according to whether they're
-                    Set grantedPermissions = loginResult.getRecentlyGrantedPermissions();
-                    Set deniedPermissions = loginResult.getRecentlyDeniedPermissions();
-                    updatePermissionSwitchPreferences(grantedPermissions, deniedPermissions);
+                    List grantedPermissions = new LinkedList<String>(loginResult.getRecentlyGrantedPermissions());
+                    List deniedPermissions = new LinkedList<String>(loginResult.getRecentlyDeniedPermissions());
+                    grantedFBPermissions = (List) grantedPermissions;
+                    deniedFBPermissions = (List) deniedPermissions;
+                    updatePermissionSwitchPreferences();
                 }
 
                 @Override
@@ -297,11 +302,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             for (String i : PERMISSIONS){
                 Preference permission = getPreferenceManager().findPreference(i);
                 permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
-                        final SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
                             GraphRequest req = new GraphRequest(
                                     accessToken,
@@ -311,14 +315,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 @Override
                                 public void onCompleted(GraphResponse response) {
                                     Log.d(TAG, "Successful completion of asynch call ");
-                                    Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
+                                    accessToken = AccessToken.getCurrentAccessToken();
                                 }
                             });
                             req.executeAsync();
+                            Log.d(TAG, "Access Token Permissions access_token is = " + accessToken.getPermissions());
+                            Log.d(TAG, "Access Token Permissions System  is = " + AccessToken.getCurrentAccessToken().getPermissions());
+                            deniedFBPermissions.add(preference.getKey().toString());
+                            grantedFBPermissions.remove(preference.getKey().toString());
+                            Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                         } else { // asks for the permission when it's enabled again
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
                                     Arrays.asList(preference.getKey()));
+                            Log.d(TAG, "Access Token Permissions access_token is = " + accessToken.getPermissions());
+                            Log.d(TAG, "Access Token Permissions System is = " + AccessToken.getCurrentAccessToken().getPermissions());
+                            grantedFBPermissions.add(preference.getKey().toString());
+                            deniedFBPermissions.remove(preference.getKey().toString());
+                            Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
                             Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                         }
                         return true;
@@ -333,8 +348,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         AccessToken oldAccessToken,
                         AccessToken currentAccessToken) {
                     Log.d(TAG, "new access token"); // TESTING
-                    //AccessToken.setCurrentAccessToken(currentAccessToken);
+                    Log.d(TAG, "new permissions current " + AccessToken.getCurrentAccessToken().getPermissions());
+                    Log.d(TAG, "new permissions old" + oldAccessToken.getPermissions());
+                    Log.d(TAG, "new permissions current new old" + currentAccessToken.getPermissions());
+                    AccessToken.setCurrentAccessToken(currentAccessToken);
+                    Log.d(TAG, "new permissions current " + AccessToken.getCurrentAccessToken().getPermissions());
                     accessToken = currentAccessToken; // sets the access token variable to the current/ new one
+                    Log.d(TAG, "new permissions current " + accessToken.getPermissions());
+                    grantedFBPermissions = new LinkedList<>(accessToken.getPermissions());
+                    deniedFBPermissions = new LinkedList<>(accessToken.getPermissions());
                 }
             };
 
@@ -348,12 +370,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             };
 
             // update permissions depending on permissions from accessToken
-            if (accessToken != null) {
-                //accessToken.
-            } else {
+            if (accessToken == null) {
                 accessToken = AccessToken.getCurrentAccessToken(); // If the access token is available already assign it
                 profile = Profile.getCurrentProfile();
-                updatePermissionSwitchPreferences(accessToken.getPermissions(), accessToken.getDeclinedPermissions());
+                if (accessToken != null){
+                    grantedFBPermissions = new LinkedList<String>(accessToken.getPermissions());
+                    deniedFBPermissions = new LinkedList<String>(accessToken.getDeclinedPermissions());
+                    updatePermissionSwitchPreferences();
+                }
             }
         }
 
@@ -376,8 +400,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         // updates switch preferences permissions according to granted/ denied permissions
-        public void updatePermissionSwitchPreferences(Set grantedPermissions, Set deniedPermissions){
-            for (Object i : grantedPermissions){ // loops through all the granted permissions
+        public void updatePermissionSwitchPreferences(){
+            for (Object i : grantedFBPermissions){ // loops through all the granted permissions
                 Log.d(TAG, "granted permission " + i.toString()); //TESTING
                 SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                 if (granted_preference != null){
@@ -387,7 +411,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     Log.d(TAG, "ERROR: Null granted permission " + i.toString());
                 }
             }
-            for (Object i : deniedPermissions){ // loops through all the denied permissions, disabling them accordingly
+            for (Object i : deniedFBPermissions){ // loops through all the denied permissions, disabling them accordingly
                 Log.d(TAG, "denied permission " + i.toString());
                 SwitchPreference denied_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                 if (denied_preference != null){
