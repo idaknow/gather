@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
         if (facebookAccessToken != null) {
             facebook.setText("Loading...");
+            facebookFitnessCount = 0; // reset to default
             facebookSummary(facebookAccessToken);
         } else {
             facebook.setText("Unable to retrieve data as you are not logged in. Enable facebook in Settings.");
