@@ -26,8 +26,8 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Facebook"; // log Tag
-    private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian");
-    private static int facebookFitnessCount = 0;
+    private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
+    private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // gets the facebook access token and applies to it get update the main activities summary
+        // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
         AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
         TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
         if (facebookAccessToken != null) {
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void facebookSummary(final AccessToken facebookAccessToken){
 
-        Set<String> grantedPermissions = facebookAccessToken.getPermissions(); // gets all granted permissions
+        final Set<String> grantedPermissions = facebookAccessToken.getPermissions(); // gets all granted permissions
         String requestedData = "";
         //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly
         // TODO: currently assumes gets all
@@ -71,9 +71,11 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Successful completion of asynch call");
                         TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
                         String outputString = transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
-                        transformFacebookFitness(facebookAccessToken); // this uses user_actions.fitness
                         Log.d(TAG, "output : " + response.getJSONObject().toString());
                         facebook.setText(outputString);
+                        if (grantedPermissions.contains("user_actions.fitness")){
+                            transformFacebookFitness(facebookAccessToken); // this uses user_actions.fitness
+                        }
                     }
                 }
             });
