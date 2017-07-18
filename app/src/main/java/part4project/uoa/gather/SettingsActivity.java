@@ -243,6 +243,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static Profile profile;
     private static final String TAG = "Facebook"; // log Tag
     private static final List<String> PERMISSIONS = Arrays.asList("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
+    private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness", "user_friends");
     public static List<String> grantedFBPermissions = new LinkedList<String>();
     public static List<String> deniedFBPermissions  = new LinkedList<String>();
 
@@ -299,32 +300,39 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             }
                         });
 
-            for (String i : PERMISSIONS){
+            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
+            for (String i : PREFERENCES){
                 Preference permission = getPreferenceManager().findPreference(i);
                 permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
-                            GraphRequest req = new GraphRequest(
-                                    accessToken,
-                                    "/me/permissions/" + preference.getKey(),
-                                    null,
-                                    HttpMethod.DELETE, new GraphRequest.Callback() {
+                            // Make callback function sent in graph request
+                            GraphRequest.Callback callback = new GraphRequest.Callback() {
                                 @Override
                                 public void onCompleted(GraphResponse response) {
                                     Log.d(TAG, "Successful completion of asynch call ");
-                                    if (response.getError()== null && response.getJSONObject() != null){
+                                    if (response.getError()== null && response.getJSONObject() != null){ // checks not cancelled or an error
                                         accessToken = AccessToken.getCurrentAccessToken();
                                     } else { //TODO: Handle Errors & Test
                                         Log.d(TAG, "response request " + response.getRequest());
                                     }
                                 }
-                            });
+                            };
+                            GraphRequest req = new GraphRequest(
+                                    accessToken,
+                                    "/me/permissions/" + preference.getKey(),
+                                    null,
+                                    HttpMethod.DELETE,
+                                    callback
+                            );
                             req.executeAsync();
                             Log.d(TAG, "Access Token Permissions access_token is = " + accessToken.getPermissions());
                             Log.d(TAG, "Access Token Permissions System  is = " + AccessToken.getCurrentAccessToken().getPermissions());
+                            // removes from denied & adds to granted - Could change these to be calls to AccessTokenTracker but idk how
                             deniedFBPermissions.add(preference.getKey().toString());
                             grantedFBPermissions.remove(preference.getKey().toString());
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
@@ -341,17 +349,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 });
             }
 
-            // tracks the token representing who is logged in
+            // tracks the token and updates when it is on login/ logout
             accessTokenTracker = new AccessTokenTracker() {
                 @Override
                 protected void onCurrentAccessTokenChanged(
                         AccessToken oldAccessToken,
                         AccessToken currentAccessToken) {
-                    Log.d(TAG, "New access token. Perrmissions current " + currentAccessToken.getPermissions());
                     AccessToken.setCurrentAccessToken(currentAccessToken);
                     accessToken = currentAccessToken; // sets the access token variable to the current/ new one
-                    grantedFBPermissions = new LinkedList<>(accessToken.getPermissions());
-                    deniedFBPermissions = new LinkedList<>(accessToken.getPermissions());
+                    if (currentAccessToken == null){
+                        grantedFBPermissions = null; // sets permissions to new permissions
+                        deniedFBPermissions = null;
+                    } else {
+                        grantedFBPermissions = new LinkedList<>(accessToken.getPermissions()); // sets permissions to new permissions
+                        deniedFBPermissions = new LinkedList<>(accessToken.getPermissions());
+                    }
                 }
             };
 

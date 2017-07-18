@@ -19,18 +19,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Facebook"; // log Tag
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
-    private static AccessToken fbToken;
 
 
     @Override
@@ -43,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
         AccessToken fbToken = SettingsActivity.accessToken;
         TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-        if (fbToken == null){ // second chance
+        if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
             fbToken = AccessToken.getCurrentAccessToken();
         }
         if (fbToken != null) {
@@ -62,57 +59,70 @@ public class MainActivity extends AppCompatActivity {
      */
     public boolean facebookSummary(){
 
-        List<String> grantedPermissions = getFBGrantedPermissions(); // gets all granted permissions
-        List<String> deniedPermissions = getFBDeniedPermissions();
-        String requestedData = "";
+        // gets the Denied and Granted permissions according to the access token
+        List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
+        String requestedData = ""; // incase we want to seperate the method depending on permissions
 
         //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly - currently assumes gets all
         if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
             requestedData+="posts,likes,events";
-            GraphRequest req = new GraphRequest(
-                    AccessToken.getCurrentAccessToken(),
-                    "/me/",
-                    null,
-                    HttpMethod.GET, new GraphRequest.Callback() {
+            AccessToken facebookAccessToken = SettingsActivity.accessToken;
+            if (facebookAccessToken == null){
+                facebookAccessToken = AccessToken.getCurrentAccessToken();
+            }
+
+            //Callback method sent with request
+            GraphRequest.Callback callback = new GraphRequest.Callback() {
                 @Override
                 public void onCompleted(GraphResponse response) {
                     if (response != null) {
-                        Log.d(TAG, "Successful completion of asynch call");
                         TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
                         String outputString = transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
                         Log.d(TAG, "output : " + response.getJSONObject().toString());
                         facebook.setText(outputString);
-                        if (getFBGrantedPermissions().contains("user_actions.fitness")){
+                        if (getFBPermissions(true).contains("user_actions.fitness")){
                             transformFacebookFitness(); // this uses user_actions.fitness
                         }
-                    }
+                    } //TODO: Error checking
                 }
-            });
+            };
+            GraphRequest req = new GraphRequest(
+                    facebookAccessToken,
+                    "/me/",
+                    null,
+                    HttpMethod.GET,
+                    callback
+            );
             Bundle parameters = new Bundle();
             parameters.putString("fields", requestedData); // adds requested permissions
             req.setParameters(parameters);
             req.executeAsync();
             return true;
         }
-        return false;
+        return false; // No permissions granted
     }
 
-    public List<String> getFBGrantedPermissions(){
-        if (SettingsActivity.accessToken == null){
+    /**
+     *
+     * This gets the access token and then returns the granted/ denied permissions according to it
+     * @param wantGranted : true/ false depending on whether wants granted or denied permissions
+     * @return List of permissions granted/ denied
+     */
+    public List<String> getFBPermissions(boolean wantGranted){
+        List<String> list; // the returned list
+        if (SettingsActivity.accessToken == null){ // settingsActivity has been created
             AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
-            List<String> list =  new LinkedList<String>(facebookAccessToken.getPermissions());
-            return list;
+            list = new LinkedList<String>(facebookAccessToken.getPermissions());
+            if (!wantGranted) {
+                list = new LinkedList<String>(facebookAccessToken.getDeclinedPermissions());
+            }
+        } else {
+            list = SettingsActivity.grantedFBPermissions;
+            if (!wantGranted) {
+                list = SettingsActivity.deniedFBPermissions;
+            }
         }
-        return SettingsActivity.grantedFBPermissions;
-    }
-
-    public List<String> getFBDeniedPermissions(){
-        if (SettingsActivity.accessToken == null){
-            AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
-            List<String> list =  new LinkedList<String>(facebookAccessToken.getPermissions());
-            return list;
-        }
-        return SettingsActivity.deniedFBPermissions;
+        return list;
     }
 
     /**
@@ -121,7 +131,10 @@ public class MainActivity extends AppCompatActivity {
      * Adds up the amount of data to a global variable
      */
     public void transformFacebookFitness(){
-        AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
+        AccessToken facebookAccessToken = SettingsActivity.accessToken;
+        if (facebookAccessToken == null){
+            facebookAccessToken = AccessToken.getCurrentAccessToken();
+        }
         // the callback used by each
         GraphRequest.Callback callback = new GraphRequest.Callback() {
             @Override
@@ -164,9 +177,9 @@ public class MainActivity extends AppCompatActivity {
                 TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
                 String outputString = (String) facebook.getText(); // gets the current text
                 if (facebookFitnessCount == 1){ // updates the current text of the facebook summary, takes account of plural of the sentence
-                    outputString += "You have completed " + facebookFitnessCount + " facebook fitness action.";
+                    outputString += " You have completed " + facebookFitnessCount + " facebook fitness action.";
                 } else {
-                    outputString += "You have completed " + facebookFitnessCount + " facebook fitness actions.";
+                    outputString += " You have completed " + facebookFitnessCount + " facebook fitness actions.";
                 }
                 facebook.setText(outputString); // sets the output text
             }
