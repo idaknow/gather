@@ -65,8 +65,8 @@
 
     <TextView
         android:id="@+id/social_media_app_summary"
-        android:layout_width="231dp"
-        android:layout_height="37dp"
+        android:layout_width="232dp"
+        android:layout_height="82dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginTop="111dp"
@@ -95,7 +95,7 @@
         android:layout_height="37dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="22dp"
         android:text="You have 1,050 calories left of your recommended daily intake"
         app:layout_constraintHorizontal_bias="0.426"
         app:layout_constraintLeft_toRightOf="@+id/fitness_app"
