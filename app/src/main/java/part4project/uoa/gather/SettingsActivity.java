@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -231,11 +232,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(Preference preference){
                     //TO DO: if turning off then revoke access?? If turning on then redirect to Chrome Tabs authorisation page
-                    String url = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=" +
-                            data + "&scope=activity%20heartrate%20nutrition%20sleep%20weight&expires_in=604800";
+                    String url = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition%20sleep%20weight&expires_in=604800";
                     CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
                     CustomTabsIntent customTabsIntent = builder.build();
                     customTabsIntent.launchUrl(getActivity(), Uri.parse(url));
+                    Toast.makeText(getActivity(), "Changed permissions for Fitbit",Toast.LENGTH_LONG).show();
                     return true;
                 }
             });
