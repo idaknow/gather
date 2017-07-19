@@ -19,8 +19,6 @@
     <!-- Social Media settings -->
     <string name="pref_header_social_media_app">Social Media App</string>
     <string name="social_media_app_name">Facebook</string>
-    <!--<string name="social_media_app_public_profile">Public Profile</string>-->
-    <!--<string name="social_media_app_email">Email</string>-->
     <string name="social_media_app_events">Events</string>
     <string name="social_media_app_friends">Friends</string>
     <string name="social_media_app_likes">Likes</string>
@@ -30,6 +28,11 @@
     <!-- Facebook API -->
     <string name="facebook_app_id">875295565956699</string>
     <string name="fb_login_protocol_scheme">fb875295565956699</string>
+
+    <!--Facebook Summary default strings-->
+    <string name="fb_disabled_permissions">Unable to retrieve data as required permissions are disabled. Enable facebook permissions in Settings.</string>
+    <string name="fb_logged_out">UUnable to retrieve data as you are not logged in. Enable facebook in Settings.</string>
+    <string name="loading">Loading...</string>
 
     <!-- Nutrition App settings -->
     <string name="pref_header_food_app">Nutrition App</string>

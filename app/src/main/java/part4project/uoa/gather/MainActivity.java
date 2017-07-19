@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Facebook"; // log Tag
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
+    //private GoogleApiClient mClient = null;
 
 
     @Override
@@ -44,13 +45,13 @@ public class MainActivity extends AppCompatActivity {
             fbToken = AccessToken.getCurrentAccessToken();
         }
         if (fbToken != null) {
-            facebook.setText("Loading...");
+            facebook.setText(R.string.loading);
             facebookFitnessCount = 0; // reset to default
             if (!facebookSummary()){
-                facebook.setText("Unable to retrieve data as required permissions are disabled. Enable facebook permissions in Settings.");
+                facebook.setText(R.string.fb_disabled_permissions);
             }
         } else {
-            facebook.setText("Unable to retrieve data as you are not logged in. Enable facebook in Settings.");
+            facebook.setText(R.string.fb_logged_out);
         }
     }
 
@@ -112,9 +113,9 @@ public class MainActivity extends AppCompatActivity {
         List<String> list; // the returned list
         if (SettingsActivity.accessToken == null){ // settingsActivity has been created
             AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
-            list = new LinkedList<String>(facebookAccessToken.getPermissions());
+            list = new LinkedList<>(facebookAccessToken.getPermissions());
             if (!wantGranted) {
-                list = new LinkedList<String>(facebookAccessToken.getDeclinedPermissions());
+                list = new LinkedList<>(facebookAccessToken.getDeclinedPermissions());
             }
         } else {
             list = SettingsActivity.grantedFBPermissions;
@@ -200,7 +201,9 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Log.d(TAG, "fitness object is null");
             }
-        } catch (JSONException e){} //TODO: Error handling
+        } catch (JSONException e){
+            Log.d(TAG,"Error: JSON Exception");
+        } //TODO: Error handling
     }
 
     /**
@@ -246,7 +249,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
                     countEvents = loopThroughResponse(eventsArray, "description"); // adds to count the number of times keywords are used in event descriptions
                 }
-            } catch (JSONException e){} //TODO add error response
+            } catch (JSONException e){
+                Log.d(TAG,"Error: JSON Exception");
+            } //TODO add error response
 
         // format string responses plurals accordingly to the output count
         String outputString;
@@ -288,7 +293,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-        } catch (JSONException e){} //TODO add error response
+        } catch (JSONException e){
+            Log.d(TAG,"Error: JSON Exception");
+        } //TODO add error response
         return count;
     }
 
