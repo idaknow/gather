@@ -28,5 +28,7 @@
                 android:value="part4project.uoa.gather.MainActivity" />
         </activity>
     </application>
+    <uses-permission android:name="android.permission.ACCOUNT_MANAGER" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

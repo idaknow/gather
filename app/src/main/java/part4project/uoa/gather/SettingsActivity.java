@@ -18,10 +18,15 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
-
+import android.widget.Toast;
 import java.util.List;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.customtabs.CustomTabsCallback;
+import android.support.customtabs.CustomTabsClient;
+import android.support.customtabs.CustomTabsIntent;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -35,6 +40,8 @@ import java.util.List;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
+
+    static Uri data;
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -82,6 +89,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        data = getIntent().getData();
+        Log.i("App uri", String.valueOf(data));
+
     }
 
     /**
@@ -196,10 +206,26 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FitnessPreferenceFragment extends PreferenceFragment {
         @Override
-        public void onCreate(Bundle savedInstanceState) {
+        public void onCreate(final Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_fitness);
             setHasOptionsMenu(true);
+
+            Preference pref = getPreferenceManager().findPreference("fitness_all");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                public boolean onPreferenceClick(Preference preference){
+                    //TO DO: if turning off then revoke access?? If turning on then redirect to Chrome Tabs authorisation page
+                    String url = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=" +
+                            data + "&scope=activity%20heartrate%20nutrition%20sleep%20weight&expires_in=604800";
+                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                    CustomTabsIntent customTabsIntent = builder.build();
+                    customTabsIntent.launchUrl(getActivity(), Uri.parse(url));
+                    return true;
+                }
+            });
+
+//            Intent intent = new Intent(FitbitActivity.class);
+//            startActivity(intent);
 
             //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
         }
