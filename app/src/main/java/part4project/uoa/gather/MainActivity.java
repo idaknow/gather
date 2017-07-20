@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.renderscript.Element;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -74,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements
     private Button mButtonAddSteps;
     private Button mButtonUpdateSteps;
     private Button mButtonDeleteSteps;
+    List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY); //AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY
+    List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY); //android.permission.ACCESS_FINE_LOCATION: AGGREGATE_DISTANCE_DELTA,DataType.AGGREGATE_SPEED_SUMMARY, DataType.AGGREGATE_HEART_RATE_SUMMARY (android.permission.body_sensors)
 
     private GoogleApiClient mGoogleApiClient = null;
     private OnDataPointListener mListener;
@@ -137,6 +140,13 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private class ViewTodayStepCountTask extends AsyncTask<Void, Void, Void> {
+        protected Void doInBackground(Void... params) {
+            displayStepDataForToday();
+            return null;
+        }
+    }
+
     protected void displayLastWeeksData(){
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -178,6 +188,8 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+
+
     private void showDataSet(DataSet dataSet) {
         Log.d("History", "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getDateInstance();
@@ -196,10 +208,16 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void displayStepDataForToday() {
-        DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA ).await(1, TimeUnit.MINUTES);
-        showDataSet(result.getTotal());
-    }
 
+        for (int i = 0; i < ACTIVITYDATATYPES.size(); i++){
+            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, ACTIVITYDATATYPES.get(i) ).await(1, TimeUnit.MINUTES);
+            showDataSet(result.getTotal());
+        }
+        for (int i = 0; i < NUTRITIONDATATYPES.size(); i++){
+            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, NUTRITIONDATATYPES.get(i) ).await(1, TimeUnit.MINUTES);
+            showDataSet(result.getTotal());
+        }
+    }
 
     @Override
     public void onConnectionSuspended(int i) {
@@ -224,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             }
             case R.id.btn_view_today: {
-                new ViewWeekStepCountTask().execute();
+                new ViewTodayStepCountTask().execute();
                 break;
             }
         }
