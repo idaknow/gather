@@ -135,69 +135,69 @@ public class MainActivity extends AppCompatActivity implements
             displayLastWeeksData();
             return null;
         }
+    }
 
-        protected void displayLastWeeksData(){
-            Calendar cal = Calendar.getInstance();
-            Date now = new Date();
-            cal.setTime(now);
-            long endTime = cal.getTimeInMillis();
-            cal.add(Calendar.WEEK_OF_YEAR, -1);
-            long startTime = cal.getTimeInMillis();
+    protected void displayLastWeeksData(){
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.WEEK_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
 
-            java.text.DateFormat dateFormat = DateFormat.getDateInstance();
-            Log.d("History", "Range Start: " + dateFormat.format(startTime));
-            Log.d("History", "Range End: " + dateFormat.format(endTime));
+        java.text.DateFormat dateFormat = DateFormat.getDateInstance();
+        Log.d("History", "Range Start: " + dateFormat.format(startTime));
+        Log.d("History", "Range End: " + dateFormat.format(endTime));
 
-            //Check how many steps were walked and recorded in the last 7 days
-            DataReadRequest readRequest = new DataReadRequest.Builder()
-                    .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                    .bucketByTime(1, TimeUnit.DAYS)
-                    .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                    .build();
+        //Check how many steps were walked and recorded in the last 7 days
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .build();
 
-            DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
+        DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
-            //Used for aggregated data
-            if (dataReadResult.getBuckets().size() > 0) {
-                Log.d("History", "Number of buckets: " + dataReadResult.getBuckets().size());
-                for (Bucket bucket : dataReadResult.getBuckets()) {
-                    List<DataSet> dataSets = bucket.getDataSets();
-                    for (DataSet dataSet : dataSets) {
-                        showDataSet(dataSet);
-                    }
-                }
-            }
-
-            //Used for non-aggregated data
-            else if (dataReadResult.getDataSets().size() > 0) {
-                Log.d("History", "Number of returned DataSets: " + dataReadResult.getDataSets().size());
-                for (DataSet dataSet : dataReadResult.getDataSets()) {
+        //Used for aggregated data
+        if (dataReadResult.getBuckets().size() > 0) {
+            Log.d("History", "Number of buckets: " + dataReadResult.getBuckets().size());
+            for (Bucket bucket : dataReadResult.getBuckets()) {
+                List<DataSet> dataSets = bucket.getDataSets();
+                for (DataSet dataSet : dataSets) {
                     showDataSet(dataSet);
                 }
             }
         }
 
-        private void showDataSet(DataSet dataSet) {
-            Log.d("History", "Data returned for Data type: " + dataSet.getDataType().getName());
-            DateFormat dateFormat = DateFormat.getDateInstance();
-            DateFormat timeFormat = DateFormat.getTimeInstance();
-
-            for (DataPoint dp : dataSet.getDataPoints()) {
-                Log.d("History", "Data point:");
-                Log.d("History", "\tType: " + dp.getDataType().getName());
-                Log.d("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-                Log.d("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-                for(Field field : dp.getDataType().getFields()) {
-                    Log.d("History", "\tField: " + field.getName() +
-                            " Value: " + dp.getValue(field));
-                }
+        //Used for non-aggregated data
+        else if (dataReadResult.getDataSets().size() > 0) {
+            Log.d("History", "Number of returned DataSets: " + dataReadResult.getDataSets().size());
+            for (DataSet dataSet : dataReadResult.getDataSets()) {
+                showDataSet(dataSet);
             }
         }
+    }
 
-        private void displayStepDataForToday() {
-            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA ).await(1, TimeUnit.MINUTES);
-            showDataSet(result.getTotal());
+    private void showDataSet(DataSet dataSet) {
+        Log.d("History", "Data returned for Data type: " + dataSet.getDataType().getName());
+        DateFormat dateFormat = DateFormat.getDateInstance();
+        DateFormat timeFormat = DateFormat.getTimeInstance();
+
+        for (DataPoint dp : dataSet.getDataPoints()) {
+            Log.d("History", "Data point:");
+            Log.d("History", "\tType: " + dp.getDataType().getName());
+            Log.d("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            Log.d("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            for(Field field : dp.getDataType().getFields()) {
+                Log.d("History", "\tField: " + field.getName() +
+                        " Value: " + dp.getValue(field));
+            }
         }
+    }
+
+    private void displayStepDataForToday() {
+        DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_STEP_COUNT_DELTA ).await(1, TimeUnit.MINUTES);
+        showDataSet(result.getTotal());
     }
 
 
@@ -218,6 +218,16 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onClick(View v) {
+        switch(v.getId()){
+            case R.id.btn_view_week: {
+                new ViewWeekStepCountTask().execute();
+                break;
+            }
+            case R.id.btn_view_today: {
+                new ViewWeekStepCountTask().execute();
+                break;
+            }
+        }
     }
 
     @Override
