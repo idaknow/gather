@@ -33,6 +33,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
@@ -125,11 +126,28 @@ public class MainActivity extends AppCompatActivity implements
         // GoogleFit
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
+//                .addApi(Fitness.RECORDING_API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
                 .addConnectionCallbacks(this)
                 .enableAutoManage(this, 0, this)
                 .build();
 
+//        Fitness.RecordingApi.subscribe(mGoogleApiClient, DataType.AGGREGATE_ACTIVITY_SUMMARY)
+//                .setResultCallback(new ResultCallback<Status>() {
+//                    @Override
+//                    public void onResult(Status status) {
+//                        if (status.isSuccess()) {
+//                            if (status.getStatusCode()
+//                                    == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+//                                Log.i(TAG, "Existing subscription for activity detected.");
+//                            } else {
+//                                Log.i(TAG, "Successfully subscribed!");
+//                            }
+//                        } else {
+//                            Log.i(TAG, "There was a problem subscribing.");
+//                        }
+//                    }
+//                });
 
     }
 
