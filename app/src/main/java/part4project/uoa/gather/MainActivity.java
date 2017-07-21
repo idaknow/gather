@@ -54,6 +54,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -208,13 +209,18 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void displayStepDataForToday() {
-
-        for (int i = 0; i < ACTIVITYDATATYPES.size(); i++){
-            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, ACTIVITYDATATYPES.get(i) ).await(1, TimeUnit.MINUTES);
-            showDataSet(result.getTotal());
+        //List<DataType> newList = NUTRITIONDATATYPES;
+        //newList.addAll(ACTIVITYDATATYPES);
+        List<DataType> newList = new ArrayList<DataType>(NUTRITIONDATATYPES);
+        newList.addAll(ACTIVITYDATATYPES);
+        if (checkPermissions(PERMISSIONS.get(0))){ // if Permission AccessLocation is granted
+            newList.addAll(PERMISSIONLOCATIONDATATYPES);
         }
-        for (int i = 0; i < NUTRITIONDATATYPES.size(); i++){
-            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, NUTRITIONDATATYPES.get(i) ).await(1, TimeUnit.MINUTES);
+        if (checkPermissions(PERMISSIONS.get(1))){ //
+            newList.addAll(PERMISSIONBODYSENSORDATATYPES);
+        }
+        for (int i = 0; i < newList.size(); i++){
+            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, newList.get(i) ).await(1, TimeUnit.MINUTES);
             showDataSet(result.getTotal());
         }
     }
@@ -252,8 +258,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
 
-        // This ensures that if the user denies the permissions then uses Settings to re-enable
-        // them, the app will start working.
+        // This ensures that if the user denies the permissions then uses Settings to re-enable them, the app will start working.
 //        buildFitnessClient();
     }
 
@@ -268,6 +273,8 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * Return the current state of the permissions needed.
+     * @param permission
+     * @return
      */
     private boolean checkPermissions(String permission) {
         int permissionState = ActivityCompat.checkSelfPermission(this,
