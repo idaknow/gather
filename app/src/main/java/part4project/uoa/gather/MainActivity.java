@@ -107,6 +107,12 @@ public class MainActivity extends AppCompatActivity implements
         mButtonViewToday.setOnClickListener(this);
 
         // GoogleFit
+        buildClient();
+        checkAndRequestGoogleFitPermissions();
+        subscribeToDataTypes();
+    }
+
+    private void buildClient(){
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
                 .addApi(Fitness.RECORDING_API)
@@ -117,9 +123,6 @@ public class MainActivity extends AppCompatActivity implements
                 .addConnectionCallbacks(this)
                 .enableAutoManage(this, 0, this)
                 .build();
-
-        checkAndRequestGoogleFitPermissions();
-        subscribeToDataTypes();
     }
 
     protected GoogleApiClient getGoogleFitClient(){
