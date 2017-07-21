@@ -71,15 +71,13 @@ public class MainActivity extends AppCompatActivity implements
         View.OnClickListener{
 
     private static final String TAG = "Facebook"; // log Tag
-    private static final String TAG2 = "Google Fit"; // log Tag
+    private static final String TAG2 = "GoogleFit"; // log Tag
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
 
     private Button mButtonViewWeek;
     private Button mButtonViewToday;
-    private Button mButtonAddSteps;
-    private Button mButtonUpdateSteps;
-    private Button mButtonDeleteSteps;
+
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
     List<DataType> PERMISSIONLOCATIONDATATYPES = Arrays.asList(DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY);
@@ -115,15 +113,9 @@ public class MainActivity extends AppCompatActivity implements
 
         mButtonViewWeek = (Button) findViewById(R.id.btn_view_week);
         mButtonViewToday = (Button) findViewById(R.id.btn_view_today);
-        mButtonAddSteps = (Button) findViewById(R.id.btn_add_steps);
-        mButtonUpdateSteps = (Button) findViewById(R.id.btn_update_steps);
-        mButtonDeleteSteps = (Button) findViewById(R.id.btn_delete_steps);
 
         mButtonViewWeek.setOnClickListener(this);
         mButtonViewToday.setOnClickListener(this);
-        mButtonAddSteps.setOnClickListener(this);
-        mButtonUpdateSteps.setOnClickListener(this);
-        mButtonDeleteSteps.setOnClickListener(this);
 
         // GoogleFit
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -138,9 +130,11 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
 
         checkAndRequestGoogleFitPermissions();
-
         subscribeToDataTypes();
-        listSubscriptions();
+    }
+
+    protected GoogleApiClient getGoogleFitClient(){
+        return mGoogleApiClient;
     }
 
     private void subscribeToDataTypes(){
@@ -163,21 +157,6 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     });
         }
-    }
-
-    private void listSubscriptions(){
-        Fitness.RecordingApi.listSubscriptions(mGoogleApiClient, DataType.TYPE_ACTIVITY_SAMPLES)
-                // Create the callback to retrieve the list of subscriptions asynchronously.
-                .setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
-                    @Override
-                    public void onResult(ListSubscriptionsResult listSubscriptionsResult) {
-                        Log.d(TAG2, "Listing active subscriptions");
-                        for (Subscription sc : listSubscriptionsResult.getSubscriptions()) {
-                            DataType dt = sc.getDataType();
-                            Log.d(TAG2, "Active subscription for data type: " + dt.getName());
-                        }
-                    }
-                });
     }
 
     private class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
@@ -203,26 +182,8 @@ public class MainActivity extends AppCompatActivity implements
         long startTime = cal.getTimeInMillis();
 
         java.text.DateFormat dateFormat = DateFormat.getDateInstance();
-        Log.d("History", "Range Start: " + dateFormat.format(startTime));
-        Log.d("History", "Range End: " + dateFormat.format(endTime));
-
-        //Check how many steps were walked and recorded in the last 7 days
-//        DataReadRequest readRequest = new DataReadRequest.Builder()
-//                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-////                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED) //TODO: add them
-////                .aggregate(DataType.TYPE_BODY_FAT_PERCENTAGE, DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY)
-////                .aggregate(DataType.TYPE_BASAL_METABOLIC_RATE, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY)
-////                .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
-//                .aggregate(DataType.TYPE_NUTRITION, DataType.AGGREGATE_NUTRITION_SUMMARY)
-////                .aggregate(DataType.TYPE_HYDRATION, DataType.AGGREGATE_HYDRATION)
-////                .aggregate(DataType.TYPE_HEART_RATE_BPM, DataType.AGGREGATE_HEART_RATE_SUMMARY)
-////                .aggregate(DataType.TYPE_BASAL_METABOLIC_RATE, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY)
-////                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
-////                .aggregate(DataType.TYPE_SPEED, DataType.AGGREGATE_SPEED_SUMMARY)
-//                .aggregate(DataType.TYPE_POWER_SAMPLE, DataType.AGGREGATE_POWER_SUMMARY)
-//                .bucketByTime(1, TimeUnit.DAYS)
-//                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-//                .build();
+        Log.d(TAG2, "Range Start: " + dateFormat.format(startTime));
+        Log.d(TAG2, "Range End: " + dateFormat.format(endTime));
 
         DataReadRequest readRequest = queryData(startTime, endTime, getListOfTypes());
 
@@ -230,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements
 
         //Used for aggregated data
         if (dataReadResult.getBuckets().size() > 0) {
-            Log.d("History", "Number of buckets: " + dataReadResult.getBuckets().size());
+            Log.d(TAG2, "Number of buckets: " + dataReadResult.getBuckets().size());
             for (Bucket bucket : dataReadResult.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
@@ -241,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements
 
         //Used for non-aggregated data
         else if (dataReadResult.getDataSets().size() > 0) {
-            Log.d("History", "Number of returned DataSets: " + dataReadResult.getDataSets().size());
+            Log.d(TAG2, "Number of returned DataSets: " + dataReadResult.getDataSets().size());
             for (DataSet dataSet : dataReadResult.getDataSets()) {
                 showDataSet(dataSet);
             }
@@ -262,17 +223,17 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void showDataSet(DataSet dataSet) {
-        Log.d("History", "Data returned for Data type: " + dataSet.getDataType().getName());
+        Log.d(TAG2, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getDateInstance();
         DateFormat timeFormat = DateFormat.getTimeInstance();
 
         for (DataPoint dp : dataSet.getDataPoints()) {
-            Log.d("History", "Data point:");
-            Log.d("History", "\tType: " + dp.getDataType().getName());
-            Log.d("History", "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            Log.d("History", "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            Log.d(TAG2, "Data point:");
+            Log.d(TAG2, "\tType: " + dp.getDataType().getName());
+            Log.d(TAG2, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            Log.d(TAG2, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             for(Field field : dp.getDataType().getFields()) {
-                Log.d("History", "\tField: " + field.getName() +
+                Log.d(TAG2, "\tField: " + field.getName() +
                         " Value: " + dp.getValue(field));
             }
         }
@@ -291,27 +252,27 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void displayStepDataForToday() {
-//        List<DataType> newList = getListOfTypes();
+        List<DataType> newList = getListOfTypes();
 
-//        for (int i = 0; i < newList.size(); i++){
-//            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, newList.get(i) ).await(1, TimeUnit.MINUTES);
-        DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_ACTIVITY_SAMPLES ).await(1, TimeUnit.MINUTES);
+        for (int i = 0; i < newList.size(); i++){
+            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, newList.get(i) ).await(1, TimeUnit.MINUTES);
+//          DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_ACTIVITY_SAMPLES ).await(1, TimeUnit.MINUTES);
             showDataSet(result.getTotal());
-//        }
+        }
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.d("HistoryAPI", "onConnectionSuspended");
+        Log.d(TAG2, "HistoryAPI onConnectionSuspended");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d("HistoryAPI", "onConnectionFailed");
+        Log.d(TAG2, "HistoryAPI onConnectionFailed");
     }
 
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d("HistoryAPI", "onConnected");
+        Log.d(TAG2, "HistoryAPI onConnected");
     }
 
 
