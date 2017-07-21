@@ -42,9 +42,10 @@
 
     <!-- Google Fit -->
     <string name="permission_rationale">Location data is used as part of the Google Fit API</string>
-    <string name="permission_denied_explanation">Permission was denied, but is needed for core
-        functionality.</string>
+    <string name="permission_denied_explanation">Permission was denied, but is needed for core functionality.</string>
     <string name="settings">Settings</string>
     <string name="ok">OK</string>
+    <string name="permission_rationale_access_fine_location">This permission will allow access to information such as your speed and power, which may prove useful to a health practitioner.</string>
+    <string name="permission_rationale_body_sensors">This permission will allow access to information such as your basal metabolic rate, which may prove useful to a health practitioner.</string>
 
 </resources>

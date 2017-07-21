@@ -76,8 +76,11 @@ public class MainActivity extends AppCompatActivity implements
     private Button mButtonAddSteps;
     private Button mButtonUpdateSteps;
     private Button mButtonDeleteSteps;
-    List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY); //AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY
-    List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY); //android.permission.ACCESS_FINE_LOCATION: AGGREGATE_DISTANCE_DELTA,DataType.AGGREGATE_SPEED_SUMMARY, DataType.AGGREGATE_HEART_RATE_SUMMARY (android.permission.body_sensors)
+    List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
+    List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
+    List<DataType> PERMISSIONLOCATIONDATATYPES = Arrays.asList(DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY);
+    List<DataType> PERMISSIONBODYSENSORDATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY);
+    List<String> PERMISSIONS = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BODY_SENSORS);
 
     private GoogleApiClient mGoogleApiClient = null;
     private OnDataPointListener mListener;
@@ -118,12 +121,8 @@ public class MainActivity extends AppCompatActivity implements
         mButtonUpdateSteps.setOnClickListener(this);
         mButtonDeleteSteps.setOnClickListener(this);
 
-        //GOOGLEFIT : modified from https://github.com/googlesamples/android-fit
-//        if (!checkPermissions()) {
-//            requestPermissions();
-//        }
-
         // GoogleFit
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
 //                .addApi(Fitness.RECORDING_API)
@@ -132,23 +131,7 @@ public class MainActivity extends AppCompatActivity implements
                 .enableAutoManage(this, 0, this)
                 .build();
 
-//        Fitness.RecordingApi.subscribe(mGoogleApiClient, DataType.AGGREGATE_ACTIVITY_SUMMARY)
-//                .setResultCallback(new ResultCallback<Status>() {
-//                    @Override
-//                    public void onResult(Status status) {
-//                        if (status.isSuccess()) {
-//                            if (status.getStatusCode()
-//                                    == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-//                                Log.i(TAG, "Existing subscription for activity detected.");
-//                            } else {
-//                                Log.i(TAG, "Successfully subscribed!");
-//                            }
-//                        } else {
-//                            Log.i(TAG, "There was a problem subscribing.");
-//                        }
-//                    }
-//                });
-
+        checkAndRequestGoogleFitPermissions();
     }
 
     private class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
@@ -206,8 +189,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
-
-
 
     private void showDataSet(DataSet dataSet) {
         Log.d("History", "Data returned for Data type: " + dataSet.getDataType().getName());
@@ -276,256 +257,55 @@ public class MainActivity extends AppCompatActivity implements
 //        buildFitnessClient();
     }
 
-//    /**
-//     *  Build a {@link GoogleApiClient} that will authenticate the user and allow the application
-//     *  to connect to Fitness APIs. The scopes included should match the scopes your app needs
-//     *  (see documentation for details). Authentication will occasionally fail intentionally,
-//     *  and in those cases, there will be a known resolution, which the OnConnectionFailedListener()
-//     *  can address. Examples of this include the user never having signed in before, or having
-//     *  multiple accounts on the device and needing to specify which account to use, etc.
-//     */
-//    private void buildFitnessClient() {
-//        if (mClient == null && checkPermissions()) {
-//            mClient = new GoogleApiClient.Builder(this)
-//                    .addApi(Fitness.SENSORS_API)
-//                    .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-//                    .addConnectionCallbacks(
-//                            new GoogleApiClient.ConnectionCallbacks() {
-//                                @Override
-//                                public void onConnected(Bundle bundle) {
-//                                    Log.d(TAG2, "Connected!!!");
-//                                    // Now you can make calls to the Fitness APIs.
-//                                    findFitnessDataSources();
-//                                }
-//
-//                                @Override
-//                                public void onConnectionSuspended(int i) {
-//                                    // If your connection to the sensor gets lost at some point,
-//                                    // you'll be able to determine the reason and react to it here.
-//                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-//                                        Log.d(TAG2, "Connection lost.  Cause: Network Lost.");
-//                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-//                                        Log.d(TAG2, "Connection lost.  Reason: Service Disconnected");
-//                                    }
-//                                }
-//                            }
-//                    )
-//                    .enableAutoManage(this, 0, new GoogleApiClient.OnConnectionFailedListener() {
-//                        @Override
-//                        public void onConnectionFailed(ConnectionResult result) {
-//                            Log.d(TAG2, "Google Play services connection failed. Cause: " + result.toString());
-//                            Snackbar.make(
-//                                    MainActivity.this.findViewById(R.id.main_activity_view),
-//                                    "Exception while connecting to Google Play services: " +
-//                                            result.getErrorMessage(),
-//                                    Snackbar.LENGTH_INDEFINITE).show();
-//                        }
-//                    })
-//                    .build();
-//        }
-//    }
-//
-//    /**
-//     * Find available data sources and attempt to register on a specific {@link DataType}.
-//     * If the application cares about a data type but doesn't care about the source of the data,
-//     * this can be skipped entirely, instead calling
-//     *     {@link com.google.android.gms.fitness.SensorsApi
-//     *     #register(GoogleApiClient, SensorRequest, DataSourceListener)},
-//     * where the {@link SensorRequest} contains the desired data type.
-//     */
-//    private void findFitnessDataSources() {
-//        // [START find_data_sources]
-//        // Note: Fitness.SensorsApi.findDataSources() requires the ACCESS_FINE_LOCATION permission.
-//        Fitness.SensorsApi.findDataSources(mClient, new DataSourcesRequest.Builder()
-//                // Sets the specific datatypes required
-//                .setDataTypes(DataType.TYPE_LOCATION_SAMPLE,
-//                        DataType.TYPE_NUTRITION, //because TYPE CALORIES CONSUMED is deprecated
-//                        DataType.TYPE_BASAL_METABOLIC_RATE,
-//                        DataType.TYPE_BODY_FAT_PERCENTAGE,
-//                        DataType.TYPE_CALORIES_EXPENDED,
-//                        DataType.TYPE_HYDRATION)
-//                .setDataSourceTypes(DataSource.TYPE_RAW)
-//                .build())
-//                .setResultCallback(new ResultCallback<DataSourcesResult>() {
-//                    @Override
-//                    public void onResult(DataSourcesResult dataSourcesResult) {
-//                        Log.d(TAG2, "Result: " + dataSourcesResult.getStatus().toString());
-//                        for (DataSource dataSource : dataSourcesResult.getDataSources()) {
-//                            Log.d(TAG2, "Data source found: " + dataSource.toString());
-//                            Log.d(TAG2, "Data Source type: " + dataSource.getDataType().getName());
-//
-//                            //Let's register a listener to receive Activity data!
-//                            if (dataSource.getDataType().equals(DataType.TYPE_LOCATION_SAMPLE)
-//                                    && mListener == null) {
-//                                Log.d(TAG2, "Data source for LOCATION_SAMPLE found!  Registering.");
-//                                registerFitnessDataListener(dataSource,
-//                                        DataType.TYPE_LOCATION_SAMPLE);
-//                            }
-//                        }
-//                    }
-//                });
-//        // [END find_data_sources]
-//    }
-//
-//    /**
-//     * Register a listener with the Sensors API for the provided {@link DataSource} and
-//     * {@link DataType} combo.
-//     */
-//    private void registerFitnessDataListener(DataSource dataSource, DataType dataType) {
-//
-//        mListener = new OnDataPointListener() {
-//            @Override
-//            public void onDataPoint(DataPoint dataPoint) {
-//                for (Field field : dataPoint.getDataType().getFields()) {
-//                    Value val = dataPoint.getValue(field);
-//                    Log.d(TAG2, "Detected DataPoint field: " + field.getName());
-//                    Log.d(TAG2, "Detected DataPoint value: " + val);
-//                }
-//            }
-//        };
-//
-//        Fitness.SensorsApi.add(
-//                mClient,
-//                new SensorRequest.Builder()
-//                        .setDataSource(dataSource) // Optional but recommended for custom data sets.
-//                        .setDataType(dataType) // Can't be omitted.
-//                        .setSamplingRate(10, TimeUnit.SECONDS)
-//                        .build(),
-//                mListener)
-//                .setResultCallback(new ResultCallback<Status>() {
-//                    @Override
-//                    public void onResult(Status status) {
-//                        if (status.isSuccess()) {
-//                            Log.d(TAG2, "Listener registered!");
-//                        } else {
-//                            Log.d(TAG2, "Listener not registered.");
-//                        }
-//                    }
-//                });
-//    }
-//
-//    /**
-//     * Unregister the listener with the Sensors API.
-//     */
-//    private void unregisterFitnessDataListener() {
-//        if (mListener == null) {
-//            // This code only activates one listener at a time.  If there's no listener, there's
-//            // nothing to unregister.
-//            return;
-//        }
-//
-//        // Waiting isn't actually necessary as the unregister call will complete regardless,
-//        // even if called from within onStop, but a callback can still be added in order to
-//        // inspect the results.
-//        Fitness.SensorsApi.remove(
-//                mClient,
-//                mListener)
-//                .setResultCallback(new ResultCallback<Status>() {
-//                    @Override
-//                    public void onResult(Status status) {
-//                        if (status.isSuccess()) {
-//                            Log.i(TAG, "Listener was removed!");
-//                        } else {
-//                            Log.i(TAG, "Listener was not removed.");
-//                        }
-//                    }
-//                });
-//    }
-//
-//    /**
-//     * Return the current state of the permissions needed.
-//     */
-//    private boolean checkPermissions() {
-//        int permissionState = ActivityCompat.checkSelfPermission(this,
-//                Manifest.permission.ACCESS_FINE_LOCATION);
-//        return permissionState == PackageManager.PERMISSION_GRANTED;
-//    }
-//
-//    private void requestPermissions() {
-//        boolean shouldProvideRationale =
-//                ActivityCompat.shouldShowRequestPermissionRationale(this,
-//                        Manifest.permission.ACCESS_FINE_LOCATION);
-//
-//        // Provide an additional rationale to the user. This would happen if the user denied the
-//        // request previously, but didn't check the "Don't ask again" checkbox.
-//        if (shouldProvideRationale) {
-//            Log.d(TAG2, "Displaying permission rationale to provide additional context.");
-//            Snackbar.make(
-//                    findViewById(R.id.main_activity_view),
-//                    R.string.permission_rationale,
-//                    Snackbar.LENGTH_INDEFINITE)
-//                    .setAction(R.string.ok, new View.OnClickListener() {
-//                        @Override
-//                        public void onClick(View view) {
-//                            // Request permission
-//                            ActivityCompat.requestPermissions(MainActivity.this,
-//                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-//                                    REQUEST_PERMISSIONS_REQUEST_CODE);
-//                        }
-//                    })
-//                    .show();
-//        } else {
-//            Log.d(TAG2, "Requesting permission");
-//            // Request permission. It's possible this can be auto answered if device policy
-//            // sets the permission in a given state or the user denied the permission
-//            // previously and checked "Never ask again".
-//            ActivityCompat.requestPermissions(MainActivity.this,
-//                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-//                    REQUEST_PERMISSIONS_REQUEST_CODE);
-//        }
-//    }
-//
-//    /**
-//     * Callback received when a permissions request has been completed.
-//     */
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-//                                           @NonNull int[] grantResults) {
-//        Log.d(TAG2, "onRequestPermissionResult");
-//        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
-//            if (grantResults.length <= 0) {
-//                // If user interaction was interrupted, the permission request is cancelled and you
-//                // receive empty arrays.
-//                Log.i(TAG, "User interaction was cancelled.");
-//            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                // Permission was granted.
-//                buildFitnessClient();
-//            } else {
-//                // Permission denied.
-//
-//                // In this Activity we've chosen to notify the user that they
-//                // have rejected a core permission for the app since it makes the Activity useless.
-//                // We're communicating this message in a Snackbar since this is a sample app, but
-//                // core permissions would typically be best requested during a welcome-screen flow.
-//
-//                // Additionally, it is important to remember that a permission might have been
-//                // rejected without asking the user for permission (device policy or "Never ask
-//                // again" prompts). Therefore, a user interface affordance is typically implemented
-//                // when permissions are denied. Otherwise, your app could appear unresponsive to
-//                // touches or interactions which have required permissions.
-//                Snackbar.make(
-//                        findViewById(R.id.main_activity_view),
-//                        R.string.permission_denied_explanation,
-//                        Snackbar.LENGTH_INDEFINITE)
-//                        .setAction(R.string.settings, new View.OnClickListener() {
-//                            @Override
-//                            public void onClick(View view) {
-//                                // Build intent that displays the App settings screen.
-//                                Intent intent = new Intent();
-//                                intent.setAction(
-//                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-//                                Uri uri = Uri.fromParts("package",
-//                                        BuildConfig.APPLICATION_ID, null);
-//                                intent.setData(uri);
-//                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                                startActivity(intent);
-//                            }
-//                        })
-//                        .show();
-//            }
-//        }
-//    }
+    private void checkAndRequestGoogleFitPermissions(){
+        for (int i = 0; i < PERMISSIONS.size(); i++){
+            if (!checkPermissions(PERMISSIONS.get(i))){
+                boolean shouldProvideAccessLocationRationale = ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSIONS.get(i));
+                requestPermissions(shouldProvideAccessLocationRationale, PERMISSIONS.get(i));
+            }
+        }
+    }
 
+    /**
+     * Return the current state of the permissions needed.
+     */
+    private boolean checkPermissions(String permission) {
+        int permissionState = ActivityCompat.checkSelfPermission(this,
+                permission);
+        return permissionState == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermissions(boolean shouldProvideRationale, final String permission) {
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG2, "Displaying permission rationale to provide additional context.");
+            int rationale;
+            if (permission == PERMISSIONS.get(0)){
+                rationale = R.string.permission_rationale_access_fine_location;
+            } else {
+                rationale = R.string.permission_rationale_body_sensors;
+            }
+            Snackbar.make(
+                    findViewById(R.id.main_activity_view),
+                    rationale,
+                    Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.ok, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // Request permission
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{permission},
+                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+                        }
+                    })
+                    .show();
+        } else {
+            Log.i(TAG2, "Requesting permission " + permission.toString());
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{permission}, REQUEST_PERMISSIONS_REQUEST_CODE);
+        }
+    }
 
     /**
      * This method is called to update the summary on Facebook if there exists an Access Token for Facebook
