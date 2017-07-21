@@ -31,7 +31,7 @@
 
     <!--Facebook Summary default strings-->
     <string name="fb_disabled_permissions">Unable to retrieve data as required permissions are disabled. Enable facebook permissions in Settings.</string>
-    <string name="fb_logged_out">UUnable to retrieve data as you are not logged in. Enable facebook in Settings.</string>
+    <string name="fb_logged_out">Unable to retrieve data as you are not logged in. Enable facebook in Settings.</string>
     <string name="loading">Loading...</string>
 
     <!-- Nutrition App settings -->

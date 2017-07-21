@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.renderscript.Element;
 import android.support.annotation.NonNull;
@@ -40,6 +41,7 @@ import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.request.DataSourcesRequest;
@@ -48,6 +50,7 @@ import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.fitness.result.DataSourcesResult;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -123,16 +126,58 @@ public class MainActivity extends AppCompatActivity implements
         mButtonDeleteSteps.setOnClickListener(this);
 
         // GoogleFit
-
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
-//                .addApi(Fitness.RECORDING_API)
-                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
+                .addApi(Fitness.RECORDING_API)
+                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
+                .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
+                .addScope(new Scope(Scopes.FITNESS_BODY_READ))
+                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
                 .addConnectionCallbacks(this)
                 .enableAutoManage(this, 0, this)
                 .build();
 
         checkAndRequestGoogleFitPermissions();
+
+        subscribeToDataTypes();
+        listSubscriptions();
+    }
+
+    private void subscribeToDataTypes(){
+        List<DataType> newList = getListOfTypes();
+        for (int i = 0; i < newList.size(); i++){
+            Log.d(TAG2, "Subscribing " + newList.get(i));
+            Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                    Log.d(TAG2, "Existing subscription for activity detected.");
+                                } else {
+                                    Log.d(TAG2, "Successfully subscribed!");
+                                }
+                            } else {
+                                Log.d(TAG2, "There was a problem subscribing. " + status);
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void listSubscriptions(){
+        Fitness.RecordingApi.listSubscriptions(mGoogleApiClient, DataType.TYPE_ACTIVITY_SAMPLES)
+                // Create the callback to retrieve the list of subscriptions asynchronously.
+                .setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+                    @Override
+                    public void onResult(ListSubscriptionsResult listSubscriptionsResult) {
+                        Log.d(TAG2, "Listing active subscriptions");
+                        for (Subscription sc : listSubscriptionsResult.getSubscriptions()) {
+                            DataType dt = sc.getDataType();
+                            Log.d(TAG2, "Active subscription for data type: " + dt.getName());
+                        }
+                    }
+                });
     }
 
     private class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
@@ -162,12 +207,24 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("History", "Range End: " + dateFormat.format(endTime));
 
         //Check how many steps were walked and recorded in the last 7 days
-        DataReadRequest readRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED) //TODO: add them
-                .bucketByTime(1, TimeUnit.DAYS)
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .build();
+//        DataReadRequest readRequest = new DataReadRequest.Builder()
+//                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+////                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED) //TODO: add them
+////                .aggregate(DataType.TYPE_BODY_FAT_PERCENTAGE, DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY)
+////                .aggregate(DataType.TYPE_BASAL_METABOLIC_RATE, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY)
+////                .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
+//                .aggregate(DataType.TYPE_NUTRITION, DataType.AGGREGATE_NUTRITION_SUMMARY)
+////                .aggregate(DataType.TYPE_HYDRATION, DataType.AGGREGATE_HYDRATION)
+////                .aggregate(DataType.TYPE_HEART_RATE_BPM, DataType.AGGREGATE_HEART_RATE_SUMMARY)
+////                .aggregate(DataType.TYPE_BASAL_METABOLIC_RATE, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY)
+////                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+////                .aggregate(DataType.TYPE_SPEED, DataType.AGGREGATE_SPEED_SUMMARY)
+//                .aggregate(DataType.TYPE_POWER_SAMPLE, DataType.AGGREGATE_POWER_SUMMARY)
+//                .bucketByTime(1, TimeUnit.DAYS)
+//                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+//                .build();
+
+        DataReadRequest readRequest = queryData(startTime, endTime, getListOfTypes());
 
         DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
@@ -191,6 +248,19 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private DataReadRequest queryData(long startTime, long endTime, List<DataType> types) {
+        types.add(DataType.TYPE_ACTIVITY_SAMPLES);
+        types.add(DataType.TYPE_POWER_SAMPLE);
+
+        DataReadRequest.Builder builder = new DataReadRequest.Builder();
+
+        for (DataType dt : types) {
+            builder.read(dt);
+        }
+
+        return builder.setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS).build();
+    }
+
     private void showDataSet(DataSet dataSet) {
         Log.d("History", "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getDateInstance();
@@ -208,9 +278,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void displayStepDataForToday() {
-        //List<DataType> newList = NUTRITIONDATATYPES;
-        //newList.addAll(ACTIVITYDATATYPES);
+    private List<DataType> getListOfTypes(){
         List<DataType> newList = new ArrayList<DataType>(NUTRITIONDATATYPES);
         newList.addAll(ACTIVITYDATATYPES);
         if (checkPermissions(PERMISSIONS.get(0))){ // if Permission AccessLocation is granted
@@ -219,10 +287,17 @@ public class MainActivity extends AppCompatActivity implements
         if (checkPermissions(PERMISSIONS.get(1))){ //
             newList.addAll(PERMISSIONBODYSENSORDATATYPES);
         }
-        for (int i = 0; i < newList.size(); i++){
-            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, newList.get(i) ).await(1, TimeUnit.MINUTES);
+        return newList;
+    }
+
+    private void displayStepDataForToday() {
+//        List<DataType> newList = getListOfTypes();
+
+//        for (int i = 0; i < newList.size(); i++){
+//            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, newList.get(i) ).await(1, TimeUnit.MINUTES);
+        DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_ACTIVITY_SAMPLES ).await(1, TimeUnit.MINUTES);
             showDataSet(result.getTotal());
-        }
+//        }
     }
 
     @Override
