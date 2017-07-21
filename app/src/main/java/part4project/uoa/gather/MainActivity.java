@@ -2,12 +2,8 @@ package part4project.uoa.gather;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.provider.Settings;
-import android.renderscript.Element;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -38,19 +34,12 @@ import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.data.Subscription;
-import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.DataReadRequest;
-import com.google.android.gms.fitness.request.DataSourcesRequest;
 import com.google.android.gms.fitness.request.OnDataPointListener;
-import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
-import com.google.android.gms.fitness.result.DataSourcesResult;
-import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -111,9 +100,9 @@ public class MainActivity extends AppCompatActivity implements
             facebook.setText(R.string.fb_logged_out);
         }
 
+        // GoogleFit Test Buttons SetUp
         mButtonViewWeek = (Button) findViewById(R.id.btn_view_week);
         mButtonViewToday = (Button) findViewById(R.id.btn_view_today);
-
         mButtonViewWeek.setOnClickListener(this);
         mButtonViewToday.setOnClickListener(this);
 
@@ -240,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private List<DataType> getListOfTypes(){
-        List<DataType> newList = new ArrayList<DataType>(NUTRITIONDATATYPES);
+        List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
         newList.addAll(ACTIVITYDATATYPES);
         if (checkPermissions(PERMISSIONS.get(0))){ // if Permission AccessLocation is granted
             newList.addAll(PERMISSIONLOCATIONDATATYPES);
@@ -309,8 +298,6 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * Return the current state of the permissions needed.
-     * @param permission
-     * @return
      */
     private boolean checkPermissions(String permission) {
         int permissionState = ActivityCompat.checkSelfPermission(this,
@@ -325,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements
         if (shouldProvideRationale) {
             Log.i(TAG2, "Displaying permission rationale to provide additional context.");
             int rationale;
-            if (permission == PERMISSIONS.get(0)){
+            if (permission.equals(PERMISSIONS.get(0))){
                 rationale = R.string.permission_rationale_access_fine_location;
             } else {
                 rationale = R.string.permission_rationale_body_sensors;
@@ -345,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements
                     })
                     .show();
         } else {
-            Log.i(TAG2, "Requesting permission " + permission.toString());
+            Log.i(TAG2, "Requesting permission " + permission);
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{permission}, REQUEST_PERMISSIONS_REQUEST_CODE);
         }
     }
