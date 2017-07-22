@@ -189,6 +189,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static List<String> PREFNAMES = Arrays.asList("HR", "BMR","distance", "speed", "fat", "calories", "hydration", "nutrition", "activity", "step", "power");
     private static Preference.OnPreferenceClickListener eachPreferenceListener;
     private static Preference.OnPreferenceClickListener googleFitParentListener;
+    public static List<String> grantedGFPermissions = new LinkedList<>(); //TODO
+    public static List<String> deniedGFPermissions  = new LinkedList<>(); //TODO
 
     /**
      * This fragment shows notification preferences only. It is used when the
