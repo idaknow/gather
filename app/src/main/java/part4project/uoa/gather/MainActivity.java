@@ -26,11 +26,9 @@ import com.facebook.HttpMethod;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.fitness.ConfigApi;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
@@ -66,9 +64,6 @@ public class MainActivity extends AppCompatActivity implements
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
 
-    private Button mButtonViewWeek;
-    private Button mButtonViewToday;
-
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
     List<DataType> PERMISSIONLOCATIONDATATYPES = Arrays.asList(DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY);
@@ -78,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements
     private static GoogleApiClient mGoogleApiClient = null;
     private OnDataPointListener mListener;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    String outputFromWeeksTask;
+    String outputFromDaysTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
         AccessToken fbToken = SettingsActivity.accessToken;
@@ -95,18 +93,14 @@ public class MainActivity extends AppCompatActivity implements
         if (fbToken != null) {
             facebook.setText(R.string.loading);
             facebookFitnessCount = 0; // reset to default
-            if (!facebookSummary()){
+            if (!checkPermissionsFB()){
                 facebook.setText(R.string.fb_disabled_permissions);
+            } else {
+                new FacebookSummaryTask().execute();
             }
         } else {
             facebook.setText(R.string.fb_logged_out);
         }
-
-        // GoogleFit Test Buttons SetUp
-        mButtonViewWeek = (Button) findViewById(R.id.btn_view_week);
-        mButtonViewToday = (Button) findViewById(R.id.btn_view_today);
-        mButtonViewWeek.setOnClickListener(this);
-        mButtonViewToday.setOnClickListener(this);
 
         // GoogleFit
         if (mGoogleApiClient == null){
@@ -116,6 +110,11 @@ public class MainActivity extends AppCompatActivity implements
             checkAndRequestGoogleFitPermissions();
             subscribeToDataTypes();
         }
+
+        TextView gf = (TextView) findViewById(R.id.food_app_summary);
+        gf.setText(R.string.loading);
+        new ViewDayGoogleFitTask().execute();
+        new ViewWeekGoogleFitTask().execute();
     }
 
     private void buildClient(){
@@ -165,16 +164,52 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
+    @Override
+    public void onClick(View v) {
+
+    }
+
+    private class ViewDayGoogleFitTask extends AsyncTask<Void, Void, Void> {
+        protected Void doInBackground(Void... params) {
+            displayDataForToday();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            TextView summary = (TextView) findViewById(R.id.food_app_summary);
+            if (summary.getText().equals("Loading...")){
+                summary.setText(outputFromDaysTask);
+            } else {
+                summary.setText(summary.getText() + " " + outputFromDaysTask);
+            }
+
+        }
+    }
+
+    private class ViewWeekGoogleFitTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
             displayLastWeeksData();
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            TextView summary = (TextView) findViewById(R.id.food_app_summary);
+            if (summary.getText().equals(R.string.loading)){
+                summary.setText(outputFromWeeksTask);
+            } else {
+                summary.setText(summary.getText() + " " + outputFromWeeksTask);
+            }
+
+        }
     }
 
-    private class ViewTodayStepCountTask extends AsyncTask<Void, Void, Void> {
+    private class FacebookSummaryTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
-            displayStepDataForToday();
+            facebookSummary();
             return null;
         }
     }
@@ -208,7 +243,9 @@ public class MainActivity extends AppCompatActivity implements
 
         //Used for non-aggregated data
         else if (dataReadResult.getDataSets().size() > 0) {
-            Log.d(TAG2, "Number of returned DataSets: " + dataReadResult.getDataSets().size());
+            outputFromWeeksTask = "Number of returned DataSets: " + dataReadResult.getDataSets().size();
+            Log.d(TAG2, outputFromWeeksTask);
+
             for (DataSet dataSet : dataReadResult.getDataSets()) {
                 showDataSet(dataSet);
             }
@@ -236,11 +273,15 @@ public class MainActivity extends AppCompatActivity implements
         for (DataPoint dp : dataSet.getDataPoints()) {
             Log.d(TAG2, "Data point:");
             Log.d(TAG2, "\tType: " + dp.getDataType().getName());
+
             Log.d(TAG2, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             Log.d(TAG2, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
             for(Field field : dp.getDataType().getFields()) {
                 Log.d(TAG2, "\tField: " + field.getName() +
                         " Value: " + dp.getValue(field));
+                if (field.getName().equals("calories")){
+                    outputFromDaysTask= field.getName() + " expended are " + dp.getValue(field) + ".";
+                }
             }
         }
     }
@@ -257,12 +298,11 @@ public class MainActivity extends AppCompatActivity implements
         return newList;
     }
 
-    private void displayStepDataForToday() {
+    private void displayDataForToday() {
         List<DataType> newList = getListOfTypes();
 
         for (int i = 0; i < newList.size(); i++){
             DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, newList.get(i) ).await(1, TimeUnit.MINUTES);
-//          DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, DataType.TYPE_ACTIVITY_SAMPLES ).await(1, TimeUnit.MINUTES);
             showDataSet(result.getTotal());
         }
     }
@@ -279,29 +319,6 @@ public class MainActivity extends AppCompatActivity implements
 
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG2, "HistoryAPI onConnected");
-    }
-
-
-    @Override
-    public void onClick(View v) {
-        switch(v.getId()){
-            case R.id.btn_view_week: {
-                if (mGoogleApiClient.isConnected()) {
-                    new ViewWeekStepCountTask().execute();
-                } else {
-                    Log.d(TAG2, "Client Not Connected");
-                }
-                break;
-            }
-            case R.id.btn_view_today: {
-                if (mGoogleApiClient.isConnected()) {
-                    new ViewTodayStepCountTask().execute();
-                } else {
-                    Log.d(TAG2, "Client Not Connected");
-                }
-                break;
-            }
-        }
     }
 
     @Override
@@ -362,14 +379,12 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * This method is called to update the summary on Facebook if there exists an Access Token for Facebook
      */
-    public boolean facebookSummary(){
-
-        // gets the Denied and Granted permissions according to the access token
-        List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
+    public void facebookSummary(){
         String requestedData = ""; // incase we want to seperate the method depending on permissions
 
+        if(checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
         //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly - currently assumes gets all
-        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")){
+
             requestedData+="posts,likes,events";
             AccessToken facebookAccessToken = SettingsActivity.accessToken;
             if (facebookAccessToken == null){
@@ -402,9 +417,15 @@ public class MainActivity extends AppCompatActivity implements
             parameters.putString("fields", requestedData); // adds requested permissions
             req.setParameters(parameters);
             req.executeAsync();
+        } // No permissions granted
+    }
+
+    private boolean checkPermissionsFB(){
+        List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
+        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")) {
             return true;
         }
-        return false; // No permissions granted
+        return false;
     }
 
     /**

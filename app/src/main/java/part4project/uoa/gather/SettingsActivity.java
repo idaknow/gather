@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
-import android.provider.ContactsContract;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -32,12 +31,9 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.common.api.GoogleApiActivity;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.fitness.ConfigApi;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
@@ -244,6 +240,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     DataType data = DATATYPES.get(index);
 
                     SwitchPreference pref = (SwitchPreference) preference;
+                    connectGoogleFit(); //TODO: Should be able to remove but keeping for now
                     if (pref.isChecked()){
                         subscribeToDataType(data);
                     } else {
