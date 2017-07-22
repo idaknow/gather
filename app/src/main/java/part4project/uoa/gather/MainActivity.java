@@ -56,23 +56,28 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        View.OnClickListener{
+        GoogleApiClient.OnConnectionFailedListener{
 
-    private static final String TAG = "Facebook"; // log Tag
-    private static final String TAG2 = "GoogleFit"; // log Tag
+    //Logging Data tags
+    private static final String TAG = "Facebook";
+    private static final String TAG2 = "GoogleFit";
+
+    // FACEBOOK: Used to summarise
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
 
+    // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
     List<DataType> PERMISSIONLOCATIONDATATYPES = Arrays.asList(DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY);
     List<DataType> PERMISSIONBODYSENSORDATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY);
     List<String> PERMISSIONS = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BODY_SENSORS);
 
+    // GOOGLEFIT: The API Client and the request code initialised
     private static GoogleApiClient mGoogleApiClient = null;
-    private OnDataPointListener mListener;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+
+    // GOOGLEFIT: Used by async tasks to update the summaries
     String outputFromWeeksTask;
     String outputFromDaysTask;
 
@@ -82,7 +87,6 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
         AccessToken fbToken = SettingsActivity.accessToken;
@@ -102,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements
             facebook.setText(R.string.fb_logged_out);
         }
 
-        // GoogleFit
+        // GOOGLEFIT Integration: builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
             buildClient();
@@ -117,6 +121,13 @@ public class MainActivity extends AppCompatActivity implements
         new ViewWeekGoogleFitTask().execute();
     }
 
+// ------------------------------------------------------------------------------
+// GOOGLE FIT
+// ------------------------------------------------------------------------------
+
+    /**
+     * Builds to google client with the required scopes (permissions)
+     */
     private void buildClient(){
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
@@ -130,22 +141,39 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
     }
 
+    /**
+     * This ensures the client is connected to the google play services
+     */
     private void connectClient(){
         mGoogleApiClient.connect();
     }
 
+    /**
+     * This is a getter used by SettingsActivity to retrieve the GoogleApiClient
+     * @return: The google api client
+     */
     public static GoogleApiClient getGoogleFitClient(){
         return mGoogleApiClient;
     }
 
+    /**
+     * This is the setter used by SettingsActivity to set the GoogleApiClient
+     * Used when it's connected or disconnected from the permissions
+     * @param client
+     */
     public static void setGoogleFitClient(GoogleApiClient client){
         mGoogleApiClient = client;
     }
 
+    /**
+     * The initial subscription to all data types to record the output
+     * TODO: Call this only on the very startup
+     */
     private void subscribeToDataTypes(){
         List<DataType> newList = getListOfTypes();
         for (int i = 0; i < newList.size(); i++){
             Log.d(TAG2, "Subscribing " + newList.get(i).getName());
+            // Subscription using RecordingAPI to the Google API Client
             Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
@@ -164,13 +192,12 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void onClick(View v) {
-
-    }
-
+    /**
+     * This is an AsyncTask that is called to retrieve "Today's" data for each subscription
+     * After this has executed, the summary of google fit is set with the calories extended as example
+     */
     private class ViewDayGoogleFitTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(Void... params) { // called on a seperate thread
             displayDataForToday();
             return null;
         }
@@ -178,16 +205,21 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            TextView summary = (TextView) findViewById(R.id.food_app_summary);
-            if (summary.getText().equals("Loading...")){
-                summary.setText(outputFromDaysTask);
-            } else {
-                summary.setText(summary.getText() + " " + outputFromDaysTask);
+            if (outputFromDaysTask != null) {
+                TextView summary = (TextView) findViewById(R.id.food_app_summary);
+                if (summary.getText().equals("Loading...")) {
+                    summary.setText(outputFromDaysTask);
+                } else {
+                    summary.setText(summary.getText() + " " + outputFromDaysTask);
+                }
             }
-
         }
     }
 
+    /**
+     * This retrieves the bulk info from GoogleFit and the subscriptions
+     * Outputs this to the summary of google fit
+     */
     private class ViewWeekGoogleFitTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
             displayLastWeeksData();
@@ -197,23 +229,22 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            TextView summary = (TextView) findViewById(R.id.food_app_summary);
-            if (summary.getText().equals(R.string.loading)){
-                summary.setText(outputFromWeeksTask);
-            } else {
-                summary.setText(summary.getText() + " " + outputFromWeeksTask);
+            if (outputFromWeeksTask != null) {
+                TextView summary = (TextView) findViewById(R.id.food_app_summary);
+                if (summary.getText().equals("Loading...")) {
+                    summary.setText(outputFromWeeksTask);
+                } else {
+                    summary.setText(summary.getText() + " " + outputFromWeeksTask);
+                }
             }
 
         }
     }
 
-    private class FacebookSummaryTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            facebookSummary();
-            return null;
-        }
-    }
-
+    /**
+     * This logs the bulk amount of data
+     * TODO: Summarise it somehow
+     */
     protected void displayLastWeeksData(){
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -226,12 +257,11 @@ public class MainActivity extends AppCompatActivity implements
         Log.d(TAG2, "Range Start: " + dateFormat.format(startTime));
         Log.d(TAG2, "Range End: " + dateFormat.format(endTime));
 
+        // The read requests made to the list of datatypes
         DataReadRequest readRequest = queryData(startTime, endTime, getListOfTypes());
-
         DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
-        //Used for aggregated data
-        if (dataReadResult.getBuckets().size() > 0) {
+        if (dataReadResult.getBuckets().size() > 0) { //Used for aggregated data
             Log.d(TAG2, "Number of buckets: " + dataReadResult.getBuckets().size());
             for (Bucket bucket : dataReadResult.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
@@ -239,10 +269,7 @@ public class MainActivity extends AppCompatActivity implements
                     showDataSet(dataSet);
                 }
             }
-        }
-
-        //Used for non-aggregated data
-        else if (dataReadResult.getDataSets().size() > 0) {
+        } else if (dataReadResult.getDataSets().size() > 0) { //Used for non-aggregated data
             outputFromWeeksTask = "Number of returned DataSets: " + dataReadResult.getDataSets().size();
             Log.d(TAG2, outputFromWeeksTask);
 
@@ -252,19 +279,30 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * This method builds the read request using the list of datatypes (adds each one to it)
+     * @param startTime
+     * @param endTime
+     * @param types : The list of datatypes that are used
+     * @return : The build read request
+     */
     private DataReadRequest queryData(long startTime, long endTime, List<DataType> types) {
+        // TESTING EXTRAS
         types.add(DataType.TYPE_ACTIVITY_SAMPLES);
         types.add(DataType.TYPE_POWER_SAMPLE);
 
         DataReadRequest.Builder builder = new DataReadRequest.Builder();
-
         for (DataType dt : types) {
             builder.read(dt);
         }
-
         return builder.setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS).build();
     }
 
+    /**
+     * This is the method that displays the datasets
+     * This is from the Android Get Started Exampler: BasicHistoryApi
+     * @param dataSet
+     */
     private void showDataSet(DataSet dataSet) {
         Log.d(TAG2, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getDateInstance();
@@ -286,6 +324,10 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * This uses the permissions to create the datatypes to request
+     * @return the datatypes permitted
+     */
     private List<DataType> getListOfTypes(){
         List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
         newList.addAll(ACTIVITYDATATYPES);
@@ -298,6 +340,9 @@ public class MainActivity extends AppCompatActivity implements
         return newList;
     }
 
+    /**
+     * This printst "Todays" data from HISTORY Api
+     */
     private void displayDataForToday() {
         List<DataType> newList = getListOfTypes();
 
@@ -324,8 +369,12 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        //TODO: used when the user resumes after accepting/ denying permissions
     }
 
+    /**
+     * This checks the current Permissions and requests them if denied or not asked yet
+     */
     private void checkAndRequestGoogleFitPermissions(){
         for (int i = 0; i < PERMISSIONS.size(); i++){
             if (!checkPermissions(PERMISSIONS.get(i))){
@@ -344,6 +393,11 @@ public class MainActivity extends AppCompatActivity implements
         return permissionState == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     * This requests the permission to the user, this includes if the user has declined it
+     * @param shouldProvideRationale
+     * @param permission
+     */
     private void requestPermissions(boolean shouldProvideRationale, final String permission) {
 
         // Provide an additional rationale to the user. This would happen if the user denied the
@@ -373,6 +427,21 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             Log.i(TAG2, "Requesting permission " + permission);
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{permission}, REQUEST_PERMISSIONS_REQUEST_CODE);
+        }
+    }
+
+// ------------------------------------------------------------------------------
+// FACEBOOK
+// ------------------------------------------------------------------------------
+
+    /**
+     * This is the async task called when the activity is created.
+     * It updates the summary for facebook on a different thread
+     */
+    private class FacebookSummaryTask extends AsyncTask<Void, Void, Void> {
+        protected Void doInBackground(Void... params) {
+            facebookSummary();
+            return null;
         }
     }
 
