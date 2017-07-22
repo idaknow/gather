@@ -112,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
             buildClient();
+            connectClient(); // TODO: Check switch pref
             checkAndRequestGoogleFitPermissions();
             subscribeToDataTypes();
         }
@@ -130,6 +131,10 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
     }
 
+    private void connectClient(){
+        mGoogleApiClient.connect();
+    }
+
     public static GoogleApiClient getGoogleFitClient(){
         return mGoogleApiClient;
     }
@@ -141,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements
     private void subscribeToDataTypes(){
         List<DataType> newList = getListOfTypes();
         for (int i = 0; i < newList.size(); i++){
-            Log.d(TAG2, "Subscribing " + newList.get(i));
+            Log.d(TAG2, "Subscribing " + newList.get(i).getName());
             Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override

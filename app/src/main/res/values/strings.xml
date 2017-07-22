@@ -35,10 +35,19 @@
     <string name="loading">Loading...</string>
 
     <!-- Nutrition App settings -->
-    <string name="pref_header_food_app">Nutrition App</string>
-    <string name="food_app_name">Nutrition App Name</string>
-    <string name="food_app_food">Diet</string>
-    <string name="food_app_calories">Calories</string>
+    <string name="pref_header_food_app">Google Fit</string>
+    <string name="gf_all">Google Fit</string>
+    <string name="gf_heart_rate">Heart Rate</string>
+    <string name="gf_basal_metabolic_rate">Basal Metabolic Rate</string>
+    <string name="gf_distance">Distance</string>
+    <string name="gf_speed">Speed</string>
+    <string name="gf_fat">Fat Percentage</string>
+    <string name="gf_calories">Calories Expended</string>
+    <string name="gf_hydration">Hydration</string>
+    <string name="gf_nutrition">Nutrition</string>
+    <string name="gf_activity">Activity</string>
+    <string name="gf_step_count">Step Count</string>
+    <string name="gf_power">Power</string>
 
     <!-- Google Fit -->
     <string name="permission_rationale">Location data is used as part of the Google Fit API</string>

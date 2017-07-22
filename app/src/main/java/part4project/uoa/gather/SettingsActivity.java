@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
+import android.provider.ContactsContract;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -187,7 +188,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     private static final String TAG2 = "GoogleFit"; // log Tag
-
+    private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY,DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY, DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
+    private static List<String> PREFNAMES = Arrays.asList("HR", "BMR","distance", "speed", "fat", "calories", "hydration", "nutrition", "activity", "step", "power");
+    private static Preference.OnPreferenceClickListener eachPreferenceListener;
+    private static Preference.OnPreferenceClickListener googleFitParentListener;
     /**
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -200,11 +204,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
 
-            Preference pref = getPreferenceManager().findPreference("food_all");
-            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            if (googleFitParentListener == null) {
+                createParentListener();
+                Preference pref = getPreferenceManager().findPreference("google_fit_all");
+                pref.setOnPreferenceClickListener(googleFitParentListener);
+            }
+
+            if (eachPreferenceListener == null) {
+                createChildListener();
+                for (int i = 0; i < PREFNAMES.size(); i++) {
+                    Preference pref2 = getPreferenceManager().findPreference(PREFNAMES.get(i));
+                    pref2.setOnPreferenceClickListener(eachPreferenceListener);
+                }
+            }
+        }
+
+        private void createParentListener(){
+            googleFitParentListener = new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    //subscribeToDataType(DataType.AGGREGATE_CALORIES_EXPENDED);
                     SwitchPreference pref = (SwitchPreference) preference;
                     if (pref.isChecked()){
                         connectGoogleFit();
@@ -214,7 +232,27 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     Toast.makeText(getActivity(), "Changed permissions for GoogleFit ",Toast.LENGTH_LONG).show();
                     return true;
                 }
-            });
+            };
+        }
+
+        private void createChildListener(){
+            eachPreferenceListener = new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+
+                    int index = PREFNAMES.indexOf(preference.getKey());
+                    DataType data = DATATYPES.get(index);
+
+                    SwitchPreference pref = (SwitchPreference) preference;
+                    if (pref.isChecked()){
+                        subscribeToDataType(data);
+                    } else {
+                        unsubscribeToDataType(data);
+                    }
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ",Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            };
         }
 
         private void disconnectGoogleFit(){
@@ -239,9 +277,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
 
+        private void unsubscribeToDataType(DataType data) {
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            Fitness.RecordingApi.unsubscribe(client, data)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                Log.i(TAG2, "Successfully unsubscribed for data type");
+                            } else {
+                                // Subscription not removed
+                                Log.i(TAG2, "Failed to unsubscribe for data type");
+                            }
+                        }
+                    });
+        }
+
         private void subscribeToDataType(DataType data){
-//            List<DataType> newList = getListOfTypes();
-//            for (int i = 0; i < newList.size(); i++){
                 Log.d(TAG2, "Subscribing " + data);
                 Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
                         .setResultCallback(new ResultCallback<Status>() {
@@ -258,7 +310,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 }
                             }
                         });
-//            }
         }
     }
 
