@@ -31,8 +31,12 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.common.api.GoogleApiActivity;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.fitness.ConfigApi;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
@@ -196,18 +200,33 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
 
-            //bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
-
-            Preference pref = getPreferenceManager().findPreference("food_food");
+            Preference pref = getPreferenceManager().findPreference("food_all");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    subscribeToDataType(DataType.AGGREGATE_CALORIES_EXPENDED);
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit",Toast.LENGTH_LONG).show();
+                    //subscribeToDataType(DataType.AGGREGATE_CALORIES_EXPENDED);
+                    SwitchPreference pref = (SwitchPreference) preference;
+                    if (pref.isChecked()){
+                        connectGoogleFit();
+                    } else {
+                        disconnectGoogleFit();
+                    }
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ",Toast.LENGTH_LONG).show();
                     return true;
                 }
             });
+        }
+
+        private void disconnectGoogleFit(){
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            client.disconnect();
+            MainActivity.setGoogleFitClient(client);
+        }
+
+        private void connectGoogleFit(){
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            client.connect();
+            MainActivity.setGoogleFitClient(client);
         }
 
         @Override
@@ -224,7 +243,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //            List<DataType> newList = getListOfTypes();
 //            for (int i = 0; i < newList.size(); i++){
                 Log.d(TAG2, "Subscribing " + data);
-                Fitness.RecordingApi.subscribe(MainActivity.getGoogleFitClient(), data)
+                Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
                         .setResultCallback(new ResultCallback<Status>() {
                             @Override
                             public void onResult(Status status) {
