@@ -183,11 +183,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    //GOOGLEFIT Initialised variables
     private static final String TAG2 = "GoogleFit"; // log Tag
     private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY,DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY, DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
     private static List<String> PREFNAMES = Arrays.asList("HR", "BMR","distance", "speed", "fat", "calories", "hydration", "nutrition", "activity", "step", "power");
     private static Preference.OnPreferenceClickListener eachPreferenceListener;
     private static Preference.OnPreferenceClickListener googleFitParentListener;
+
     /**
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -200,12 +202,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
 
+            // Adds the Preference Listeners to the parent and children preferences accordingly
             if (googleFitParentListener == null) {
                 createParentListener();
                 Preference pref = getPreferenceManager().findPreference("google_fit_all");
                 pref.setOnPreferenceClickListener(googleFitParentListener);
             }
-
             if (eachPreferenceListener == null) {
                 createChildListener();
                 for (int i = 0; i < PREFNAMES.size(); i++) {
@@ -215,23 +217,51 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
         }
 
-        private void createParentListener(){
+        /**
+         * Creates the Parent Listener to be added as an on Click Listener
+         * This connects or disconnects google fit to the google play services accordingly
+         */
+        private void createParentListener() {
             googleFitParentListener = new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference pref = (SwitchPreference) preference;
-                    if (pref.isChecked()){
+                    if (pref.isChecked()) { // Re-connects GoogleFit
                         connectGoogleFit();
                     } else {
-                        disconnectGoogleFit();
+                        disconnectGoogleFit(); // Disconnects GoogleFit
                     }
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
                     return true;
                 }
             };
         }
 
-        private void createChildListener(){
+        /**
+         * Methods called by the parent listener
+         * This disconnects the API Client to the Google Play Services
+         */
+        private void disconnectGoogleFit() {
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            client.disconnect();
+            MainActivity.setGoogleFitClient(client);
+        }
+
+        /**
+         * Methods called by the parent listener
+         * This connects the API Client to the Google Play Services
+         */
+        private void connectGoogleFit() {
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            client.connect();
+            MainActivity.setGoogleFitClient(client);
+        }
+
+        /**
+         * Creates the Child Listener that is used for each switch preference datatype that is a child
+         * It subscribes or unsubscribes the recording API accordingly
+         */
+        private void createChildListener() {
             eachPreferenceListener = new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -241,39 +271,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                     SwitchPreference pref = (SwitchPreference) preference;
                     connectGoogleFit(); //TODO: Should be able to remove but keeping for now
-                    if (pref.isChecked()){
+                    if (pref.isChecked()) {
                         subscribeToDataType(data);
                     } else {
                         unsubscribeToDataType(data);
                     }
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
                     return true;
                 }
             };
         }
 
-        private void disconnectGoogleFit(){
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.disconnect();
-            MainActivity.setGoogleFitClient(client);
-        }
-
-        private void connectGoogleFit(){
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.connect();
-            MainActivity.setGoogleFitClient(client);
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
-
+        /**
+         * Called by the child listener if the user decides to disable the preference
+         * This method unsubscribes the Client API to the datatype with the RecordingAPI
+         * @param data : The datatype that the user wants to unsubscribe from
+         */
         private void unsubscribeToDataType(DataType data) {
             GoogleApiClient client = MainActivity.getGoogleFitClient();
             Fitness.RecordingApi.unsubscribe(client, data)
@@ -290,25 +303,42 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     });
         }
 
-        private void subscribeToDataType(DataType data){
-                Log.d(TAG2, "Subscribing " + data);
-                Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
-                        .setResultCallback(new ResultCallback<Status>() {
-                            @Override
-                            public void onResult(Status status) {
-                                if (status.isSuccess()) {
-                                    if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                        Log.d(TAG2, "Existing subscription for activity detected.");
-                                    } else {
-                                        Log.d(TAG2, "Successfully subscribed!");
-                                    }
+        /**
+         * Called by the child listener if the user decides to enable the preference
+         * This method subscribes the Client API to the datatype with the RecordingAPI
+         * @param data
+         */
+        private void subscribeToDataType(DataType data) {
+            Log.d(TAG2, "Subscribing " + data);
+            Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            if (status.isSuccess()) {
+                                if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                    Log.d(TAG2, "Existing subscription for activity detected.");
                                 } else {
-                                    Log.d(TAG2, "There was a problem subscribing. " + status);
+                                    Log.d(TAG2, "Successfully subscribed!");
                                 }
+                            } else {
+                                Log.d(TAG2, "There was a problem subscribing. " + status);
                             }
-                        });
+                        }
+                    });
+        }
+
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
         }
     }
+
 
     /**
      * This fragment shows data and sync preferences only. It is used when the

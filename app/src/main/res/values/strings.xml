@@ -34,7 +34,7 @@
     <string name="fb_logged_out">Unable to retrieve data as you are not logged in. Enable facebook in Settings.</string>
     <string name="loading">Loading...</string>
 
-    <!-- Nutrition App settings -->
+    <!-- GoogleFit App settings -->
     <string name="pref_header_food_app">Google Fit</string>
     <string name="gf_all">Google Fit</string>
     <string name="gf_heart_rate">Heart Rate</string>
