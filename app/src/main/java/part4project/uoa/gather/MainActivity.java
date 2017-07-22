@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements
     List<DataType> PERMISSIONBODYSENSORDATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY);
     List<String> PERMISSIONS = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BODY_SENSORS);
 
-    private GoogleApiClient mGoogleApiClient = null;
+    private static GoogleApiClient mGoogleApiClient = null;
     private OnDataPointListener mListener;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements
         // GoogleFit
         buildClient();
         checkAndRequestGoogleFitPermissions();
-        subscribeToDataTypes();
+//        subscribeToDataTypes();
     }
 
     private void buildClient(){
@@ -125,31 +125,31 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
     }
 
-    protected GoogleApiClient getGoogleFitClient(){
+    public static GoogleApiClient getGoogleFitClient(){
         return mGoogleApiClient;
     }
 
-    private void subscribeToDataTypes(){
-        List<DataType> newList = getListOfTypes();
-        for (int i = 0; i < newList.size(); i++){
-            Log.d(TAG2, "Subscribing " + newList.get(i));
-            Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
-                    .setResultCallback(new ResultCallback<Status>() {
-                        @Override
-                        public void onResult(Status status) {
-                            if (status.isSuccess()) {
-                                if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                    Log.d(TAG2, "Existing subscription for activity detected.");
-                                } else {
-                                    Log.d(TAG2, "Successfully subscribed!");
-                                }
-                            } else {
-                                Log.d(TAG2, "There was a problem subscribing. " + status);
-                            }
-                        }
-                    });
-        }
-    }
+//    private void subscribeToDataTypes(){
+//        List<DataType> newList = getListOfTypes();
+//        for (int i = 0; i < newList.size(); i++){
+//            Log.d(TAG2, "Subscribing " + newList.get(i));
+//            Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
+//                    .setResultCallback(new ResultCallback<Status>() {
+//                        @Override
+//                        public void onResult(Status status) {
+//                            if (status.isSuccess()) {
+//                                if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+//                                    Log.d(TAG2, "Existing subscription for activity detected.");
+//                                } else {
+//                                    Log.d(TAG2, "Successfully subscribed!");
+//                                }
+//                            } else {
+//                                Log.d(TAG2, "There was a problem subscribing. " + status);
+//                            }
+//                        }
+//                    });
+//        }
+//    }
 
     private class ViewWeekStepCountTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
@@ -281,14 +281,14 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        // This ensures that if the user denies the permissions then uses Settings to re-enable them, the app will start working.
-//        buildFitnessClient();
-    }
+//
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//
+//        // This ensures that if the user denies the permissions then uses Settings to re-enable them, the app will start working.
+//        buildClient();
+//    }
 
     private void checkAndRequestGoogleFitPermissions(){
         for (int i = 0; i < PERMISSIONS.size(); i++){

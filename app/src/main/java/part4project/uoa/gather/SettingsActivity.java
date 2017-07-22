@@ -31,6 +31,11 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessStatusCodes;
+import com.google.android.gms.fitness.data.DataType;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -177,6 +182,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    private static final String TAG2 = "GoogleFit"; // log Tag
+
     /**
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -186,10 +193,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_food);
+            addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
 
             //bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+
+            Preference pref = getPreferenceManager().findPreference("food_food");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    subscribeToDataType(DataType.AGGREGATE_CALORIES_EXPENDED);
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit",Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            });
         }
 
         @Override
@@ -200,6 +218,28 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 return true;
             }
             return super.onOptionsItemSelected(item);
+        }
+
+        private void subscribeToDataType(DataType data){
+//            List<DataType> newList = getListOfTypes();
+//            for (int i = 0; i < newList.size(); i++){
+                Log.d(TAG2, "Subscribing " + data);
+                Fitness.RecordingApi.subscribe(MainActivity.getGoogleFitClient(), data)
+                        .setResultCallback(new ResultCallback<Status>() {
+                            @Override
+                            public void onResult(Status status) {
+                                if (status.isSuccess()) {
+                                    if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                        Log.d(TAG2, "Existing subscription for activity detected.");
+                                    } else {
+                                        Log.d(TAG2, "Successfully subscribed!");
+                                    }
+                                } else {
+                                    Log.d(TAG2, "There was a problem subscribing. " + status);
+                                }
+                            }
+                        });
+//            }
         }
     }
 
