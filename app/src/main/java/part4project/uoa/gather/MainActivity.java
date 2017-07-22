@@ -281,11 +281,19 @@ public class MainActivity extends AppCompatActivity implements
     public void onClick(View v) {
         switch(v.getId()){
             case R.id.btn_view_week: {
-                new ViewWeekStepCountTask().execute();
+                if (mGoogleApiClient.isConnected()) {
+                    new ViewWeekStepCountTask().execute();
+                } else {
+                    Log.d(TAG2, "Client Not Connected");
+                }
                 break;
             }
             case R.id.btn_view_today: {
-                new ViewTodayStepCountTask().execute();
+                if (mGoogleApiClient.isConnected()) {
+                    new ViewTodayStepCountTask().execute();
+                } else {
+                    Log.d(TAG2, "Client Not Connected");
+                }
                 break;
             }
         }
