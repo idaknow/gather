@@ -4,6 +4,7 @@
          when checked/unchecked. -->
     <SwitchPreference
         android:defaultValue="false"
+        android:icon="@drawable/common_google_signin_btn_icon_dark"
         android:key="google_fit_all"
         android:title="@string/gf_all" />
 
