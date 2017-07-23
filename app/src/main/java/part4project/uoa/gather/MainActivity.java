@@ -40,6 +40,10 @@ import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.twitter.sdk.android.core.DefaultLogger;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterConfig;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -120,6 +124,16 @@ public class MainActivity extends AppCompatActivity implements
         gf.setText(R.string.loading);
         new ViewDayGoogleFitTask().execute();
         new ViewWeekGoogleFitTask().execute();
+
+        //Twitter
+        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
+        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
+        TwitterConfig config = new TwitterConfig.Builder(this)
+                .logger(new DefaultLogger(Log.DEBUG))
+                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
+                .debug(true)
+                .build();
+        Twitter.initialize(config);
     }
 
 // ------------------------------------------------------------------------------
