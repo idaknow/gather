@@ -32,7 +32,8 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="8dp"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.0"
+        android:layout_marginStart="33dp" />
 
     <ImageView
         android:id="@+id/fitness_app"
@@ -48,7 +49,9 @@
         app:layout_constraintTop_toBottomOf="@+id/social_media_app"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="8dp"
-        app:layout_constraintVertical_bias="0.137" />
+        app:layout_constraintVertical_bias="0.137"
+        android:layout_marginStart="33dp"
+        android:layout_marginEnd="8dp" />
 
     <ImageView
         android:id="@+id/food_app"
@@ -61,7 +64,9 @@
         app:layout_constraintRight_toRightOf="parent"
         android:layout_marginLeft="8dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintHorizontal_bias="0.075" />
+        app:layout_constraintHorizontal_bias="0.075"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
 
     <TextView
         android:id="@+id/social_media_app_summary"
@@ -74,7 +79,9 @@
         app:layout_constraintHorizontal_bias="0.426"
         app:layout_constraintLeft_toRightOf="@+id/social_media_app"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
 
     <TextView
         android:id="@+id/fitness_app_summary"
@@ -87,7 +94,9 @@
         app:layout_constraintHorizontal_bias="0.426"
         app:layout_constraintLeft_toRightOf="@+id/fitness_app"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/social_media_app_summary" />
+        app:layout_constraintTop_toBottomOf="@+id/social_media_app_summary"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
 
     <TextView
         android:id="@+id/food_app_summary"
@@ -100,6 +109,8 @@
         app:layout_constraintHorizontal_bias="0.426"
         app:layout_constraintLeft_toRightOf="@+id/fitness_app"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fitness_app_summary" />
+        app:layout_constraintTop_toBottomOf="@+id/fitness_app_summary"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
 
 </android.support.constraint.ConstraintLayout>
