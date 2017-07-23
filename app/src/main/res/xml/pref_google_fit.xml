@@ -1,0 +1,77 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. -->
+    <SwitchPreference
+        android:defaultValue="false"
+        android:icon="@drawable/common_google_signin_btn_icon_dark"
+        android:key="google_fit_all"
+        android:title="@string/gf_all" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="HR"
+        android:title="@string/gf_heart_rate" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="BMR"
+        android:title="@string/gf_basal_metabolic_rate" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="distance"
+        android:title="@string/gf_distance" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="speed"
+        android:title="@string/gf_speed" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="fat"
+        android:title="@string/gf_fat" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="calories"
+        android:title="@string/gf_calories" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="hydration"
+        android:title="@string/gf_hydration" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="nutrition"
+        android:title="@string/gf_nutrition" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="activity"
+        android:title="@string/gf_activity" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="step"
+        android:title="@string/gf_step_count" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="google_fit_all"
+        android:key="power"
+        android:title="@string/gf_power" />
+
+</PreferenceScreen>

@@ -19,8 +19,6 @@
     <!-- Social Media settings -->
     <string name="pref_header_social_media_app">Social Media App</string>
     <string name="social_media_app_name">Facebook</string>
-    <!--<string name="social_media_app_public_profile">Public Profile</string>-->
-    <!--<string name="social_media_app_email">Email</string>-->
     <string name="social_media_app_events">Events</string>
     <string name="social_media_app_friends">Friends</string>
     <string name="social_media_app_likes">Likes</string>
@@ -31,10 +29,32 @@
     <string name="facebook_app_id">875295565956699</string>
     <string name="fb_login_protocol_scheme">fb875295565956699</string>
 
-    <!-- Nutrition App settings -->
-    <string name="pref_header_food_app">Nutrition App</string>
-    <string name="food_app_name">Nutrition App Name</string>
-    <string name="food_app_food">Diet</string>
-    <string name="food_app_calories">Calories</string>
+    <!--Facebook Summary default strings-->
+    <string name="fb_disabled_permissions">Unable to retrieve data as required permissions are disabled. Enable facebook permissions in Settings.</string>
+    <string name="fb_logged_out">Unable to retrieve data as you are not logged in. Enable facebook in Settings.</string>
+    <string name="loading">Loading...</string>
+
+    <!-- GoogleFit App settings -->
+    <string name="pref_header_food_app">Google Fit</string>
+    <string name="gf_all">Google Fit</string>
+    <string name="gf_heart_rate">Heart Rate</string>
+    <string name="gf_basal_metabolic_rate">Basal Metabolic Rate</string>
+    <string name="gf_distance">Distance</string>
+    <string name="gf_speed">Speed</string>
+    <string name="gf_fat">Fat Percentage</string>
+    <string name="gf_calories">Calories Expended</string>
+    <string name="gf_hydration">Hydration</string>
+    <string name="gf_nutrition">Nutrition</string>
+    <string name="gf_activity">Activity</string>
+    <string name="gf_step_count">Step Count</string>
+    <string name="gf_power">Power</string>
+
+    <!-- Google Fit -->
+    <string name="permission_rationale">Location data is used as part of the Google Fit API</string>
+    <string name="permission_denied_explanation">Permission was denied, but is needed for core functionality.</string>
+    <string name="settings">Settings</string>
+    <string name="ok">OK</string>
+    <string name="permission_rationale_access_fine_location">Please grant permission: Information (e.g. speed) may prove useful to a health practitioner.</string>
+    <string name="permission_rationale_body_sensors">Please grant permission: Information (e.g. basal metabolic rate) may prove useful to a health practitioner.</string>
 
 </resources>

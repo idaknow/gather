@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -34,12 +35,19 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessStatusCodes;
+import com.google.android.gms.fitness.data.DataType;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import android.support.customtabs.CustomTabsIntent;
@@ -48,8 +56,6 @@ import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
 
 import javax.net.ssl.HttpsURLConnection;
-
-import static part4project.uoa.gather.R.id.social_media_all;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -196,6 +202,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    //GOOGLEFIT Initialised variables
+    private static final String TAG2 = "GoogleFit"; // log Tag
+    private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY,DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY, DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
+    private static List<String> PREFNAMES = Arrays.asList("HR", "BMR","distance", "speed", "fat", "calories", "hydration", "nutrition", "activity", "step", "power");
+    private static Preference.OnPreferenceClickListener eachPreferenceListener;
+    private static Preference.OnPreferenceClickListener googleFitParentListener;
+//    public static List<String> grantedGFPermissions = new LinkedList<>(); //TODO
+//    public static List<String> deniedGFPermissions  = new LinkedList<>(); //TODO
+
     /**
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -205,11 +220,134 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_food);
+            addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
 
-            //bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+            // Adds the Preference Listeners to the parent and children preferences accordingly
+            if (googleFitParentListener == null) {
+                createParentListener();
+                Preference pref = getPreferenceManager().findPreference("google_fit_all");
+                pref.setOnPreferenceClickListener(googleFitParentListener);
+            }
+            if (eachPreferenceListener == null) {
+                createChildListener();
+                for (int i = 0; i < PREFNAMES.size(); i++) {
+                    Preference pref2 = getPreferenceManager().findPreference(PREFNAMES.get(i));
+                    pref2.setOnPreferenceClickListener(eachPreferenceListener);
+                }
+            }
         }
+
+        /**
+         * Creates the Parent Listener to be added as an on Click Listener
+         * This connects or disconnects google fit to the google play services accordingly
+         */
+        private void createParentListener() {
+            googleFitParentListener = new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    SwitchPreference pref = (SwitchPreference) preference;
+                    if (pref.isChecked()) { // Re-connects GoogleFit
+                        connectGoogleFit();
+                    } else {
+                        disconnectGoogleFit(); // Disconnects GoogleFit
+                    }
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            };
+        }
+
+        /**
+         * Methods called by the parent listener
+         * This disconnects the API Client to the Google Play Services
+         */
+        private void disconnectGoogleFit() {
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            client.disconnect();
+            MainActivity.setGoogleFitClient(client);
+        }
+
+        /**
+         * Methods called by the parent listener
+         * This connects the API Client to the Google Play Services
+         */
+        private void connectGoogleFit() {
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            client.connect();
+            MainActivity.setGoogleFitClient(client);
+        }
+
+        /**
+         * Creates the Child Listener that is used for each switch preference datatype that is a child
+         * It subscribes or unsubscribes the recording API accordingly
+         */
+        private void createChildListener() {
+            eachPreferenceListener = new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+
+                    int index = PREFNAMES.indexOf(preference.getKey());
+                    DataType data = DATATYPES.get(index);
+
+                    SwitchPreference pref = (SwitchPreference) preference;
+                    connectGoogleFit(); //TODO: Should be able to remove but keeping for now
+                    if (pref.isChecked()) {
+                        subscribeToDataType(data);
+                    } else {
+                        unsubscribeToDataType(data);
+                    }
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            };
+        }
+
+        /**
+         * Called by the child listener if the user decides to disable the preference
+         * This method unsubscribes the Client API to the datatype with the RecordingAPI
+         * @param data : The datatype that the user wants to unsubscribe from
+         */
+        private void unsubscribeToDataType(DataType data) {
+            GoogleApiClient client = MainActivity.getGoogleFitClient();
+            Fitness.RecordingApi.unsubscribe(client, data)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(@NonNull Status status) {
+                            if (status.isSuccess()) {
+                                Log.i(TAG2, "Successfully unsubscribed for data type");
+                            } else {
+                                // Subscription not removed
+                                Log.i(TAG2, "Failed to unsubscribe for data type");
+                            }
+                        }
+                    });
+        }
+
+        /**
+         * Called by the child listener if the user decides to enable the preference
+         * This method subscribes the Client API to the datatype with the RecordingAPI
+         * @param data : This is the data type that wants the subscription
+         */
+        private void subscribeToDataType(DataType data) {
+            Log.d(TAG2, "Subscribing " + data);
+            Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(@NonNull Status status) {
+                            if (status.isSuccess()) {
+                                if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                    Log.d(TAG2, "Existing subscription for activity detected.");
+                                } else {
+                                    Log.d(TAG2, "Successfully subscribed!");
+                                }
+                            } else {
+                                Log.d(TAG2, "There was a problem subscribing. " + status);
+                            }
+                        }
+                    });
+        }
+
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
@@ -221,6 +359,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
     }
+
 
     /**
      * This fragment shows data and sync preferences only. It is used when the
@@ -300,12 +439,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static AccessTokenTracker accessTokenTracker;
     public static AccessToken accessToken;
     private static ProfileTracker profileTracker;
-    private static Profile profile;
     private static final String TAG = "Facebook"; // log Tag
     private static final List<String> PERMISSIONS = Arrays.asList("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
     private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness", "user_friends");
-    public static List<String> grantedFBPermissions = new LinkedList<String>();
-    public static List<String> deniedFBPermissions  = new LinkedList<String>();
+    public static List<String> grantedFBPermissions = new LinkedList<>();
+    public static List<String> deniedFBPermissions  = new LinkedList<>();
 
     // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -329,8 +467,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     // The code below enables/ disables switch preference according to whether they're
-                    grantedFBPermissions = new LinkedList<String>(loginResult.getRecentlyGrantedPermissions());
-                    deniedFBPermissions = new LinkedList<String>(loginResult.getRecentlyDeniedPermissions());
+                    grantedFBPermissions = new LinkedList<>(loginResult.getRecentlyGrantedPermissions());
+                    deniedFBPermissions = new LinkedList<>(loginResult.getRecentlyDeniedPermissions());
                     updatePermissionSwitchPreferences();
                 }
 
@@ -393,14 +531,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             Log.d(TAG, "Access Token Permissions access_token is = " + accessToken.getPermissions());
                             Log.d(TAG, "Access Token Permissions System  is = " + AccessToken.getCurrentAccessToken().getPermissions());
                             // removes from denied & adds to granted - Could change these to be calls to AccessTokenTracker but idk how
-                            deniedFBPermissions.add(preference.getKey().toString());
-                            grantedFBPermissions.remove(preference.getKey().toString());
+                            deniedFBPermissions.add(preference.getKey());
+                            grantedFBPermissions.remove(preference.getKey());
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
                             Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                         } else { // asks for the permission when it's enabled again
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
-                                    Arrays.asList(preference.getKey()));
+                                    Collections.singletonList(preference.getKey()));
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
                             Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
                         }
@@ -432,17 +570,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
                     Profile.setCurrentProfile(currentProfile);
-                    profile = currentProfile;
                 }
             };
 
             // update permissions depending on permissions from accessToken
             if (accessToken == null) {
                 accessToken = AccessToken.getCurrentAccessToken(); // If the access token is available already assign it
-                profile = Profile.getCurrentProfile();
                 if (accessToken != null){
-                    grantedFBPermissions = new LinkedList<String>(accessToken.getPermissions());
-                    deniedFBPermissions = new LinkedList<String>(accessToken.getDeclinedPermissions());
+                    grantedFBPermissions = new LinkedList<>(accessToken.getPermissions());
+                    deniedFBPermissions = new LinkedList<>(accessToken.getDeclinedPermissions());
                     updatePermissionSwitchPreferences();
                 }
             }
