@@ -40,10 +40,15 @@ import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.DefaultLogger;
+import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements
     //Logging Data tags
     private static final String TAG = "Facebook";
     private static final String TAG2 = "GoogleFit";
+    private static final String TAG3 = "Twitter";
 
     // FACEBOOK: Used to summarise
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
@@ -86,9 +92,23 @@ public class MainActivity extends AppCompatActivity implements
     String outputFromWeeksTask;
     String outputFromDaysTask;
 
+    // TWITTER
+    TwitterLoginButton loginButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
+        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
+
+        TwitterConfig config = new TwitterConfig.Builder(this)
+                .logger(new DefaultLogger(Log.DEBUG))
+                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
+                .debug(true)
+                .build();
+        Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -125,15 +145,28 @@ public class MainActivity extends AppCompatActivity implements
         new ViewDayGoogleFitTask().execute();
         new ViewWeekGoogleFitTask().execute();
 
-        //Twitter
-        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
-        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
-        TwitterConfig config = new TwitterConfig.Builder(this)
-                .logger(new DefaultLogger(Log.DEBUG))
-                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
-                .debug(true)
-                .build();
-        Twitter.initialize(config);
+        loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
+        loginButton.setCallback(new Callback<TwitterSession>() {
+            @Override
+            public void success(Result<TwitterSession> result) {
+                // Do something with result, which provides a TwitterSession for making API calls
+                Log.d(TAG3, "Successfull callback from Twitter");
+            }
+
+            @Override
+            public void failure(TwitterException exception) {
+                // Do something on failure
+                Log.d(TAG3, "Failed callback from Twitter");
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Pass the activity result to the login button.
+        loginButton.onActivityResult(requestCode, resultCode, data);
     }
 
 // ------------------------------------------------------------------------------
