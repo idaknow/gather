@@ -45,9 +45,12 @@ import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import org.json.JSONArray;
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements
 
     // TWITTER
     TwitterLoginButton loginButton;
+    TwitterSession session;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,18 +149,46 @@ public class MainActivity extends AppCompatActivity implements
         new ViewDayGoogleFitTask().execute();
         new ViewWeekGoogleFitTask().execute();
 
+        createTwitterButton();
+        session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        Log.d(TAG3, "session" + session);
+    }
+
+    // TWITTER
+
+    private void createTwitterButton(){
         loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
         loginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
                 // Do something with result, which provides a TwitterSession for making API calls
                 Log.d(TAG3, "Successfull callback from Twitter");
+                session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                TwitterAuthToken authToken = session.getAuthToken();
+                String token = authToken.token;
+                String secret = authToken.secret;
             }
 
             @Override
             public void failure(TwitterException exception) {
                 // Do something on failure
                 Log.d(TAG3, "Failed callback from Twitter");
+                Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
+            }
+        });
+    }
+
+    protected void getTwitterEmail(){
+        TwitterAuthClient authClient = new TwitterAuthClient();
+        authClient.requestEmail(session, new Callback<String>() {
+            @Override
+            public void success(Result<String> result) {
+                Log.d(TAG3, "Success have email" + result.data + result.toString());
+            }
+
+            @Override
+            public void failure(TwitterException exception) {
+                Log.d(TAG3, "Fail - don't have email");
             }
         });
     }
