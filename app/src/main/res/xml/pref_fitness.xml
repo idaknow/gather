@@ -5,12 +5,30 @@
     <SwitchPreference
         android:defaultValue="false"
         android:key="fitness_all"
-        android:title="@string/fitness_app_name" />
+        android:title="Fitbit" />
 
     <SwitchPreference
         android:defaultValue="false"
         android:dependency="fitness_all"
-        android:key="fitness_history"
-        android:title="@string/fitness_app_activity" />
+        android:key="fitbit_activity"
+        android:title="Activity" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="fitness_all"
+        android:key="fitbit_nutrition"
+        android:title="Nutrition" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="fitness_all"
+        android:key="fitbit_heartrate"
+        android:title="Heart Rate" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="fitness_all"
+        android:key="fitbit_weight"
+        android:title="Weight" />
 
 </PreferenceScreen>

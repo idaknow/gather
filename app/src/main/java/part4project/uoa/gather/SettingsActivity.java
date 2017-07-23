@@ -35,6 +35,10 @@ import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +46,8 @@ import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import static part4project.uoa.gather.R.id.social_media_all;
 
@@ -222,6 +228,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FitnessPreferenceFragment extends PreferenceFragment {
+
+        private String fitbitToken = "";
+        private Long expires;
+        List<String> scopes;
+        Intent browserIntent;
+
         @Override
         public void onCreate(final Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -231,20 +243,42 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             Preference pref = getPreferenceManager().findPreference("fitness_all");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(Preference preference){
-                    //TO DO: if turning off then revoke access?? If turning on then redirect to Chrome Tabs authorisation page
-                    String url = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition%20sleep%20weight&expires_in=604800";
-                    CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-                    CustomTabsIntent customTabsIntent = builder.build();
-                    customTabsIntent.launchUrl(getActivity(), Uri.parse(url));
-                    Toast.makeText(getActivity(), "Changed permissions for Fitbit",Toast.LENGTH_LONG).show();
+                    SwitchPreference switchPreference = (SwitchPreference) preference;
+                    if (switchPreference.isChecked()){
+
+                    } else {
+                        revokePreferences();
+                    }
                     return true;
                 }
             });
 
-//            Intent intent = new Intent(FitbitActivity.class);
-//            startActivity(intent);
-
             //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+        }
+
+        public void getAuthToken(){
+            try {
+                String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition%20sleep%20weight&expires_in=604800";
+
+                browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
+                startActivity(browserIntent);
+
+            } catch (Exception e) {
+                Log.e("Fitbit", "An error occurred when dealing with the auth url: " + e);
+            }
+        }
+
+        public void revokePreferences(){
+
+        }
+
+        public void parseAccessToken(){
+            //Save Auth Token
+            Uri returnUri = browserIntent.getData();
+            fitbitToken = returnUri.getQueryParameter("access_token");
+            expires = Long.parseLong(returnUri.getQueryParameter("expires_in")) + System.currentTimeMillis() / 1000;
+            //scopes = parseScopes(uri.getQueryParameter("scope"));
+            Log.d("Fitbit", "The token is: " + fitbitToken);
         }
 
         @Override
@@ -455,12 +489,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             }
         }
+        // this implements changing the tokens accordingly, allowing for login & logout
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
-    // this implements changing the tokens accordingly, allowing for login & logout
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
+
 }
