@@ -20,6 +20,7 @@ android {
     }
     repositories {
         mavenCentral()
+        jcenter()
     }
 }
 
@@ -35,5 +36,6 @@ dependencies {
     compile 'com.android.support:support-vector-drawable:25.3.1'
     compile 'com.facebook.android:facebook-android-sdk:[4,5)'
     compile 'com.google.android.gms:play-services-fitness:9.8.0'
+    compile 'com.twitter.sdk.android:twitter-core:3.0.0'
     testCompile 'junit:junit:4.12'
 }
