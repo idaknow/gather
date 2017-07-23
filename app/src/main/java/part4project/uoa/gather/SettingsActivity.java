@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -189,8 +190,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static List<String> PREFNAMES = Arrays.asList("HR", "BMR","distance", "speed", "fat", "calories", "hydration", "nutrition", "activity", "step", "power");
     private static Preference.OnPreferenceClickListener eachPreferenceListener;
     private static Preference.OnPreferenceClickListener googleFitParentListener;
-    public static List<String> grantedGFPermissions = new LinkedList<>(); //TODO
-    public static List<String> deniedGFPermissions  = new LinkedList<>(); //TODO
+//    public static List<String> grantedGFPermissions = new LinkedList<>(); //TODO
+//    public static List<String> deniedGFPermissions  = new LinkedList<>(); //TODO
 
     /**
      * This fragment shows notification preferences only. It is used when the
@@ -294,7 +295,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             Fitness.RecordingApi.unsubscribe(client, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
-                        public void onResult(Status status) {
+                        public void onResult(@NonNull Status status) {
                             if (status.isSuccess()) {
                                 Log.i(TAG2, "Successfully unsubscribed for data type");
                             } else {
@@ -308,14 +309,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         /**
          * Called by the child listener if the user decides to enable the preference
          * This method subscribes the Client API to the datatype with the RecordingAPI
-         * @param data
+         * @param data : This is the data type that wants the subscription
          */
         private void subscribeToDataType(DataType data) {
             Log.d(TAG2, "Subscribing " + data);
             Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
-                        public void onResult(Status status) {
+                        public void onResult(@NonNull Status status) {
                             if (status.isSuccess()) {
                                 if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
                                     Log.d(TAG2, "Existing subscription for activity detected.");

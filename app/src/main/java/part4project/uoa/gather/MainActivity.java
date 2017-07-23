@@ -1,11 +1,13 @@
 package part4project.uoa.gather;
 
-import android.Manifest;
+import android.Manifest.permission;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,7 +17,6 @@ import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -37,7 +38,6 @@ import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
-import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
 
@@ -54,6 +54,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements
     List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
     List<DataType> PERMISSIONLOCATIONDATATYPES = Arrays.asList(DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY);
     List<DataType> PERMISSIONBODYSENSORDATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY);
-    List<String> PERMISSIONS = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BODY_SENSORS);
+    List<String> PERMISSIONS = Arrays.asList(permission.ACCESS_FINE_LOCATION, permission.BODY_SENSORS);
 
     // GOOGLEFIT: The API Client and the request code initialised
     private static GoogleApiClient mGoogleApiClient = null;
@@ -150,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * This is a getter used by SettingsActivity to retrieve the GoogleApiClient
-     * @return: The google api client
+     * @return the google api client
      */
     public static GoogleApiClient getGoogleFitClient(){
         return mGoogleApiClient;
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * This is the setter used by SettingsActivity to set the GoogleApiClient
      * Used when it's connected or disconnected from the permissions
-     * @param client
+     * @param client : The Google API Client
      */
     public static void setGoogleFitClient(GoogleApiClient client){
         mGoogleApiClient = client;
@@ -177,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements
             Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
-                        public void onResult(Status status) {
+                        public void onResult(@NonNull Status status) {
                             if (status.isSuccess()) {
                                 if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
                                     Log.d(TAG2, "Existing subscription for activity detected.");
@@ -281,8 +282,8 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * This method builds the read request using the list of datatypes (adds each one to it)
-     * @param startTime
-     * @param endTime
+     * @param startTime : The start time to query data from
+     * @param endTime : The end time to query data till
      * @param types : The list of datatypes that are used
      * @return : The build read request
      */
@@ -301,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * This is the method that displays the datasets
      * This is from the Android Get Started Exampler: BasicHistoryApi
-     * @param dataSet
+     * @param dataSet : The Data set to be shown
      */
     private void showDataSet(DataSet dataSet) {
         Log.d(TAG2, "Data returned for Data type: " + dataSet.getDataType().getName());
@@ -395,8 +396,8 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * This requests the permission to the user, this includes if the user has declined it
-     * @param shouldProvideRationale
-     * @param permission
+     * @param shouldProvideRationale : Whether
+     * @param permission : The permissions to be requested to the user
      */
     private void requestPermissions(boolean shouldProvideRationale, final String permission) {
 
@@ -489,12 +490,13 @@ public class MainActivity extends AppCompatActivity implements
         } // No permissions granted
     }
 
+    /**
+     * Checks if user posts, user likes and user events permissions are granted
+     * @return true or false whether all 3 permissions are granted
+     */
     private boolean checkPermissionsFB(){
         List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
-        if (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events")) {
-            return true;
-        }
-        return false;
+        return (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events"));
     }
 
     /**
