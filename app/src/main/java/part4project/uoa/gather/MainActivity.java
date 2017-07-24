@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements
     // TWITTER
     TwitterLoginButton loginButton;
     TwitterSession session;
+    private static Callback<List<Tweet>> twitterCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,39 +159,44 @@ public class MainActivity extends AppCompatActivity implements
         new ViewWeekGoogleFitTask().execute();
 
         createTwitterButton();
-        Button twitterTestButton = (Button) findViewById(R.id.test_button);
-        twitterTestButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getStatusTweet();
-            }
-        });
-
+        createTwitterCallback();
     }
 
-    private void getStatusTweet(){
-        Log.d(TAG3, "session" + session);
-        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
-        FavoriteService service = twitterApiClient.getFavoriteService();
-        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
-        call.enqueue(new Callback<List<Tweet>>() {
+    private void createTwitterCallback(){
+        twitterCallback = new Callback<List<Tweet>>() {
             @Override
             public void success(Result<List<Tweet>> result) {
                 //Do something with result
-                Log.d(TAG3, "Succesfully got the results for statuses");
+                Log.d(TAG3, "Succesfully got the results");
                 Log.d(TAG3, result.response.message().toString());
                 List<Tweet> data = result.data;
                 for (int i = 0; i < data.size(); i++){
-                    Log.d(TAG3, data.get(i).text.toString());
+                    String tweet = data.get(i).text.toString();
+                    Log.d(TAG3, tweet);
                 }
-                //Log.d(TAG3, result.data.toString());
             }
 
             public void failure(TwitterException exception) {
                 //Do something on failure
-                Log.d(TAG3, "Didn't get the results for statuses");
+                Log.d(TAG3, "Didn't get the results");
             }
-        });
+        };
+    }
+
+    private void getFavouritedTweets(){
+        Log.d(TAG3, "session" + session);
+        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+        FavoriteService service = twitterApiClient.getFavoriteService();
+        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
+    }
+
+    private void getStatusTweets(){
+        Log.d(TAG3, "session" + session);
+        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+        StatusesService service = twitterApiClient.getStatusesService();
+        Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
     }
 
     // TWITTER
@@ -203,9 +209,9 @@ public class MainActivity extends AppCompatActivity implements
                 // Do something with result, which provides a TwitterSession for making API calls
                 Log.d(TAG3, "Successfull callback from Twitter");
                 session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-                TwitterAuthToken authToken = session.getAuthToken();
-                String token = authToken.token;
-                String secret = authToken.secret;
+                //TwitterAuthToken authToken = session.getAuthToken();
+                getFavouritedTweets();
+                getStatusTweets();
             }
 
             @Override
