@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -44,6 +45,7 @@ import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterApiClient;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterConfig;
@@ -52,6 +54,9 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.services.FavoriteService;
+import com.twitter.sdk.android.core.services.StatusesService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -65,6 +70,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import retrofit2.Call;
+
 
 @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
 public class MainActivity extends AppCompatActivity implements
@@ -150,8 +158,39 @@ public class MainActivity extends AppCompatActivity implements
         new ViewWeekGoogleFitTask().execute();
 
         createTwitterButton();
-        session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        Button twitterTestButton = (Button) findViewById(R.id.test_button);
+        twitterTestButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getStatusTweet();
+            }
+        });
+
+    }
+
+    private void getStatusTweet(){
         Log.d(TAG3, "session" + session);
+        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+        FavoriteService service = twitterApiClient.getFavoriteService();
+        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
+        call.enqueue(new Callback<List<Tweet>>() {
+            @Override
+            public void success(Result<List<Tweet>> result) {
+                //Do something with result
+                Log.d(TAG3, "Succesfully got the results for statuses");
+                Log.d(TAG3, result.response.message().toString());
+                List<Tweet> data = result.data;
+                for (int i = 0; i < data.size(); i++){
+                    Log.d(TAG3, data.get(i).text.toString());
+                }
+                //Log.d(TAG3, result.data.toString());
+            }
+
+            public void failure(TwitterException exception) {
+                //Do something on failure
+                Log.d(TAG3, "Didn't get the results for statuses");
+            }
+        });
     }
 
     // TWITTER
