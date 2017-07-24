@@ -160,6 +160,13 @@ public class MainActivity extends AppCompatActivity implements
 
         createTwitterButton();
         createTwitterCallback();
+        session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        if (session == null){
+            loginButton.performClick();
+        } else {
+            getFavouritedTweets();
+            getStatusTweets();
+        }
     }
 
     private void createTwitterCallback(){
@@ -202,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements
     // TWITTER
 
     private void createTwitterButton(){
-        loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
+        loginButton = new TwitterLoginButton(this);
         loginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
