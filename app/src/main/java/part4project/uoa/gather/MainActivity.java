@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements
     TwitterLoginButton loginButton;
     TwitterSession session;
     private static Callback<List<Tweet>> twitterCallback;
+    TwitterApiClient twitterApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,24 +159,34 @@ public class MainActivity extends AppCompatActivity implements
         new ViewDayGoogleFitTask().execute();
         new ViewWeekGoogleFitTask().execute();
 
+        //TWITTER
         createTwitterButton();
         createTwitterCallback();
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
         if (session == null){
             loginButton.performClick();
         } else {
-            getFavouritedTweets();
-            getStatusTweets();
+            displayTweets();
         }
     }
 
+// ------------------------------------------------------------------------------
+// TWITTER
+// ------------------------------------------------------------------------------
+
+    /**
+     * This initialised the twitterCallback that is used to print the results from either a status or favourite request
+     */
     private void createTwitterCallback(){
         twitterCallback = new Callback<List<Tweet>>() {
             @Override
             public void success(Result<List<Tweet>> result) {
-                //Do something with result
+                // TODO: Transform the data into a useful output to the user
+                // TODO: Print the output to summary page
                 Log.d(TAG3, "Succesfully got the results");
                 Log.d(TAG3, result.response.message().toString());
+
+                // loops through the data and prints each tweat to the debug console
                 List<Tweet> data = result.data;
                 for (int i = 0; i < data.size(); i++){
                     String tweet = data.get(i).text.toString();
@@ -184,63 +195,57 @@ public class MainActivity extends AppCompatActivity implements
             }
 
             public void failure(TwitterException exception) {
-                //Do something on failure
+                //TODO: Add an error
                 Log.d(TAG3, "Didn't get the results");
             }
         };
     }
 
-    private void getFavouritedTweets(){
-        Log.d(TAG3, "session" + session);
-        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+    /**
+     * Calls the appropriate methods to display tweets
+     */
+    private void displayTweets(){
+        twitterApiClient = TwitterCore.getInstance().getApiClient();
+        displayFavouritedTweets();
+        displayStatusTweets();
+    }
+
+    /**
+     * This method displays all the users's favourited tweets
+     */
+    private void displayFavouritedTweets(){
         FavoriteService service = twitterApiClient.getFavoriteService();
         Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
         call.enqueue(twitterCallback);
     }
 
-    private void getStatusTweets(){
-        Log.d(TAG3, "session" + session);
-        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+    /**
+     * This method displays all the user's statuses
+     */
+    private void displayStatusTweets(){
         StatusesService service = twitterApiClient.getStatusesService();
         Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
         call.enqueue(twitterCallback);
     }
 
-    // TWITTER
-
+    /**
+     * This creates the twitter button, that calls login and authorisation
+     */
     private void createTwitterButton(){
         loginButton = new TwitterLoginButton(this);
         loginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
-                // Do something with result, which provides a TwitterSession for making API calls
+                // The result provides a TwitterSession for making API calls
                 Log.d(TAG3, "Successfull callback from Twitter");
                 session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-                //TwitterAuthToken authToken = session.getAuthToken();
-                getFavouritedTweets();
-                getStatusTweets();
+                displayTweets();
             }
 
             @Override
             public void failure(TwitterException exception) {
-                // Do something on failure
                 Log.d(TAG3, "Failed callback from Twitter");
                 Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
-            }
-        });
-    }
-
-    protected void getTwitterEmail(){
-        TwitterAuthClient authClient = new TwitterAuthClient();
-        authClient.requestEmail(session, new Callback<String>() {
-            @Override
-            public void success(Result<String> result) {
-                Log.d(TAG3, "Success have email" + result.data + result.toString());
-            }
-
-            @Override
-            public void failure(TwitterException exception) {
-                Log.d(TAG3, "Fail - don't have email");
             }
         });
     }
