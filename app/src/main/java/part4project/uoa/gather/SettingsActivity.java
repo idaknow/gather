@@ -615,18 +615,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
         }
 
-        public void logoutTwitter() {
-            TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
-            if (twitterSession != null) {
-                ClearCookies();
-            }
-        }
-
-        public static void ClearCookies() {
-            CookieManager.getInstance().removeAllCookies(null);
-            CookieManager.getInstance().flush();
-        }
-
         private void createParentPreference(){
             Preference pref = getPreferenceManager().findPreference("social_media_2_all");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
