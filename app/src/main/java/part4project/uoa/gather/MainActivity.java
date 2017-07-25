@@ -40,6 +40,19 @@ import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.DefaultLogger;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterApiClient;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.services.FavoriteService;
+import com.twitter.sdk.android.core.services.StatusesService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,6 +67,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import retrofit2.Call;
+
+
 @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -62,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements
     //Logging Data tags
     private static final String TAG = "Facebook";
     private static final String TAG2 = "GoogleFit";
+    private static final String TAG3 = "Twitter";
 
     // FACEBOOK: Used to summarise
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
@@ -82,9 +99,25 @@ public class MainActivity extends AppCompatActivity implements
     String outputFromWeeksTask;
     String outputFromDaysTask;
 
+    // TWITTER
+    TwitterSession session;
+    TwitterApiClient twitterApiClient;
+    private static Callback<List<Tweet>> twitterCallback;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
+        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
+
+        TwitterConfig config = new TwitterConfig.Builder(this)
+                .logger(new DefaultLogger(Log.DEBUG))
+                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
+                .debug(true)
+                .build();
+        Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -120,7 +153,72 @@ public class MainActivity extends AppCompatActivity implements
         gf.setText(R.string.loading);
         new ViewDayGoogleFitTask().execute();
         new ViewWeekGoogleFitTask().execute();
+
+        // TWITTER
+        session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        createTwitterCallback();
+        if (session == null){
+            Log.d(TAG3, "Twitter: Not logged in");
+            // TODO: Reflect on the summary page in a message
+        } else {
+            displayTweets();
+        }
     }
+
+// ------------------------------------------------------------------------------
+// TWITTER
+// ------------------------------------------------------------------------------
+
+    private void displayTweets(){
+        twitterApiClient = TwitterCore.getInstance().getApiClient();
+        displayFavouritedTweets();
+        displayStatusTweets();
+    }
+
+    /**
+     * This method displays all the users's favourited tweets
+     */
+    private void displayFavouritedTweets(){
+        FavoriteService service = twitterApiClient.getFavoriteService();
+        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
+    }
+
+    /**
+     * This method displays all the user's statuses
+     */
+    private void displayStatusTweets(){
+        StatusesService service = twitterApiClient.getStatusesService();
+        Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
+    }
+
+    /**
+     * This initialised the twitterCallback that is used to print the results from either a status or favourite request
+     */
+    private void createTwitterCallback(){
+        twitterCallback = new Callback<List<Tweet>>() {
+            @Override
+            public void success(Result<List<Tweet>> result) {
+                // TODO: Transform the data into a useful output to the user
+                // TODO: Print the output to summary page
+                Log.d(TAG3, "Succesfully got the results");
+
+                // loops through the data and prints each tweat to the debug console
+                List<Tweet> data = result.data;
+                for (int i = 0; i < data.size(); i++){
+                    String tweet = data.get(i).text;
+                    Log.d(TAG3, tweet);
+                }
+            }
+
+            public void failure(TwitterException exception) {
+                //TODO: Add an error
+                Log.d(TAG3, "Didn't get the results");
+            }
+        };
+    }
+
 
 // ------------------------------------------------------------------------------
 // GOOGLE FIT

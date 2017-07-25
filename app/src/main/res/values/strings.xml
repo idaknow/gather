@@ -57,4 +57,14 @@
     <string name="permission_rationale_access_fine_location">Please grant permission: Information (e.g. speed) may prove useful to a health practitioner.</string>
     <string name="permission_rationale_body_sensors">Please grant permission: Information (e.g. basal metabolic rate) may prove useful to a health practitioner.</string>
 
+    <!-- Twitter-->
+    <string name="com.twitter.sdk.android.CONSUMER_KEY">fclM24Zol77H9Js1h78gkuiDy</string>
+    <string name="com.twitter.sdk.android.CONSUMER_SECRET">IWrC84e25OFeC87ULFaaZK7tq8DeQTF6QB1ZGwz38lQGfZDNIa</string>
+
+    <!-- Social Media 2 settings -->
+    <string name="pref_header_social_media_app_2">Social Media App 2</string>
+    <string name="social_media_app_2_name">Twitter</string>
+    <string name="social_media_app_2_favourites">Favourites</string>
+    <string name="social_media_app_2_statuses">Statuses</string>
+
 </resources>
