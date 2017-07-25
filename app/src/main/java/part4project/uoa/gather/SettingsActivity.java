@@ -17,6 +17,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -40,6 +42,7 @@ import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthException;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
@@ -397,6 +400,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_social_media);
             setHasOptionsMenu(true);
 
+            isFacebookOrTwitter = 0; // so onActivityResult does the correct code
+
             // added a callback manager for fb to use on login
             callbackManager = CallbackManager.Factory.create();
 
@@ -567,13 +572,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             }
         }
-
-        // this implements changing the tokens accordingly, allowing for login & logout
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
-            callbackManager.onActivityResult(requestCode, resultCode, data);
-        }
     }
 
     //TWITTER VARIABLES
@@ -590,6 +588,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_social_media_2);
             setHasOptionsMenu(true);
+
+            isFacebookOrTwitter = 1; // used by onActivityResult
 
             createTwitterLoginButton();
             createParentPreference();
@@ -613,6 +613,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     }
                 });
             }
+        }
+
+        public void logoutTwitter() {
+            TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+            if (twitterSession != null) {
+                ClearCookies();
+            }
+        }
+
+        public static void ClearCookies() {
+            CookieManager.getInstance().removeAllCookies(null);
+            CookieManager.getInstance().flush();
         }
 
         private void createParentPreference(){
@@ -652,6 +664,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 @Override
                 public void failure(TwitterException exception) {
+                    Toast.makeText(getActivity(), "Twitter Login Failed",Toast.LENGTH_SHORT).show();
                     Log.d(TAG3, "Failed callback from Twitter");
                     Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
                     // TODO: CHANGE SWITCH PREFERENCE BACK, this code doesn't work for some reason. Might need to remove listener and then add it again
@@ -670,14 +683,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
+    }
 
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
+    private static int isFacebookOrTwitter = -1; // changes the code depending on whether the fb fragment or twitter one is open
 
-            // Pass the activity result to the login button.
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // Pass the activity result to the login button.
+        if (isFacebookOrTwitter == 0){ // Facebook
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+        if (isFacebookOrTwitter == 1){ // Twitter
             twitterLogin.onActivityResult(requestCode, resultCode, data);
         }
     }
-
 }
