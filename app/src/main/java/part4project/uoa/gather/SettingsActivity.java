@@ -3,6 +3,7 @@ package part4project.uoa.gather;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
@@ -39,6 +40,7 @@ import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterAuthException;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
@@ -410,6 +412,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     grantedFBPermissions = new LinkedList<>(loginResult.getRecentlyGrantedPermissions());
                     deniedFBPermissions = new LinkedList<>(loginResult.getRecentlyDeniedPermissions());
                     updatePermissionSwitchPreferences();
+                    Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
@@ -433,7 +436,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             public boolean onPreferenceClick(Preference preference) {
                                 facebookLogin.setReadPermissions(PERMISSIONS);
                                 facebookLogin.performClick();
-                                Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_SHORT).show();
                                 return true;
                             }
                         });
@@ -590,18 +592,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             createTwitterLoginButton();
-
-            // this code implements a fb login button click method for each time the parent switch preference is clicked
-            Preference pref = getPreferenceManager().findPreference("social_media_2_all");
-            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    twitterLogin.performClick();
-                    Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
-                    return true;
-                }
-            });
+            createParentPreference();
 
             // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
             for (String i : TWITTERPREFERENCES){
@@ -624,6 +615,27 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
         }
 
+        private void createParentPreference(){
+            Preference pref = getPreferenceManager().findPreference("social_media_2_all");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    SwitchPreference switchpref = (SwitchPreference) preference;
+                    if (switchpref.isChecked()){
+                        if (session == null){
+                            twitterLogin.performClick();
+                        }
+                    } else {
+                        session = null;
+                        TwitterCore.getInstance().getSessionManager().clearActiveSession();
+                    }
+
+                    return true;
+                }
+            });
+        }
+
         /**
          * This creates the twitter button, that calls login and authorisation
          */
@@ -635,12 +647,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     // The result provides a TwitterSession for making API calls
                     Log.d(TAG3, "Successfull callback from Twitter");
                     session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                    Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
                 }
 
                 @Override
                 public void failure(TwitterException exception) {
                     Log.d(TAG3, "Failed callback from Twitter");
                     Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
+                    // TODO: CHANGE SWITCH PREFERENCE BACK, this code doesn't work for some reason. Might need to remove listener and then add it again
+//                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
+//                    switchPref.setChecked(false);
                 }
             });
         }
