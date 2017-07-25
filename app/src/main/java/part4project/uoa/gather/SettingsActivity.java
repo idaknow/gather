@@ -276,7 +276,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     } else {
                         unsubscribeToDataType(data);
                     }
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_SHORT).show();
                     return true;
                 }
             };
@@ -426,7 +426,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             public boolean onPreferenceClick(Preference preference) {
                                 loginButton.setReadPermissions(PERMISSIONS);
                                 loginButton.performClick();
-                                Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_SHORT).show();
                                 return true;
                             }
                         });
@@ -467,13 +467,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             deniedFBPermissions.add(preference.getKey());
                             grantedFBPermissions.remove(preference.getKey());
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
-                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_SHORT).show();
                         } else { // asks for the permission when it's enabled again
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
                                     Collections.singletonList(preference.getKey()));
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
-                            Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_SHORT).show();
                         }
                         return true;
                     }
@@ -567,7 +567,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
+
+
     static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses");
+
+
+
 
     public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
 
@@ -601,11 +606,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
                             // Make callback function sent in graph request
-
-                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
                         } else { // asks for the permission when it's enabled again
-
-                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
                         }
                         return true;
                     }
