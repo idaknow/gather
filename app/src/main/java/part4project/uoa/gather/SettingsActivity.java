@@ -37,6 +37,13 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterLoginButton;
+import com.twitter.sdk.android.core.models.Tweet;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -368,7 +375,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     /**
      * Initialised variables to be used by Facebook - Social Media App
      */
-    private static LoginButton loginButton;
+    private static LoginButton facebookLogin;
     private static CallbackManager callbackManager;
     private static AccessTokenTracker accessTokenTracker;
     public static AccessToken accessToken;
@@ -392,11 +399,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             callbackManager = CallbackManager.Factory.create();
 
             // creates the fb login button that is used, but doesn't actually put it on the screen. This is invoked when the switch preferences are
-            loginButton = new LoginButton(getActivity());
+            facebookLogin = new LoginButton(getActivity());
             // set permissions according to: email, status, posts, likes, events, fitness, profile and friends
-            loginButton.setReadPermissions(PERMISSIONS);
+            facebookLogin.setReadPermissions(PERMISSIONS);
             // code called on success or failure
-            loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            facebookLogin.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     // The code below enables/ disables switch preference according to whether they're
@@ -424,8 +431,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                             @Override
                             public boolean onPreferenceClick(Preference preference) {
-                                loginButton.setReadPermissions(PERMISSIONS);
-                                loginButton.performClick();
+                                facebookLogin.setReadPermissions(PERMISSIONS);
+                                facebookLogin.performClick();
                                 Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_SHORT).show();
                                 return true;
                             }
@@ -558,21 +565,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             }
         }
+
+        // this implements changing the tokens accordingly, allowing for login & logout
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
-    // this implements changing the tokens accordingly, allowing for login & logout
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
+    //TWITTER VARIABLES
+    private static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses");
+    protected static TwitterLoginButton twitterLogin;
+    private static TwitterSession session;
 
-
-
-    static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses");
-
-
-
+    private static final String TAG3 = "Twitter";
 
     public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
 
@@ -582,14 +589,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_social_media_2);
             setHasOptionsMenu(true);
 
+            createTwitterLoginButton();
+
             // this code implements a fb login button click method for each time the parent switch preference is clicked
             Preference pref = getPreferenceManager().findPreference("social_media_2_all");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-//                    loginButton.setReadPermissions(PERMISSIONS);
-//                    MainActivity.loginButton.performClick();
+                    twitterLogin.performClick();
                     Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
                     return true;
                 }
@@ -616,6 +624,27 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
         }
 
+        /**
+         * This creates the twitter button, that calls login and authorisation
+         */
+        private void createTwitterLoginButton(){
+            twitterLogin = new TwitterLoginButton(getActivity());
+            twitterLogin.setCallback(new Callback<TwitterSession>() {
+                @Override
+                public void success(Result<TwitterSession> result) {
+                    // The result provides a TwitterSession for making API calls
+                    Log.d(TAG3, "Successfull callback from Twitter");
+                    session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                }
+
+                @Override
+                public void failure(TwitterException exception) {
+                    Log.d(TAG3, "Failed callback from Twitter");
+                    Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
+                }
+            });
+        }
+
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
@@ -626,6 +655,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
 
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+
+            // Pass the activity result to the login button.
+            twitterLogin.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
 }

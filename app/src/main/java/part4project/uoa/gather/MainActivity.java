@@ -2,6 +2,7 @@ package part4project.uoa.gather;
 
 import android.Manifest.permission;
 import android.content.pm.PackageManager;
+import android.media.audiofx.BassBoost;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -101,10 +102,9 @@ public class MainActivity extends AppCompatActivity implements
     String outputFromDaysTask;
 
     // TWITTER
-    TwitterLoginButton loginButton;
     TwitterSession session;
-    private static Callback<List<Tweet>> twitterCallback;
     TwitterApiClient twitterApiClient;
+    private static Callback<List<Tweet>> twitterCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,11 +157,11 @@ public class MainActivity extends AppCompatActivity implements
         new ViewWeekGoogleFitTask().execute();
 
         //TWITTER
-        createTwitterButton();
-        createTwitterCallback();
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        createTwitterCallback();
         if (session == null){
-            loginButton.performClick();
+            Log.d(TAG3, "Twitter: Not logged in");
+            //SettingsActivity.twitterLogin.performClick();
         } else {
             displayTweets();
         }
@@ -170,6 +170,31 @@ public class MainActivity extends AppCompatActivity implements
 // ------------------------------------------------------------------------------
 // TWITTER
 // ------------------------------------------------------------------------------
+
+    private void displayTweets(){
+        twitterApiClient = TwitterCore.getInstance().getApiClient();
+        displayFavouritedTweets();
+        displayStatusTweets();
+    }
+
+    /**
+     * This method displays all the users's favourited tweets
+     */
+    private void displayFavouritedTweets(){
+        FavoriteService service = twitterApiClient.getFavoriteService();
+        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
+    }
+
+    /**
+     * This method displays all the user's statuses
+     */
+    private void displayStatusTweets(){
+        StatusesService service = twitterApiClient.getStatusesService();
+        Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
+    }
+
 
     /**
      * This initialised the twitterCallback that is used to print the results from either a status or favourite request
@@ -197,59 +222,6 @@ public class MainActivity extends AppCompatActivity implements
         };
     }
 
-    private void displayTweets(){
-        twitterApiClient = TwitterCore.getInstance().getApiClient();
-        displayFavouritedTweets();
-        displayStatusTweets();
-    }
-
-    /**
-     * This method displays all the users's favourited tweets
-     */
-    private void displayFavouritedTweets(){
-        FavoriteService service = twitterApiClient.getFavoriteService();
-        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
-        call.enqueue(twitterCallback);
-    }
-
-    /**
-     * This method displays all the user's statuses
-     */
-    private void displayStatusTweets(){
-        StatusesService service = twitterApiClient.getStatusesService();
-        Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
-        call.enqueue(twitterCallback);
-    }
-
-    /**
-     * This creates the twitter button, that calls login and authorisation
-     */
-    private void createTwitterButton(){
-        loginButton = new TwitterLoginButton(this);
-        loginButton.setCallback(new Callback<TwitterSession>() {
-            @Override
-            public void success(Result<TwitterSession> result) {
-                // The result provides a TwitterSession for making API calls
-                Log.d(TAG3, "Successfull callback from Twitter");
-                session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-                displayTweets();
-            }
-
-            @Override
-            public void failure(TwitterException exception) {
-                Log.d(TAG3, "Failed callback from Twitter");
-                Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
-            }
-        });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        // Pass the activity result to the login button.
-        loginButton.onActivityResult(requestCode, resultCode, data);
-    }
 
 // ------------------------------------------------------------------------------
 // GOOGLE FIT
