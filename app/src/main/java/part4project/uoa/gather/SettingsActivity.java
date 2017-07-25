@@ -3,9 +3,7 @@ package part4project.uoa.gather;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -17,8 +15,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
-import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -42,13 +38,10 @@ import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.Twitter;
-import com.twitter.sdk.android.core.TwitterAuthException;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
-import com.twitter.sdk.android.core.models.Tweet;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -575,11 +568,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     //TWITTER VARIABLES
-    private static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses");
-    protected static TwitterLoginButton twitterLogin;
-    private static TwitterSession session;
-
-    private static final String TAG3 = "Twitter";
+    private static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
+    protected static TwitterLoginButton twitterLogin; // the component that isn't visible but is used to perform clicks
+    private static TwitterSession session; // the twitter session variable
+    private static final String TAG3 = "Twitter"; // for logging
 
     public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
 
@@ -591,30 +583,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             isFacebookOrTwitter = 1; // used by onActivityResult
 
-            createTwitterLoginButton();
-            createParentPreference();
+            createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
+            createParentPreference(); // this calls the login/ logout methods initalised ^
 
-            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
-            for (String i : TWITTERPREFERENCES){
-                Preference permission = getPreferenceManager().findPreference(i);
-                permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) {
-                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
-                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
-
-                        if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
-                            // Make callback function sent in graph request
-                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
-                        } else { // asks for the permission when it's enabled again
-                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
-                        }
-                        return true;
-                    }
-                });
-            }
         }
 
+        /**
+         * This creates the parent switch preference on click listener
+         * This calls the appropriate login or logout methods accordingly
+         */
         private void createParentPreference(){
             Preference pref = getPreferenceManager().findPreference("social_media_2_all");
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -634,6 +611,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     return true;
                 }
             });
+        }
+
+        /**
+         * This adds the onclick listeners to each child switch preference
+         * TODO: REFLECT THE ENABLED/DISABLED SWITCHES IN THE MAIN SUMMARY PAGE SOMEHOW
+         */
+        private void createChildPreferences(){
+            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
+            for (String i : TWITTERPREFERENCES){
+                Preference permission = getPreferenceManager().findPreference(i);
+                permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
+                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+
+                        if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
+                            // Make callback function sent in graph request
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
+                        } else { // asks for the permission when it's enabled again
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
+                        }
+                        return true;
+                    }
+                });
+            }
         }
 
         /**

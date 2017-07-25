@@ -156,12 +156,12 @@ public class MainActivity extends AppCompatActivity implements
         new ViewDayGoogleFitTask().execute();
         new ViewWeekGoogleFitTask().execute();
 
-        //TWITTER
+        // TWITTER
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
         createTwitterCallback();
         if (session == null){
             Log.d(TAG3, "Twitter: Not logged in");
-            //SettingsActivity.twitterLogin.performClick();
+            // TODO: Reflect on the summary page in a message
         } else {
             displayTweets();
         }
@@ -194,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements
         Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
         call.enqueue(twitterCallback);
     }
-
 
     /**
      * This initialised the twitterCallback that is used to print the results from either a status or favourite request
