@@ -17,7 +17,6 @@ import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -47,12 +46,10 @@ import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterApiClient;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
-import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterConfig;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
-import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.services.FavoriteService;
@@ -184,12 +181,11 @@ public class MainActivity extends AppCompatActivity implements
                 // TODO: Transform the data into a useful output to the user
                 // TODO: Print the output to summary page
                 Log.d(TAG3, "Succesfully got the results");
-                Log.d(TAG3, result.response.message().toString());
 
                 // loops through the data and prints each tweat to the debug console
                 List<Tweet> data = result.data;
                 for (int i = 0; i < data.size(); i++){
-                    String tweet = data.get(i).text.toString();
+                    String tweet = data.get(i).text;
                     Log.d(TAG3, tweet);
                 }
             }
@@ -201,9 +197,6 @@ public class MainActivity extends AppCompatActivity implements
         };
     }
 
-    /**
-     * Calls the appropriate methods to display tweets
-     */
     private void displayTweets(){
         twitterApiClient = TwitterCore.getInstance().getApiClient();
         displayFavouritedTweets();

@@ -1,7 +1,6 @@
 package part4project.uoa.gather;
 
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -140,7 +139,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * {@inheritDoc}
      */
     @Override
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
         loadHeadersFromResource(R.xml.pref_headers, target);
     }
@@ -155,6 +153,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 || FitnessPreferenceFragment.class.getName().equals(fragmentName)
                 || FoodPreferenceFragment.class.getName().equals(fragmentName)
                 || SocialMediaPreferenceFragment.class.getName().equals(fragmentName)
+                || SocialMedia2PreferenceFragment.class.getName().equals(fragmentName)
                 ;
     }
 
@@ -162,7 +161,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -197,7 +195,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FoodPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -347,7 +344,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows data and sync preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FitnessPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -384,7 +380,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static List<String> deniedFBPermissions  = new LinkedList<>();
 
     // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
 
         @Override
@@ -571,4 +566,63 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
+
+    static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses");
+
+    public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_social_media_2);
+            setHasOptionsMenu(true);
+
+            // this code implements a fb login button click method for each time the parent switch preference is clicked
+            Preference pref = getPreferenceManager().findPreference("social_media_2_all");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+//                    loginButton.setReadPermissions(PERMISSIONS);
+//                    MainActivity.loginButton.performClick();
+                    Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            });
+
+            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
+            for (String i : TWITTERPREFERENCES){
+                Preference permission = getPreferenceManager().findPreference(i);
+                permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
+                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+
+                        if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
+                            // Make callback function sent in graph request
+
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_LONG).show();
+                        } else { // asks for the permission when it's enabled again
+
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_LONG).show();
+                        }
+                        return true;
+                    }
+                });
+            }
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+
+    }
+
 }
