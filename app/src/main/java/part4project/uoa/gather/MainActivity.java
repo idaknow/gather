@@ -2,7 +2,6 @@ package part4project.uoa.gather;
 
 import android.Manifest.permission;
 import android.content.pm.PackageManager;
-import android.media.audiofx.BassBoost;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -51,7 +50,6 @@ import com.twitter.sdk.android.core.TwitterConfig;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
-import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.services.FavoriteService;
 import com.twitter.sdk.android.core.services.StatusesService;
