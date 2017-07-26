@@ -9,6 +9,8 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -30,12 +32,18 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.result.DataTypeResult;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
@@ -248,8 +256,45 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void disconnectGoogleFit() {
             GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.disconnect();
-            MainActivity.setGoogleFitClient(client);
+            client.connect();
+//            MainActivity.setGoogleFitClient(client);
+            PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(client);
+//            client.disconnect();
+//            MainActivity.setGoogleFitClient(client);
+        }
+
+        public GoogleApiClient buildClient(GoogleApiClient client){
+            client = new GoogleApiClient.Builder(getActivity())
+                    .addApi(Fitness.HISTORY_API)
+                    .addApi(Fitness.RECORDING_API)
+                    .addApi(Fitness.CONFIG_API)
+                    .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
+                    .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
+                    .addScope(new Scope(Scopes.FITNESS_BODY_READ))
+                    .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
+                    .addConnectionCallbacks(
+                            new GoogleApiClient.ConnectionCallbacks() {
+                                @Override
+                                public void onConnected(Bundle bundle) {
+                                    Log.d(TAG2, "Connected!!!");
+                                }
+
+                                @Override
+                                public void onConnectionSuspended(int i) {
+                                    // If your connection to the sensor gets lost at some point,
+                                    // you'll be able to determine the reason and react to it here.
+                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+                                        Log.d(TAG2, "Connection lost.  Cause: Network Lost.");
+                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+                                        Log.d(TAG2, "Connection lost.  Reason: Service Disconnected");
+                                    }
+                                }
+                            }
+
+                    )
+                    //.enableAutoManage(this)
+                    .build();
+            return client;
         }
 
         /**
@@ -259,7 +304,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         private void connectGoogleFit() {
             GoogleApiClient client = MainActivity.getGoogleFitClient();
             client.connect();
-            MainActivity.setGoogleFitClient(client);
+            GoogleApiClient outputclient = buildClient(client);
+            MainActivity.setGoogleFitClient(outputclient);
         }
 
         /**

@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -27,6 +28,7 @@ import com.facebook.HttpMethod;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
@@ -161,6 +163,23 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             displayTweets();
         }
+
+        Button googleLogin = (Button) findViewById(R.id.button2);
+        googleLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                buildClient();
+            }
+        });
+
+        Button googleLogout = (Button) findViewById(R.id.button3);
+        googleLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(mGoogleApiClient);
+            }
+        });
+
     }
 
 // ------------------------------------------------------------------------------
@@ -225,10 +244,11 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Builds to google client with the required scopes (permissions)
      */
-    private void buildClient(){
+    public void buildClient(){
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
                 .addApi(Fitness.RECORDING_API)
+                .addApi(Fitness.CONFIG_API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
                 .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
                 .addScope(new Scope(Scopes.FITNESS_BODY_READ))
@@ -237,9 +257,7 @@ public class MainActivity extends AppCompatActivity implements
                         new GoogleApiClient.ConnectionCallbacks() {
                                 @Override
                                 public void onConnected(Bundle bundle) {
-                                    Log.i(TAG, "Connected!!!");
-                                    // Now you can make calls to the Fitness APIs.  What to do?
-                                    // Look at some data!!
+                                    Log.d(TAG2, "Connected!!!");
                                     new ViewDayGoogleFitTask().execute();
                                     new ViewWeekGoogleFitTask().execute();
                                 }
@@ -257,14 +275,26 @@ public class MainActivity extends AppCompatActivity implements
                             }
 
                 )
-                .enableAutoManage(this, 0, this)
+                .enableAutoManage(this, 0, new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(ConnectionResult result) {
+                        Log.i(TAG, "Google Play services connection failed. Cause: " +
+                                result.toString());
+                        Snackbar.make(
+                                MainActivity.this.findViewById(R.id.main_activity_view),
+                                "Exception while connecting to Google Play services: " +
+                                        result.getErrorMessage(),
+                                Snackbar.LENGTH_INDEFINITE).show();
+                    }
+                })
                 .build();
+        mGoogleApiClient.connect();
     }
 
     /**
      * This ensures the client is connected to the google play services
      */
-    private void connectClient(){
+    private static void connectClient(){
         mGoogleApiClient.connect();
     }
 
@@ -273,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements
      * @return the google api client
      */
     public static GoogleApiClient getGoogleFitClient(){
+        connectClient();
         return mGoogleApiClient;
     }
 
