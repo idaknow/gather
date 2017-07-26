@@ -151,8 +151,6 @@ public class MainActivity extends AppCompatActivity implements
 
         TextView gf = (TextView) findViewById(R.id.food_app_summary);
         gf.setText(R.string.loading);
-        new ViewDayGoogleFitTask().execute();
-        new ViewWeekGoogleFitTask().execute();
 
         // TWITTER
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
@@ -235,7 +233,30 @@ public class MainActivity extends AppCompatActivity implements
                 .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
                 .addScope(new Scope(Scopes.FITNESS_BODY_READ))
                 .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-                .addConnectionCallbacks(this)
+                .addConnectionCallbacks(
+                        new GoogleApiClient.ConnectionCallbacks() {
+                                @Override
+                                public void onConnected(Bundle bundle) {
+                                    Log.i(TAG, "Connected!!!");
+                                    // Now you can make calls to the Fitness APIs.  What to do?
+                                    // Look at some data!!
+                                    new ViewDayGoogleFitTask().execute();
+                                    new ViewWeekGoogleFitTask().execute();
+                                }
+
+                                @Override
+                                public void onConnectionSuspended(int i) {
+                                    // If your connection to the sensor gets lost at some point,
+                                    // you'll be able to determine the reason and react to it here.
+                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+                                        Log.d(TAG2, "Connection lost.  Cause: Network Lost.");
+                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+                                        Log.d(TAG2, "Connection lost.  Reason: Service Disconnected");
+                                    }
+                                }
+                            }
+
+                )
                 .enableAutoManage(this, 0, this)
                 .build();
     }
