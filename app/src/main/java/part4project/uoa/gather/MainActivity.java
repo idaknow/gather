@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements
         googleLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                buildClient();
+                mGoogleApiClient.reconnect();
             }
         });
 
