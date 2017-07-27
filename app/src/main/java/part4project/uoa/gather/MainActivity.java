@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements
     List<String> PERMISSIONS = Arrays.asList(permission.ACCESS_FINE_LOCATION, permission.BODY_SENSORS);
 
     // GOOGLEFIT: The API Client and the request code initialised
-    private static GoogleApiClient mGoogleApiClient = null;
+    public static GoogleApiClient mGoogleApiClient = null;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
     // GOOGLEFIT: Used by async tasks to update the summaries
@@ -145,8 +145,7 @@ public class MainActivity extends AppCompatActivity implements
         // GOOGLEFIT Integration: builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
-            buildClient();
-            connectClient(); // TODO: Check switch pref
+            buildAndConnectClient(); // TODO: Check switch pref
             checkAndRequestGoogleFitPermissions();
             subscribeToDataTypes();
         }
@@ -163,22 +162,6 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             displayTweets();
         }
-
-        Button googleLogin = (Button) findViewById(R.id.button2);
-        googleLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mGoogleApiClient.reconnect();
-            }
-        });
-
-        Button googleLogout = (Button) findViewById(R.id.button3);
-        googleLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(mGoogleApiClient);
-            }
-        });
 
     }
 
@@ -244,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Builds to google client with the required scopes (permissions)
      */
-    public void buildClient(){
+    public void buildAndConnectClient(){
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
                 .addApi(Fitness.RECORDING_API)
@@ -289,31 +272,6 @@ public class MainActivity extends AppCompatActivity implements
                 })
                 .build();
         mGoogleApiClient.connect();
-    }
-
-    /**
-     * This ensures the client is connected to the google play services
-     */
-    private static void connectClient(){
-        mGoogleApiClient.connect();
-    }
-
-    /**
-     * This is a getter used by SettingsActivity to retrieve the GoogleApiClient
-     * @return the google api client
-     */
-    public static GoogleApiClient getGoogleFitClient(){
-        connectClient();
-        return mGoogleApiClient;
-    }
-
-    /**
-     * This is the setter used by SettingsActivity to set the GoogleApiClient
-     * Used when it's connected or disconnected from the permissions
-     * @param client : The Google API Client
-     */
-    public static void setGoogleFitClient(GoogleApiClient client){
-        mGoogleApiClient = client;
     }
 
     /**

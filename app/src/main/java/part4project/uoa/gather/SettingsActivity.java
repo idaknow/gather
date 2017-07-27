@@ -244,7 +244,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     } else {
                         disconnectGoogleFit(); // Disconnects GoogleFit
                     }
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
                     return true;
                 }
             };
@@ -255,46 +254,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This disconnects the API Client to the Google Play Services
          */
         private void disconnectGoogleFit() {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.connect();
-//            MainActivity.setGoogleFitClient(client);
-            PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(client);
-//            client.disconnect();
-//            MainActivity.setGoogleFitClient(client);
-        }
-
-        public GoogleApiClient buildClient(GoogleApiClient client){
-            client = new GoogleApiClient.Builder(getActivity())
-                    .addApi(Fitness.HISTORY_API)
-                    .addApi(Fitness.RECORDING_API)
-                    .addApi(Fitness.CONFIG_API)
-                    .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
-                    .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
-                    .addScope(new Scope(Scopes.FITNESS_BODY_READ))
-                    .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-                    .addConnectionCallbacks(
-                            new GoogleApiClient.ConnectionCallbacks() {
-                                @Override
-                                public void onConnected(Bundle bundle) {
-                                    Log.d(TAG2, "Connected!!!");
-                                }
-
-                                @Override
-                                public void onConnectionSuspended(int i) {
-                                    // If your connection to the sensor gets lost at some point,
-                                    // you'll be able to determine the reason and react to it here.
-                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-                                        Log.d(TAG2, "Connection lost.  Cause: Network Lost.");
-                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-                                        Log.d(TAG2, "Connection lost.  Reason: Service Disconnected");
-                                    }
-                                }
-                            }
-
-                    )
-                    //.enableAutoManage(this)
-                    .build();
-            return client;
+            PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(MainActivity.mGoogleApiClient);
+            pendingResult.setResultCallback(new ResultCallback<Status>() {
+                @Override
+                public void onResult(@NonNull Status status) {
+                    if (status.isSuccess()){
+                        Toast.makeText(getActivity(), "Disabled permissions for Google Fit", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Could not disable permissions for Google Fit", Toast.LENGTH_LONG).show();
+                        //TODO: Change switch preference back
+                    }
+                }
+            });
         }
 
         /**
@@ -302,10 +273,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This connects the API Client to the Google Play Services
          */
         private void connectGoogleFit() {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.connect();
-            GoogleApiClient outputclient = buildClient(client);
-            MainActivity.setGoogleFitClient(outputclient);
+            MainActivity.mGoogleApiClient.reconnect();
+            Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
         }
 
         /**
@@ -339,8 +308,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * @param data : The datatype that the user wants to unsubscribe from
          */
         private void unsubscribeToDataType(DataType data) {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            Fitness.RecordingApi.unsubscribe(client, data)
+            Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
