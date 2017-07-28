@@ -39,9 +39,11 @@ import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Result;
@@ -147,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements
             Log.d(TAG2,"Google client is null");
             buildAndConnectClient(); // TODO: Check switch pref
             checkAndRequestGoogleFitPermissions();
-            subscribeToDataTypes();
+            subscribe();
         }
 
         TextView gf = (TextView) findViewById(R.id.food_app_summary);
@@ -162,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             displayTweets();
         }
+        getSubscriptions();
 
     }
 
@@ -301,6 +304,32 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private void getSubscriptions(){
+        PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
+        result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                for (Subscription sc : listSubscriptionsResult.getSubscriptions()) {
+                    DataType dt = sc.getDataType();
+                    Log.d(TAG2, "Active subscription for data type: " + dt.getName());
+                }
+            }
+        });
+    }
+
+    private void subscribe(){
+        PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
+        result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                // if there don't exist subscriptions, subscribe to all data types
+                if (listSubscriptionsResult.getSubscriptions().size() <= 0){
+                    subscribeToDataTypes();
+                }
+            }
+        });
+    }
+
     /**
      * This is an AsyncTask that is called to retrieve "Today's" data for each subscription
      * After this has executed, the summary of google fit is set with the calories extended as example
@@ -375,7 +404,7 @@ public class MainActivity extends AppCompatActivity implements
             for (Bucket bucket : dataReadResult.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
-                    showDataSet(dataSet);
+                    //showDataSet(dataSet);
                 }
             }
         } else if (dataReadResult.getDataSets().size() > 0) { //Used for non-aggregated data
@@ -383,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements
             Log.d(TAG2, outputFromWeeksTask);
 
             for (DataSet dataSet : dataReadResult.getDataSets()) {
-                showDataSet(dataSet);
+                //showDataSet(dataSet);
             }
         }
     }

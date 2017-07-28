@@ -228,6 +228,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     pref2.setOnPreferenceClickListener(eachPreferenceListener);
                 }
             }
+            MainActivity.mGoogleApiClient.connect();
         }
 
         /**
@@ -254,6 +255,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This disconnects the API Client to the Google Play Services
          */
         private void disconnectGoogleFit() {
+            if (!MainActivity.mGoogleApiClient.isConnected()){
+                Log.d(TAG2, "Google Client API Wasn't connected");
+                MainActivity.mGoogleApiClient.connect();
+            }
+
             PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(MainActivity.mGoogleApiClient);
             pendingResult.setResultCallback(new ResultCallback<Status>() {
                 @Override
@@ -290,7 +296,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     DataType data = DATATYPES.get(index);
 
                     SwitchPreference pref = (SwitchPreference) preference;
-                    connectGoogleFit(); //TODO: Should be able to remove but keeping for now
+                    //connectGoogleFit(); //TODO: Should be able to remove but keeping for now
+                    if (!MainActivity.mGoogleApiClient.isConnected()){
+                        MainActivity.mGoogleApiClient.connect();
+                    }
+
                     if (pref.isChecked()) {
                         subscribeToDataType(data);
                     } else {
@@ -329,7 +339,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void subscribeToDataType(DataType data) {
             Log.d(TAG2, "Subscribing " + data);
-            Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
+            Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
