@@ -27,6 +27,7 @@ import com.facebook.HttpMethod;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
@@ -37,9 +38,11 @@ import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Result;
@@ -92,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements
     List<String> PERMISSIONS = Arrays.asList(permission.ACCESS_FINE_LOCATION, permission.BODY_SENSORS);
 
     // GOOGLEFIT: The API Client and the request code initialised
-    private static GoogleApiClient mGoogleApiClient = null;
+    public static GoogleApiClient mGoogleApiClient = null;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
     // GOOGLEFIT: Used by async tasks to update the summaries
@@ -141,18 +144,18 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         // GOOGLEFIT Integration: builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
-        if (mGoogleApiClient == null){
-            Log.d(TAG2,"Google client is null");
-            buildClient();
-            connectClient(); // TODO: Check switch pref
-            checkAndRequestGoogleFitPermissions();
-            subscribeToDataTypes();
-        }
-
         TextView gf = (TextView) findViewById(R.id.food_app_summary);
         gf.setText(R.string.loading);
-        new ViewDayGoogleFitTask().execute();
-        new ViewWeekGoogleFitTask().execute();
+
+        if (mGoogleApiClient == null){
+            Log.d(TAG2,"Google client is null");
+            buildAndConnectClient(); // TODO: Check switch pref
+            checkAndRequestGoogleFitPermissions();
+            subscribe();
+        } else {
+            new ViewDayGoogleFitTask().execute();
+            new ViewWeekGoogleFitTask().execute();
+        }
 
         // TWITTER
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
@@ -163,6 +166,8 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             displayTweets();
         }
+        getSubscriptions();
+
     }
 
 // ------------------------------------------------------------------------------
@@ -227,41 +232,51 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Builds to google client with the required scopes (permissions)
      */
-    private void buildClient(){
+    public void buildAndConnectClient(){
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
                 .addApi(Fitness.RECORDING_API)
+                .addApi(Fitness.CONFIG_API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
                 .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
                 .addScope(new Scope(Scopes.FITNESS_BODY_READ))
                 .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-                .addConnectionCallbacks(this)
-                .enableAutoManage(this, 0, this)
+                .addConnectionCallbacks(
+                        new GoogleApiClient.ConnectionCallbacks() {
+                                @Override
+                                public void onConnected(Bundle bundle) {
+                                    Log.d(TAG2, "Connected!!!");
+                                    new ViewDayGoogleFitTask().execute();
+                                    new ViewWeekGoogleFitTask().execute();
+                                }
+
+                                @Override
+                                public void onConnectionSuspended(int i) {
+                                    // If your connection to the sensor gets lost at some point,
+                                    // you'll be able to determine the reason and react to it here.
+                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+                                        Log.d(TAG2, "Connection lost.  Cause: Network Lost.");
+                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+                                        Log.d(TAG2, "Connection lost.  Reason: Service Disconnected");
+                                    }
+                                }
+                            }
+
+                )
+                .enableAutoManage(this, 0, new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult result) {
+                        Log.i(TAG, "Google Play services connection failed. Cause: " +
+                                result.toString());
+                        Snackbar.make(
+                                MainActivity.this.findViewById(R.id.main_activity_view),
+                                "Exception while connecting to Google Play services: " +
+                                        result.getErrorMessage(),
+                                Snackbar.LENGTH_INDEFINITE).show();
+                    }
+                })
                 .build();
-    }
-
-    /**
-     * This ensures the client is connected to the google play services
-     */
-    private void connectClient(){
         mGoogleApiClient.connect();
-    }
-
-    /**
-     * This is a getter used by SettingsActivity to retrieve the GoogleApiClient
-     * @return the google api client
-     */
-    public static GoogleApiClient getGoogleFitClient(){
-        return mGoogleApiClient;
-    }
-
-    /**
-     * This is the setter used by SettingsActivity to set the GoogleApiClient
-     * Used when it's connected or disconnected from the permissions
-     * @param client : The Google API Client
-     */
-    public static void setGoogleFitClient(GoogleApiClient client){
-        mGoogleApiClient = client;
     }
 
     /**
@@ -289,6 +304,32 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     });
         }
+    }
+
+    private void getSubscriptions(){
+        PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
+        result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                for (Subscription sc : listSubscriptionsResult.getSubscriptions()) {
+                    DataType dt = sc.getDataType();
+                    Log.d(TAG2, "Active subscription for data type: " + dt.getName());
+                }
+            }
+        });
+    }
+
+    private void subscribe(){
+        PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
+        result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                // if there don't exist subscriptions, subscribe to all data types
+                if (listSubscriptionsResult.getSubscriptions().size() <= 0){
+                    subscribeToDataTypes();
+                }
+            }
+        });
     }
 
     /**

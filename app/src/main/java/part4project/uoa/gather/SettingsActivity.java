@@ -30,12 +30,14 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Subscription;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
@@ -207,6 +209,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
 
+            MainActivity.mGoogleApiClient.connect();
+            fixChildPreferences(); // set child preferences according to the API Client's subscriptions
+
             // Adds the Preference Listeners to the parent and children preferences accordingly
             if (googleFitParentListener == null) {
                 createParentListener();
@@ -223,6 +228,39 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         /**
+         * This method gets all the subscriptions and changes the switch preferences accordingly to them
+         */
+        private void fixChildPreferences(){
+                PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(MainActivity.mGoogleApiClient);
+                result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+                    @Override
+                    public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                        List<Subscription> subscriptionList = listSubscriptionsResult.getSubscriptions();
+
+                        for (int i = 0; i < DATATYPES.size(); i++) { // loop through all the datatypes
+                            String prefname = PREFNAMES.get(i);
+                            SwitchPreference pref = (SwitchPreference) getPreferenceManager().findPreference(prefname);
+
+                            boolean subscriptionContains = false;
+                            for (Subscription sc : subscriptionList){ // loops through all subscriptions
+                                if (sc.getDataType().getName().equals(DATATYPES.get(i).getName())){
+                                    subscriptionContains = true; // if subscribed to a datatype with a preference
+                                }
+                            }
+
+                            if (subscriptionContains){
+                                Log.d(TAG2, "Active subscription for data type: " + prefname);
+                                pref.setChecked(true);
+                            } else {
+                                Log.d(TAG2, "Non-active subscription for data type: " + prefname);
+                                pref.setChecked(false);
+                            }
+                        }
+                    }
+                });
+        }
+
+        /**
          * Creates the Parent Listener to be added as an on Click Listener
          * This connects or disconnects google fit to the google play services accordingly
          */
@@ -236,7 +274,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     } else {
                         disconnectGoogleFit(); // Disconnects GoogleFit
                     }
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
                     return true;
                 }
             };
@@ -247,9 +284,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This disconnects the API Client to the Google Play Services
          */
         private void disconnectGoogleFit() {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.disconnect();
-            MainActivity.setGoogleFitClient(client);
+            if (!MainActivity.mGoogleApiClient.isConnected()){
+                Log.d(TAG2, "Google Client API Wasn't connected");
+                MainActivity.mGoogleApiClient.connect();
+            }
+
+            PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(MainActivity.mGoogleApiClient);
+            pendingResult.setResultCallback(new ResultCallback<Status>() {
+                @Override
+                public void onResult(@NonNull Status status) {
+                    if (status.isSuccess()){
+                        Toast.makeText(getActivity(), "Disabled permissions for Google Fit", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Could not disable permissions for Google Fit", Toast.LENGTH_LONG).show();
+                        //TODO: Change switch preference back
+                    }
+                }
+            });
         }
 
         /**
@@ -257,9 +308,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This connects the API Client to the Google Play Services
          */
         private void connectGoogleFit() {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.connect();
-            MainActivity.setGoogleFitClient(client);
+            MainActivity.mGoogleApiClient.reconnect();
+            Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
         }
 
         /**
@@ -275,7 +325,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     DataType data = DATATYPES.get(index);
 
                     SwitchPreference pref = (SwitchPreference) preference;
-                    connectGoogleFit(); //TODO: Should be able to remove but keeping for now
+                    if (!MainActivity.mGoogleApiClient.isConnected()){
+                        MainActivity.mGoogleApiClient.connect();
+                    }
+
                     if (pref.isChecked()) {
                         subscribeToDataType(data);
                     } else {
@@ -293,8 +346,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * @param data : The datatype that the user wants to unsubscribe from
          */
         private void unsubscribeToDataType(DataType data) {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            Fitness.RecordingApi.unsubscribe(client, data)
+            Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
@@ -315,7 +367,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void subscribeToDataType(DataType data) {
             Log.d(TAG2, "Subscribing " + data);
-            Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
+            Fitness.RecordingApi.subscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
@@ -332,7 +384,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     });
         }
 
-
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
@@ -343,7 +394,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
     }
-
 
     /**
      * This fragment shows data and sync preferences only. It is used when the
