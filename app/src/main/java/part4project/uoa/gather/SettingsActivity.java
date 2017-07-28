@@ -9,8 +9,6 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -32,19 +30,13 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Subscription;
-import com.google.android.gms.fitness.result.DataTypeResult;
 import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -217,6 +209,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
 
+            MainActivity.mGoogleApiClient.connect();
+            fixChildPreferences(); // set child preferences according to the API Client's subscriptions
+
             // Adds the Preference Listeners to the parent and children preferences accordingly
             if (googleFitParentListener == null) {
                 createParentListener();
@@ -230,29 +225,26 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     pref2.setOnPreferenceClickListener(eachPreferenceListener);
                 }
             }
-            MainActivity.mGoogleApiClient.connect();
-            fixChildPreferences();
         }
 
+        /**
+         * This method gets all the subscriptions and changes the switch preferences accordingly to them
+         */
         private void fixChildPreferences(){
                 PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(MainActivity.mGoogleApiClient);
                 result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
                     @Override
                     public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
-                        List<Subscription> subscribe = listSubscriptionsResult.getSubscriptions();
+                        List<Subscription> subscriptionList = listSubscriptionsResult.getSubscriptions();
 
-                        for (Subscription sc : subscribe){
-                            Log.d(TAG2,"Actively subscribed to: " + sc.getDataType().getName());
-                        }
-
-                        for (int i = 0; i < DATATYPES.size(); i++) {
+                        for (int i = 0; i < DATATYPES.size(); i++) { // loop through all the datatypes
                             String prefname = PREFNAMES.get(i);
                             SwitchPreference pref = (SwitchPreference) getPreferenceManager().findPreference(prefname);
 
                             boolean subscriptionContains = false;
-                            for (Subscription sc : subscribe){
+                            for (Subscription sc : subscriptionList){ // loops through all subscriptions
                                 if (sc.getDataType().getName().equals(DATATYPES.get(i).getName())){
-                                    subscriptionContains = true;
+                                    subscriptionContains = true; // if subscribed to a datatype with a preference
                                 }
                             }
 
@@ -263,11 +255,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 Log.d(TAG2, "Non-active subscription for data type: " + prefname);
                                 pref.setChecked(false);
                             }
-
                         }
                     }
                 });
-
         }
 
         /**
@@ -335,7 +325,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     DataType data = DATATYPES.get(index);
 
                     SwitchPreference pref = (SwitchPreference) preference;
-                    //connectGoogleFit(); //TODO: Should be able to remove but keeping for now
                     if (!MainActivity.mGoogleApiClient.isConnected()){
                         MainActivity.mGoogleApiClient.connect();
                     }
@@ -378,7 +367,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void subscribeToDataType(DataType data) {
             Log.d(TAG2, "Subscribing " + data);
-            Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data)
+            Fitness.RecordingApi.subscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
@@ -395,7 +384,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     });
         }
 
-
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
@@ -406,7 +394,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
     }
-
 
     /**
      * This fragment shows data and sync preferences only. It is used when the
