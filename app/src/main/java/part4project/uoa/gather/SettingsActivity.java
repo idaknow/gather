@@ -43,7 +43,9 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.result.DataTypeResult;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
@@ -229,6 +231,43 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             }
             MainActivity.mGoogleApiClient.connect();
+            fixChildPreferences();
+        }
+
+        private void fixChildPreferences(){
+                PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(MainActivity.mGoogleApiClient);
+                result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+                    @Override
+                    public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                        List<Subscription> subscribe = listSubscriptionsResult.getSubscriptions();
+
+                        for (Subscription sc : subscribe){
+                            Log.d(TAG2,"Actively subscribed to: " + sc.getDataType().getName());
+                        }
+
+                        for (int i = 0; i < DATATYPES.size(); i++) {
+                            String prefname = PREFNAMES.get(i);
+                            SwitchPreference pref = (SwitchPreference) getPreferenceManager().findPreference(prefname);
+
+                            boolean subscriptionContains = false;
+                            for (Subscription sc : subscribe){
+                                if (sc.getDataType().getName().equals(DATATYPES.get(i).getName())){
+                                    subscriptionContains = true;
+                                }
+                            }
+
+                            if (subscriptionContains){
+                                Log.d(TAG2, "Active subscription for data type: " + prefname);
+                                pref.setChecked(true);
+                            } else {
+                                Log.d(TAG2, "Non-active subscription for data type: " + prefname);
+                                pref.setChecked(false);
+                            }
+
+                        }
+                    }
+                });
+
         }
 
         /**

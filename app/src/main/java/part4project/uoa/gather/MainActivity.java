@@ -145,15 +145,18 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         // GOOGLEFIT Integration: builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
+        TextView gf = (TextView) findViewById(R.id.food_app_summary);
+        gf.setText(R.string.loading);
+
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
             buildAndConnectClient(); // TODO: Check switch pref
             checkAndRequestGoogleFitPermissions();
             subscribe();
+        } else {
+            new ViewDayGoogleFitTask();
+            new ViewWeekGoogleFitTask();
         }
-
-        TextView gf = (TextView) findViewById(R.id.food_app_summary);
-        gf.setText(R.string.loading);
 
         // TWITTER
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
