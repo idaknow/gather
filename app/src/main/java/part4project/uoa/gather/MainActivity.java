@@ -17,7 +17,6 @@ import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -266,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements
                 )
                 .enableAutoManage(this, 0, new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
-                    public void onConnectionFailed(ConnectionResult result) {
+                    public void onConnectionFailed(@NonNull ConnectionResult result) {
                         Log.i(TAG, "Google Play services connection failed. Cause: " +
                                 result.toString());
                         Snackbar.make(
@@ -407,7 +406,7 @@ public class MainActivity extends AppCompatActivity implements
             for (Bucket bucket : dataReadResult.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
-                    //showDataSet(dataSet);
+                    showDataSet(dataSet);
                 }
             }
         } else if (dataReadResult.getDataSets().size() > 0) { //Used for non-aggregated data
@@ -415,7 +414,7 @@ public class MainActivity extends AppCompatActivity implements
             Log.d(TAG2, outputFromWeeksTask);
 
             for (DataSet dataSet : dataReadResult.getDataSets()) {
-                //showDataSet(dataSet);
+                showDataSet(dataSet);
             }
         }
     }
