@@ -153,8 +153,8 @@ public class MainActivity extends AppCompatActivity implements
             checkAndRequestGoogleFitPermissions();
             subscribe();
         } else {
-            new ViewDayGoogleFitTask();
-            new ViewWeekGoogleFitTask();
+            new ViewDayGoogleFitTask().execute();
+            new ViewWeekGoogleFitTask().execute();
         }
 
         // TWITTER
