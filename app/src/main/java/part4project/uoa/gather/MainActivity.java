@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -160,7 +161,13 @@ public class MainActivity extends AppCompatActivity implements
         getSubscriptions();
     }
 
-    
+    public void intentFitness(View view) {
+        startActivity(new Intent(this,FitnessSummaryActivity.class));
+    }
+
+    public void intentNutrition(View view) {
+        startActivity(new Intent(this,NutritionSummaryActivity.class));
+    }
 
     // ------------------------------------------------------------------------------
     // TWITTER

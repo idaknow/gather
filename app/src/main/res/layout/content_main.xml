@@ -8,6 +8,23 @@
     tools:context="part4project.uoa.gather.MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <Button
+        android:id="@+id/nutrition_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="166dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:onClick="intentNutrition"
+        android:text="Nutrition"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toRightOf="@+id/fitness_button"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
     <TextView
         android:id="@+id/welcome_message"
         android:layout_width="239dp"
@@ -112,5 +129,19 @@
         app:layout_constraintTop_toBottomOf="@+id/fitness_app_summary"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp" />
+
+    <Button
+        android:id="@+id/fitness_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp"
+        android:onClick="intentFitness"
+        android:text="Fitness"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
 </android.support.constraint.ConstraintLayout>

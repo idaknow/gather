@@ -13,7 +13,7 @@ public class FitnessSummaryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_fitness_summary);
     }
 
-    public void intentMain(View view) {
+    public void intentMainActivity(View view) {
         startActivity(new Intent(this,MainActivity.class));
     }
 
