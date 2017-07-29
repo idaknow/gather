@@ -79,19 +79,19 @@ public class MainActivity extends AppCompatActivity implements
     private static final String TAG2 = "GoogleFit";
     private static final String TAG3 = "Twitter";
 
-    // FACEBOOK: Used to summarise
-    private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
+    // SOCIAL: Used to summarise
+    //TODO: Change to be more extensive depending on words we want to search for
+    private static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active");
+    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Fitness","nutrition","Vegetables", "Vegetarian");
+
+    // FACEBOOK
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
-
-    // GOOGLEFIT: The API Client and the request code initialised
-    public static GoogleApiClient mGoogleApiClient = null;
-
-    // GOOGLEFIT: Used by async tasks to update the summaries
-    String outputFromWeeksTask;
+    public static GoogleApiClient mGoogleApiClient = null; // The API Client
+    String outputFromWeeksTask; //Used by async tasks to update the summaries
     String outputFromDaysTask;
 
     // TWITTER
@@ -103,9 +103,9 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // TWITTER Initialised
         String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
         String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
-
         TwitterConfig config = new TwitterConfig.Builder(this)
                 .logger(new DefaultLogger(Log.DEBUG))
                 .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
@@ -113,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
         Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
 
+        // Content Initialised
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -138,7 +139,6 @@ public class MainActivity extends AppCompatActivity implements
         // GOOGLEFIT Integration: builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
         TextView gf = (TextView) findViewById(R.id.food_app_summary);
         gf.setText(R.string.loading);
-
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
             buildAndConnectClient(); // TODO: Check switch pref
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements
             new ViewWeekGoogleFitTask().execute();
         }
 
-        // TWITTER
+        // TWITTER Initialisation continued
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
         createTwitterCallback();
         if (session == null){
@@ -158,12 +158,11 @@ public class MainActivity extends AppCompatActivity implements
             displayTweets();
         }
         getSubscriptions();
-
     }
 
-// ------------------------------------------------------------------------------
-// TWITTER
-// ------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------
+    // TWITTER
+    // ------------------------------------------------------------------------------
 
     private void displayTweets(){
         twitterApiClient = TwitterCore.getInstance().getApiClient();
@@ -694,7 +693,7 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "posts object = " + postsObject.toString());
                     JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
                     Log.d(TAG, "posts array = " + postsArray.toString());
-                    countPostsEvents += loopThroughResponse(postsArray, "message"); // adds to count the number of times keywords are used in posts
+                    countPostsEvents += loopThroughResponse(postsArray, "message", FITNESSKEYWORDS); // adds to count the number of times keywords are used in posts
                 }
                 if (jsonObject.length() > 2) {
                     // gets  user's LIKES data
@@ -702,7 +701,7 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "likes object = " + likesObject.toString());
                     JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
                     Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
-                    countPostsEvents += loopThroughResponse(likesArray, "name"); // adds to count the number of times keywords are used in likes
+                    countPostsEvents += loopThroughResponse(likesArray, "name", FITNESSKEYWORDS); // adds to count the number of times keywords are used in likes
                 }
                 if (jsonObject.length() > 3) {
                     // gets  user's EVENTS data
@@ -710,7 +709,7 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "events object = " + eventsObject.toString());
                     JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
                     Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
-                    countEvents = loopThroughResponse(eventsArray, "description"); // adds to count the number of times keywords are used in event descriptions
+                    countEvents = loopThroughResponse(eventsArray, "description", FITNESSKEYWORDS); // adds to count the number of times keywords are used in event descriptions
                 }
             } catch (JSONException e){
                 Log.d(TAG,"Error: JSON Exception");
@@ -741,7 +740,7 @@ public class MainActivity extends AppCompatActivity implements
      * @param dataType : the type of data it is, such as "message" or "name"
      * @return an integer value representing the number of matches
      */
-    public int loopThroughResponse(JSONArray array, String dataType){
+    public int loopThroughResponse(JSONArray array, String dataType, List<String> KEYWORDS){
         int count = 0; // counter of number of times a keyword is matches
         try {
             for (int j = 0; j < array.length(); j++) { // loops through each element in the array
