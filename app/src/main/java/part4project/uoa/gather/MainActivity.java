@@ -531,7 +531,7 @@ public class MainActivity extends AppCompatActivity implements
         if(checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
         //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly - currently assumes gets all
 
-            requestedData+="posts,likes,events";
+            requestedData+="posts.limit(5),likes.limit(5),events.limit(5)";
             AccessToken facebookAccessToken = SettingsActivity.accessToken;
             if (facebookAccessToken == null){
                 facebookAccessToken = AccessToken.getCurrentAccessToken();
@@ -719,7 +719,7 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "events object = " + eventsObject.toString());
                     JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
                     Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
-                    countEvents = loopThroughResponse(eventsArray, "description", FITNESSKEYWORDS); // adds to count the number of times keywords are used in event descriptions
+                    countEvents = loopThroughResponse(eventsArray, "name", FITNESSKEYWORDS); // adds to count the number of times keywords are used in event name (could use descriptions)
                 }
             } catch (JSONException e){
                 Log.d(TAG,"Error: JSON Exception");
