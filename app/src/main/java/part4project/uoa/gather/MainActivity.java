@@ -161,11 +161,6 @@ public class MainActivity extends AppCompatActivity implements
             new ViewWeekGoogleFitTask().execute();
         }
 
-        TextView gf = (TextView) findViewById(R.id.food_app_summary);
-        gf.setText(R.string.loading);
-        new ViewDayGoogleFitTask().execute();
-        new ViewWeekGoogleFitTask().execute();
-
         TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
         fitbitView.setText(R.string.loading);
         new FitbitSummaryTask().execute();

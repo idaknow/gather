@@ -48,12 +48,16 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
+import java.io.DataOutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -433,7 +437,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=604800";
     public static String fitbitToken = null;
     public static boolean fitbitConnected =  false;
-    public static ArrayList<String> grantedfitbitPermissions = new ArrayList<String>();
+    public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>();
+    private static String encoded = "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3";
 
     /**
      * This fragment shows data and sync preferences only. It is used when the
@@ -533,8 +538,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         This method clears the token so that the app can no longer access the Web API.
          */
         private static void revokeToken(){
-            fitbitToken = null;
-            fitbitConnected = false;
+            try {
+                String revoke = "https://api.fitbit.com/oauth2/revoke";
+                URL revokeUrl = new URL(revoke);
+                HttpsURLConnection revokeCon = (HttpsURLConnection) revokeUrl.openConnection();
+                revokeCon.setRequestMethod("POST");
+                revokeCon.setRequestProperty  ("Authorization", "Basic " + encoded);
+
+                // Send post request
+                revokeCon.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(revokeCon.getOutputStream());
+                wr.flush();
+                wr.close();
+                revokeCon.disconnect();
+                fitbitToken = null;
+                fitbitConnected = false;
+            } catch (Exception e) {
+
+            }
+
         }
 
         /*
@@ -777,7 +799,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
     protected static TwitterLoginButton twitterLogin; // the component that isn't visible but is used to perform clicks
     private static TwitterSession session; // the twitter session variable
-    private static final String TAG3 = "Twitter"; // for logging
+    private static final String TAG4 = "Twitter"; // for logging
 
     public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
 
@@ -854,7 +876,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void success(Result<TwitterSession> result) {
                     // The result provides a TwitterSession for making API calls
-                    Log.d(TAG3, "Successfull callback from Twitter");
+                    Log.d(TAG4, "Successfull callback from Twitter");
                     session = TwitterCore.getInstance().getSessionManager().getActiveSession();
                     Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
                 }
@@ -862,8 +884,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void failure(TwitterException exception) {
                     Toast.makeText(getActivity(), "Twitter Login Failed",Toast.LENGTH_SHORT).show();
-                    Log.d(TAG3, "Failed callback from Twitter");
-                    Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
+                    Log.d(TAG4, "Failed callback from Twitter");
+                    Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
                     // TODO: CHANGE SWITCH PREFERENCE BACK, this code doesn't work for some reason. Might need to remove listener and then add it again
 //                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
 //                    switchPref.setChecked(false);
