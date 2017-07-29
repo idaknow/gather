@@ -57,4 +57,7 @@
     <string name="permission_rationale_access_fine_location">Please grant permission: Information (e.g. speed) may prove useful to a health practitioner.</string>
     <string name="permission_rationale_body_sensors">Please grant permission: Information (e.g. basal metabolic rate) may prove useful to a health practitioner.</string>
 
+    <!-- Fitbit -->
+    <string name="fitbit_not_authenticated">Unable to retrieve data as required permissions are disabled. Go to Settings to give permission.</string>
+
 </resources>

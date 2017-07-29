@@ -10,16 +10,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.SwitchPreference;
-import android.support.annotation.NonNull;
-import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
+import android.preference.SwitchPreference;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
-import android.support.v4.app.NavUtils;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -42,20 +41,12 @@ import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import android.support.customtabs.CustomTabsIntent;
-import android.support.customtabs.CustomTabsCallback;
-import android.support.customtabs.CustomTabsClient;
-import android.support.customtabs.CustomTabsIntent;
-
-import javax.net.ssl.HttpsURLConnection;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -120,6 +111,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         setupActionBar();
         data = getIntent().getData();
         Log.i("App uri", String.valueOf(data));
+        if (data != null) {
+            String host = data.getHost();
+            if (host.equals("fitbit")){
+                String resultFragment = String.valueOf(data.getFragment());
+                FitnessPreferenceFragment.setToken(resultFragment);
+                FitnessPreferenceFragment.setGrantedScopes(resultFragment);
+                fitbitConnected = true;
+                Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
+
+            }
+        }
 
     }
 
@@ -167,6 +169,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This method stops fragment injection in malicious applications.
      * Make sure to deny any unknown fragments here.
      */
+    @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
@@ -244,6 +247,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void createParentListener() {
             googleFitParentListener = new Preference.OnPreferenceClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference pref = (SwitchPreference) preference;
@@ -262,6 +266,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * Methods called by the parent listener
          * This disconnects the API Client to the Google Play Services
          */
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void disconnectGoogleFit() {
             GoogleApiClient client = MainActivity.getGoogleFitClient();
             client.disconnect();
@@ -272,6 +277,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * Methods called by the parent listener
          * This connects the API Client to the Google Play Services
          */
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void connectGoogleFit() {
             GoogleApiClient client = MainActivity.getGoogleFitClient();
             client.connect();
@@ -284,6 +290,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void createChildListener() {
             eachPreferenceListener = new Preference.OnPreferenceClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
 
@@ -308,6 +315,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This method unsubscribes the Client API to the datatype with the RecordingAPI
          * @param data : The datatype that the user wants to unsubscribe from
          */
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void unsubscribeToDataType(DataType data) {
             GoogleApiClient client = MainActivity.getGoogleFitClient();
             Fitness.RecordingApi.unsubscribe(client, data)
@@ -329,6 +337,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This method subscribes the Client API to the datatype with the RecordingAPI
          * @param data : This is the data type that wants the subscription
          */
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void subscribeToDataType(DataType data) {
             Log.d(TAG2, "Subscribing " + data);
             Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
@@ -360,7 +369,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
-
+    //Fitbit variables
+    private static final String TAG3 = "Fitbit"; // log Tag
+    private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition","fitbit_heartrate");
+    private static List<String> SCOPES = Arrays.asList("activity", "nutrition", "heartrate");
+    private static Preference.OnPreferenceClickListener fitbitPreferenceListener;
+    private static Preference.OnPreferenceClickListener fitbitParentListener;
+    private static Intent browserIntent; //Intent used to open the authentication page
+    private static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=604800";
+    public static String fitbitToken = null;
+    public static boolean fitbitConnected =  false;
+    public static ArrayList<String> grantedfitbitPermissions = new ArrayList<String>();
     /**
      * This fragment shows data and sync preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -368,56 +387,120 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FitnessPreferenceFragment extends PreferenceFragment {
 
-        private String fitbitToken = "";
-        private Long expires;
-        List<String> scopes;
-        Intent browserIntent;
-
         @Override
         public void onCreate(final Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_fitness);
             setHasOptionsMenu(true);
 
-            Preference pref = getPreferenceManager().findPreference("fitness_all");
-            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                public boolean onPreferenceClick(Preference preference){
-                    SwitchPreference switchPreference = (SwitchPreference) preference;
-                    if (switchPreference.isChecked()){
-
-                    } else {
-                        revokePreferences();
-                    }
-                    return true;
+            // Adds the Preference Listeners to the parent and children preferences accordingly
+            if (fitbitParentListener == null) {
+                createParentListener();
+                Preference pref = getPreferenceManager().findPreference("fitbit_all");
+                pref.setOnPreferenceClickListener(fitbitParentListener);
+            }
+            if (fitbitPreferenceListener == null) {
+                createChildListener();
+                for (int i = 0; i < PREFS.size(); i++) {
+                    Preference pref2 = getPreferenceManager().findPreference(PREFS.get(i));
+                    pref2.setOnPreferenceClickListener(fitbitPreferenceListener);
                 }
-            });
-
-            //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
-        }
-
-        public void getAuthToken(){
-            try {
-                String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition%20sleep%20weight&expires_in=604800";
-
-                browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
-                startActivity(browserIntent);
-
-            } catch (Exception e) {
-                Log.e("Fitbit", "An error occurred when dealing with the auth url: " + e);
             }
         }
 
-        public void revokePreferences(){
+        /**
+         * Creates the Parent Listener to be added as an on Click Listener
+         * This will authorise or unauthorise the app from accessing the users information.
+         */
+        private void createParentListener() {
+            fitbitParentListener = new Preference.OnPreferenceClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    SwitchPreference pref = (SwitchPreference) preference;
+                    if (pref.isChecked()) {
+                        try {
+                            browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
+                            startActivity(browserIntent);
+                        } catch (Exception e) {
+                            Log.e("Fitbit", "An error occurred when dealing with the auth url: " + e);
+                        }
+                    } else {
+                        grantedfitbitPermissions.clear();
+                        revokeToken();
+                        for (int i = 0; i < PREFS.size(); i++) {
+                            Preference pref2 = getPreferenceManager().findPreference(PREFS.get(i));
+                            pref2.setEnabled(false);
+                        }
+                        Toast.makeText(getActivity(), "Permission disabled for access to Fitbit", Toast.LENGTH_LONG).show();
+                    }
+                    return true;
+                }
+            };
+        }
+        /*
+        The child listener listens for any of the fine-grained preference switches,
+        and removes or adds the corresponding permission.
+         */
+        private void createChildListener() {
+            fitbitPreferenceListener = new Preference.OnPreferenceClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
 
+                    int index = PREFS.indexOf(preference.getKey());
+                    String scope = SCOPES.get(index);
+
+                    SwitchPreference pref = (SwitchPreference) preference;
+                    if (pref.isChecked()) {
+                        browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
+                        startActivity(browserIntent);
+                        Toast.makeText(getActivity(), scope + " permission enabled for Fitbit", Toast.LENGTH_LONG).show();
+                    } else {
+                        grantedfitbitPermissions.remove(scope);
+                        Toast.makeText(getActivity(), scope + " permission disabled for Fitbit", Toast.LENGTH_LONG).show();
+                    }
+                    return true;
+                }
+            };
         }
 
-        public void parseAccessToken(){
-            //Save Auth Token
-            Uri returnUri = browserIntent.getData();
-            fitbitToken = returnUri.getQueryParameter("access_token");
-            expires = Long.parseLong(returnUri.getQueryParameter("expires_in")) + System.currentTimeMillis() / 1000;
-            //scopes = parseScopes(uri.getQueryParameter("scope"));
-            Log.d("Fitbit", "The token is: " + fitbitToken);
+        /*
+        This method is passed the uri fragment which is returned to the app by fitbit, and extracts
+        the access token from it. It then assigns this value to the fitbitToken string.
+         */
+        private static void setToken(String uriFragment){
+            String temp = uriFragment.split("&")[0];
+            fitbitToken = temp.substring(13);
+            Log.d(TAG3, "Token: " + fitbitToken);
+        }
+
+        /*
+        This method clears the token so that the app can no longer access the Web API.
+         */
+        private static void revokeToken(){
+            fitbitToken = null;
+            fitbitConnected = false;
+        }
+
+        /*
+        Adds the granted scopes to an arraylist to keep track of and sets the preferences to true
+        or false accordingly.
+         */
+        private static void setGrantedScopes(String responseFragment) {
+            try {
+                String temp = responseFragment.split("&")[2];
+                String scopeFragment = temp.substring(6);
+                String[] scopes = scopeFragment.split("\\+");
+                grantedfitbitPermissions.clear();
+                for (String scope : scopes){
+                    grantedfitbitPermissions.add(scope);
+                    String prefName = "fitbit_" + scope;
+                    //Set the appropriate preferences to enabled
+                }
+            } catch (PatternSyntaxException ex) {
+                // error handling
+            }
         }
 
         @Override
@@ -449,6 +532,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
 
+        @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -603,6 +687,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         // updates switch preferences permissions according to granted/ denied permissions
+        @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         public void updatePermissionSwitchPreferences(){
             for (Object i : grantedFBPermissions){ // loops through all the granted permissions
                 Log.d(TAG, "granted permission " + i.toString()); //TESTING

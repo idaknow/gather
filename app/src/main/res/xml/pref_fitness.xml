@@ -4,31 +4,37 @@
          when checked/unchecked. -->
     <SwitchPreference
         android:defaultValue="false"
-        android:key="fitness_all"
+        android:key="fitbit_all"
         android:title="Fitbit" />
 
     <SwitchPreference
         android:defaultValue="false"
-        android:dependency="fitness_all"
+        android:dependency="fitbit_all"
         android:key="fitbit_activity"
         android:title="Activity" />
 
     <SwitchPreference
         android:defaultValue="false"
-        android:dependency="fitness_all"
+        android:dependency="fitbit_all"
         android:key="fitbit_nutrition"
         android:title="Nutrition" />
 
     <SwitchPreference
         android:defaultValue="false"
-        android:dependency="fitness_all"
+        android:dependency="fitbit_all"
         android:key="fitbit_heartrate"
         android:title="Heart Rate" />
 
     <SwitchPreference
         android:defaultValue="false"
-        android:dependency="fitness_all"
+        android:dependency="fitbit_all"
         android:key="fitbit_weight"
         android:title="Weight" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="fitbit_all"
+        android:key="fitbit_sleep"
+        android:title="Sleep" />
 
 </PreferenceScreen>
