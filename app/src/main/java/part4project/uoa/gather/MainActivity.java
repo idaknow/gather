@@ -1,7 +1,5 @@
 package part4project.uoa.gather;
 
-import android.Manifest.permission;
-import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,14 +7,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -88,15 +84,11 @@ public class MainActivity extends AppCompatActivity implements
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
-    List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
-    List<DataType> ACTIVITYDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
-    List<DataType> PERMISSIONLOCATIONDATATYPES = Arrays.asList(DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY);
-    List<DataType> PERMISSIONBODYSENSORDATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY);
-    List<String> PERMISSIONS = Arrays.asList(permission.ACCESS_FINE_LOCATION, permission.BODY_SENSORS);
+    List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
+    List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
 
     // GOOGLEFIT: The API Client and the request code initialised
     public static GoogleApiClient mGoogleApiClient = null;
-    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
     // GOOGLEFIT: Used by async tasks to update the summaries
     String outputFromWeeksTask;
@@ -150,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
             buildAndConnectClient(); // TODO: Check switch pref
-            checkAndRequestGoogleFitPermissions();
             subscribe();
         } else {
             new ViewDayGoogleFitTask().execute();
@@ -470,13 +461,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private List<DataType> getListOfTypes(){
         List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
-        newList.addAll(ACTIVITYDATATYPES);
-        if (checkPermissions(PERMISSIONS.get(0))){ // if Permission AccessLocation is granted
-            newList.addAll(PERMISSIONLOCATIONDATATYPES);
-        }
-        if (checkPermissions(PERMISSIONS.get(1))){ //
-            newList.addAll(PERMISSIONBODYSENSORDATATYPES);
-        }
+        newList.addAll(FITNESSDATATYPES);
         return newList;
     }
 
@@ -512,63 +497,6 @@ public class MainActivity extends AppCompatActivity implements
         //TODO: used when the user resumes after accepting/ denying permissions
     }
 
-    /**
-     * This checks the current Permissions and requests them if denied or not asked yet
-     */
-    private void checkAndRequestGoogleFitPermissions(){
-        for (int i = 0; i < PERMISSIONS.size(); i++){
-            if (!checkPermissions(PERMISSIONS.get(i))){
-                boolean shouldProvideAccessLocationRationale = ActivityCompat.shouldShowRequestPermissionRationale(this, PERMISSIONS.get(i));
-                requestPermissions(shouldProvideAccessLocationRationale, PERMISSIONS.get(i));
-            }
-        }
-    }
-
-    /**
-     * Return the current state of the permissions needed.
-     */
-    private boolean checkPermissions(String permission) {
-        int permissionState = ActivityCompat.checkSelfPermission(this,
-                permission);
-        return permissionState == PackageManager.PERMISSION_GRANTED;
-    }
-
-    /**
-     * This requests the permission to the user, this includes if the user has declined it
-     * @param shouldProvideRationale : Whether
-     * @param permission : The permissions to be requested to the user
-     */
-    private void requestPermissions(boolean shouldProvideRationale, final String permission) {
-
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        if (shouldProvideRationale) {
-            Log.i(TAG2, "Displaying permission rationale to provide additional context.");
-            int rationale;
-            if (permission.equals(PERMISSIONS.get(0))){
-                rationale = R.string.permission_rationale_access_fine_location;
-            } else {
-                rationale = R.string.permission_rationale_body_sensors;
-            }
-            Snackbar.make(
-                    findViewById(R.id.main_activity_view),
-                    rationale,
-                    Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.ok, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            // Request permission
-                            ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{permission},
-                                    REQUEST_PERMISSIONS_REQUEST_CODE);
-                        }
-                    })
-                    .show();
-        } else {
-            Log.i(TAG2, "Requesting permission " + permission);
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{permission}, REQUEST_PERMISSIONS_REQUEST_CODE);
-        }
-    }
 
 // ------------------------------------------------------------------------------
 // FACEBOOK

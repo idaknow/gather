@@ -191,12 +191,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     //GOOGLEFIT Initialised variables
     private static final String TAG2 = "GoogleFit"; // log Tag
-    private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY,DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY, DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
-    private static List<String> PREFNAMES = Arrays.asList("HR", "BMR","distance", "speed", "fat", "calories", "hydration", "nutrition", "activity", "step", "power");
+    private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
+    private static List<String> PREFNAMES = Arrays.asList("calories", "hydration", "nutrition", "activity", "step");
     private static Preference.OnPreferenceClickListener eachPreferenceListener;
     private static Preference.OnPreferenceClickListener googleFitParentListener;
-//    public static List<String> grantedGFPermissions = new LinkedList<>(); //TODO
-//    public static List<String> deniedGFPermissions  = new LinkedList<>(); //TODO
 
     /**
      * This fragment shows notification preferences only. It is used when the
