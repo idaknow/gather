@@ -158,9 +158,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || FitnessPreferenceFragment.class.getName().equals(fragmentName)
-                || FoodPreferenceFragment.class.getName().equals(fragmentName)
-                || SocialMediaPreferenceFragment.class.getName().equals(fragmentName)
-                || SocialMedia2PreferenceFragment.class.getName().equals(fragmentName)
+                || GoogleFitPreferenceFragment.class.getName().equals(fragmentName)
+                || FacebookPreferenceFragment.class.getName().equals(fragmentName)
+                || TwitterPreferenceFragment.class.getName().equals(fragmentName)
                 ;
     }
 
@@ -200,7 +200,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    public static class FoodPreferenceFragment extends PreferenceFragment {
+    public static class GoogleFitPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -427,13 +427,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static AccessToken accessToken;
     private static ProfileTracker profileTracker;
     private static final String TAG = "Facebook"; // log Tag
-    private static final List<String> PERMISSIONS = Arrays.asList("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
-    private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness", "user_friends");
+    private static final List<String> PERMISSIONS = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile");
+    private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness");
     public static List<String> grantedFBPermissions = new LinkedList<>();
     public static List<String> deniedFBPermissions  = new LinkedList<>();
 
-    // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
-    public static class SocialMediaPreferenceFragment extends PreferenceFragment {
+    public static class FacebookPreferenceFragment extends PreferenceFragment {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -621,7 +620,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static TwitterSession session; // the twitter session variable
     private static final String TAG3 = "Twitter"; // for logging
 
-    public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
+    public static class TwitterPreferenceFragment extends PreferenceFragment {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
