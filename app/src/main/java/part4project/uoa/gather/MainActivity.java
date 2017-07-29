@@ -61,7 +61,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -73,6 +74,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
+
 import retrofit2.Call;
 
 @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
@@ -897,17 +899,39 @@ public class MainActivity extends AppCompatActivity implements
 
             String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
             URL url = new URL(dataRequestUrl);
-            //set up the connection
+
+            //set up the connection with the Authorisation header containing the previously obtained
+            //access token
+            //TO DO: currently hardcoded token
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             conn.setReadTimeout(10000);//this is in milliseconds
             conn.setConnectTimeout(15000);//this is in milliseconds
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
             conn.addRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1QkRXRFEiLCJhdWQiOiIyMjhLUVciLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJociBybnV0IiwiZXhwIjoxNTAxNjc1MDYwLCJpYXQiOjE1MDEzMDExNjV9.dVwRx9kOFT8VcR9NupTnuveBIMRR-2uLgQ23OcOUVSo");            //starts the query
-            conn.connect();
-            int response = conn.getResponseCode();
-            InputStream data = conn.getInputStream();
-            Log.d(TAG3, "data received: " + data);
+
+            //Send the request
+            int responseCode = conn.getResponseCode();
+            String responseType = conn.getContentType();
+            Log.d(TAG3, "\nResponse Type : " + responseType);
+            Log.d(TAG3, "Response Code : " + responseCode);
+
+            //Read the input received
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            JSONArray fitbitJson = new JSONArray(response);
+            String goals = fitbitJson.getString(1);
+            //print result
+            Log.d(TAG3, "Goals: " + goals);
+
         } catch (Exception e) {
 
         }
