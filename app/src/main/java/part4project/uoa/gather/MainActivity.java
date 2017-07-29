@@ -163,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements
 
     public void intentFitness(View view) {
         startActivity(new Intent(this,FitnessSummaryActivity.class));
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
     public void intentNutrition(View view) {

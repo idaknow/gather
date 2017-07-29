@@ -11,10 +11,12 @@ public class NutritionSummaryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nutrition_summary);
+
     }
 
     public void intentMainActivity(View view) {
         startActivity(new Intent(this,MainActivity.class));
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
 }
