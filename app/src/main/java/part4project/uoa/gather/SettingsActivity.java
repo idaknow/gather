@@ -1,7 +1,6 @@
 package part4project.uoa.gather;
 
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -34,12 +33,20 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Subscription;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -160,7 +167,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * {@inheritDoc}
      */
     @Override
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
         loadHeadersFromResource(R.xml.pref_headers, target);
     }
@@ -176,6 +182,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 || FitnessPreferenceFragment.class.getName().equals(fragmentName)
                 || FoodPreferenceFragment.class.getName().equals(fragmentName)
                 || SocialMediaPreferenceFragment.class.getName().equals(fragmentName)
+                || SocialMedia2PreferenceFragment.class.getName().equals(fragmentName)
                 ;
     }
 
@@ -183,7 +190,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -218,13 +224,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FoodPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
+
+            MainActivity.mGoogleApiClient.connect();
+            fixChildPreferences(); // set child preferences according to the API Client's subscriptions
 
             // Adds the Preference Listeners to the parent and children preferences accordingly
             if (googleFitParentListener == null) {
@@ -242,6 +250,39 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         /**
+         * This method gets all the subscriptions and changes the switch preferences accordingly to them
+         */
+        private void fixChildPreferences(){
+                PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(MainActivity.mGoogleApiClient);
+                result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+                    @Override
+                    public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                        List<Subscription> subscriptionList = listSubscriptionsResult.getSubscriptions();
+
+                        for (int i = 0; i < DATATYPES.size(); i++) { // loop through all the datatypes
+                            String prefname = PREFNAMES.get(i);
+                            SwitchPreference pref = (SwitchPreference) getPreferenceManager().findPreference(prefname);
+
+                            boolean subscriptionContains = false;
+                            for (Subscription sc : subscriptionList){ // loops through all subscriptions
+                                if (sc.getDataType().getName().equals(DATATYPES.get(i).getName())){
+                                    subscriptionContains = true; // if subscribed to a datatype with a preference
+                                }
+                            }
+
+                            if (subscriptionContains){
+                                Log.d(TAG2, "Active subscription for data type: " + prefname);
+                                pref.setChecked(true);
+                            } else {
+                                Log.d(TAG2, "Non-active subscription for data type: " + prefname);
+                                pref.setChecked(false);
+                            }
+                        }
+                    }
+                });
+        }
+
+        /**
          * Creates the Parent Listener to be added as an on Click Listener
          * This connects or disconnects google fit to the google play services accordingly
          */
@@ -256,7 +297,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     } else {
                         disconnectGoogleFit(); // Disconnects GoogleFit
                     }
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
                     return true;
                 }
             };
@@ -268,9 +308,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void disconnectGoogleFit() {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.disconnect();
-            MainActivity.setGoogleFitClient(client);
+            if (!MainActivity.mGoogleApiClient.isConnected()){
+                Log.d(TAG2, "Google Client API Wasn't connected");
+                MainActivity.mGoogleApiClient.connect();
+            }
+
+            PendingResult<Status> pendingResult = Fitness.ConfigApi.disableFit(MainActivity.mGoogleApiClient);
+            pendingResult.setResultCallback(new ResultCallback<Status>() {
+                @Override
+                public void onResult(@NonNull Status status) {
+                    if (status.isSuccess()){
+                        Toast.makeText(getActivity(), "Disabled permissions for Google Fit", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getActivity(), "Could not disable permissions for Google Fit", Toast.LENGTH_LONG).show();
+                        //TODO: Change switch preference back
+                    }
+                }
+            });
         }
 
         /**
@@ -279,9 +333,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void connectGoogleFit() {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            client.connect();
-            MainActivity.setGoogleFitClient(client);
+            MainActivity.mGoogleApiClient.reconnect();
+            Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
         }
 
         /**
@@ -298,13 +351,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     DataType data = DATATYPES.get(index);
 
                     SwitchPreference pref = (SwitchPreference) preference;
-                    connectGoogleFit(); //TODO: Should be able to remove but keeping for now
+                    if (!MainActivity.mGoogleApiClient.isConnected()){
+                        MainActivity.mGoogleApiClient.connect();
+                    }
+
                     if (pref.isChecked()) {
                         subscribeToDataType(data);
                     } else {
                         unsubscribeToDataType(data);
                     }
-                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Changed permissions for GoogleFit ", Toast.LENGTH_SHORT).show();
                     return true;
                 }
             };
@@ -317,8 +373,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void unsubscribeToDataType(DataType data) {
-            GoogleApiClient client = MainActivity.getGoogleFitClient();
-            Fitness.RecordingApi.unsubscribe(client, data)
+            Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
@@ -340,7 +395,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void subscribeToDataType(DataType data) {
             Log.d(TAG2, "Subscribing " + data);
-            Fitness.RecordingApi.unsubscribe(MainActivity.getGoogleFitClient(), data)
+            Fitness.RecordingApi.subscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
@@ -356,7 +411,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         }
                     });
         }
-
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
@@ -380,11 +434,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static String fitbitToken = null;
     public static boolean fitbitConnected =  false;
     public static ArrayList<String> grantedfitbitPermissions = new ArrayList<String>();
+
     /**
      * This fragment shows data and sync preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class FitnessPreferenceFragment extends PreferenceFragment {
 
         @Override
@@ -517,7 +571,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     /**
      * Initialised variables to be used by Facebook - Social Media App
      */
-    private static LoginButton loginButton;
+    private static LoginButton facebookLogin;
     private static CallbackManager callbackManager;
     private static AccessTokenTracker accessTokenTracker;
     public static AccessToken accessToken;
@@ -529,7 +583,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static List<String> deniedFBPermissions  = new LinkedList<>();
 
     // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class SocialMediaPreferenceFragment extends PreferenceFragment {
 
         @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -539,21 +592,24 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_social_media);
             setHasOptionsMenu(true);
 
+            isFacebookOrTwitter = 0; // so onActivityResult does the correct code
+
             // added a callback manager for fb to use on login
             callbackManager = CallbackManager.Factory.create();
 
             // creates the fb login button that is used, but doesn't actually put it on the screen. This is invoked when the switch preferences are
-            loginButton = new LoginButton(getActivity());
+            facebookLogin = new LoginButton(getActivity());
             // set permissions according to: email, status, posts, likes, events, fitness, profile and friends
-            loginButton.setReadPermissions(PERMISSIONS);
+            facebookLogin.setReadPermissions(PERMISSIONS);
             // code called on success or failure
-            loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            facebookLogin.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
                     // The code below enables/ disables switch preference according to whether they're
                     grantedFBPermissions = new LinkedList<>(loginResult.getRecentlyGrantedPermissions());
                     deniedFBPermissions = new LinkedList<>(loginResult.getRecentlyDeniedPermissions());
                     updatePermissionSwitchPreferences();
+                    Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
@@ -575,9 +631,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                             @Override
                             public boolean onPreferenceClick(Preference preference) {
-                                loginButton.setReadPermissions(PERMISSIONS);
-                                loginButton.performClick();
-                                Toast.makeText(getActivity(), "Changed permissions for Facebook",Toast.LENGTH_LONG).show();
+                                facebookLogin.setReadPermissions(PERMISSIONS);
+                                facebookLogin.performClick();
                                 return true;
                             }
                         });
@@ -618,13 +673,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             deniedFBPermissions.add(preference.getKey());
                             grantedFBPermissions.remove(preference.getKey());
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
-                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_SHORT).show();
                         } else { // asks for the permission when it's enabled again
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
                                     Collections.singletonList(preference.getKey()));
                             Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
-                            Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_SHORT).show();
                         }
                         return true;
                     }
@@ -718,5 +773,126 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    //TWITTER VARIABLES
+    private static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
+    protected static TwitterLoginButton twitterLogin; // the component that isn't visible but is used to perform clicks
+    private static TwitterSession session; // the twitter session variable
+    private static final String TAG3 = "Twitter"; // for logging
 
+    public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_social_media_2);
+            setHasOptionsMenu(true);
+
+            isFacebookOrTwitter = 1; // used by onActivityResult
+
+            createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
+            createParentPreference(); // this calls the login/ logout methods initalised ^
+
+        }
+
+        /**
+         * This creates the parent switch preference on click listener
+         * This calls the appropriate login or logout methods accordingly
+         */
+        private void createParentPreference(){
+            Preference pref = getPreferenceManager().findPreference("social_media_2_all");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    SwitchPreference switchpref = (SwitchPreference) preference;
+                    if (switchpref.isChecked()){
+                        if (session == null){
+                            twitterLogin.performClick();
+                        }
+                    } else {
+                        session = null;
+                        TwitterCore.getInstance().getSessionManager().clearActiveSession();
+                    }
+
+                    return true;
+                }
+            });
+        }
+
+        /**
+         * This adds the onclick listeners to each child switch preference
+         * TODO: REFLECT THE ENABLED/DISABLED SWITCHES IN THE MAIN SUMMARY PAGE SOMEHOW
+         */
+        private void createChildPreferences(){
+            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
+            for (String i : TWITTERPREFERENCES){
+                Preference permission = getPreferenceManager().findPreference(i);
+                permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
+                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+
+                        if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
+                            // Make callback function sent in graph request
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
+                        } else { // asks for the permission when it's enabled again
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
+                        }
+                        return true;
+                    }
+                });
+            }
+        }
+
+        /**
+         * This creates the twitter button, that calls login and authorisation
+         */
+        private void createTwitterLoginButton(){
+            twitterLogin = new TwitterLoginButton(getActivity());
+            twitterLogin.setCallback(new Callback<TwitterSession>() {
+                @Override
+                public void success(Result<TwitterSession> result) {
+                    // The result provides a TwitterSession for making API calls
+                    Log.d(TAG3, "Successfull callback from Twitter");
+                    session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                    Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void failure(TwitterException exception) {
+                    Toast.makeText(getActivity(), "Twitter Login Failed",Toast.LENGTH_SHORT).show();
+                    Log.d(TAG3, "Failed callback from Twitter");
+                    Log.d(TAG3, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
+                    // TODO: CHANGE SWITCH PREFERENCE BACK, this code doesn't work for some reason. Might need to remove listener and then add it again
+//                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
+//                    switchPref.setChecked(false);
+                }
+            });
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private static int isFacebookOrTwitter = -1; // changes the code depending on whether the fb fragment or twitter one is open
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // Pass the activity result to the login button.
+        if (isFacebookOrTwitter == 0){ // Facebook
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+        if (isFacebookOrTwitter == 1){ // Twitter
+            twitterLogin.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 }

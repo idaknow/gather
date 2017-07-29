@@ -1,0 +1,26 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. -->
+    <SwitchPreference
+        android:id="@+id/social_media_2_all"
+        android:defaultValue="false"
+        android:icon="@drawable/tw__ic_logo_default"
+        android:key="social_media_2_all"
+        android:title="@string/social_media_app_2_name" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_2_all"
+        android:key="favourites"
+        android:title="@string/social_media_app_2_favourites" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:dependency="social_media_2_all"
+        android:key="statuses"
+        android:title="@string/social_media_app_2_statuses" />
+
+</PreferenceScreen>

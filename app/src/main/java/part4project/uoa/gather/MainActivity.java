@@ -27,6 +27,7 @@ import com.facebook.HttpMethod;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
@@ -37,9 +38,24 @@ import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.google.android.gms.fitness.result.ListSubscriptionsResult;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.DefaultLogger;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterApiClient;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.services.FavoriteService;
+import com.twitter.sdk.android.core.services.StatusesService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,6 +73,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
+import retrofit2.Call;
 
 @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
 public class MainActivity extends AppCompatActivity implements
@@ -67,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements
     private static final String TAG = "Facebook";
     private static final String TAG2 = "GoogleFit";
     private static final String TAG3 = "Fitbit";
+    private static final String TAG4 = "Twitter";
 
     // FACEBOOK: Used to summarise
     private static final List<String> KEYWORDS = Arrays.asList("Fitness","dance","run", "Vegetarian"); //TODO: Change to be more extensive depending on words we want to search for
@@ -80,16 +98,32 @@ public class MainActivity extends AppCompatActivity implements
     List<String> PERMISSIONS = Arrays.asList(permission.ACCESS_FINE_LOCATION, permission.BODY_SENSORS);
 
     // GOOGLEFIT: The API Client and the request code initialised
-    private static GoogleApiClient mGoogleApiClient = null;
+    public static GoogleApiClient mGoogleApiClient = null;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
     // GOOGLEFIT: Used by async tasks to update the summaries
     String outputFromWeeksTask;
     String outputFromDaysTask;
 
+    // TWITTER
+    TwitterSession session;
+    TwitterApiClient twitterApiClient;
+    private static Callback<List<Tweet>> twitterCallback;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
+        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
+
+        TwitterConfig config = new TwitterConfig.Builder(this)
+                .logger(new DefaultLogger(Log.DEBUG))
+                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
+                .debug(true)
+                .build();
+        Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -114,12 +148,17 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         // GOOGLEFIT Integration: builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
+        TextView gf = (TextView) findViewById(R.id.food_app_summary);
+        gf.setText(R.string.loading);
+
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
-            buildClient();
-            connectClient(); // TODO: Check switch pref
+            buildAndConnectClient(); // TODO: Check switch pref
             checkAndRequestGoogleFitPermissions();
-            subscribeToDataTypes();
+            subscribe();
+        } else {
+            new ViewDayGoogleFitTask().execute();
+            new ViewWeekGoogleFitTask().execute();
         }
 
         TextView gf = (TextView) findViewById(R.id.food_app_summary);
@@ -138,7 +177,74 @@ public class MainActivity extends AppCompatActivity implements
 //            Log.d(TAG3, "Fitbit token is null");
 //            fitbitView.setText(R.string.fitbit_not_authenticated);
 //        }
+
+        // TWITTER
+        session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        createTwitterCallback();
+        if (session == null){
+            Log.d(TAG3, "Twitter: Not logged in");
+            // TODO: Reflect on the summary page in a message
+        } else {
+            displayTweets();
+        }
+        getSubscriptions();
+
     }
+
+// ------------------------------------------------------------------------------
+// TWITTER
+// ------------------------------------------------------------------------------
+
+    private void displayTweets(){
+        twitterApiClient = TwitterCore.getInstance().getApiClient();
+        displayFavouritedTweets();
+        displayStatusTweets();
+    }
+
+    /**
+     * This method displays all the users's favourited tweets
+     */
+    private void displayFavouritedTweets(){
+        FavoriteService service = twitterApiClient.getFavoriteService();
+        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
+    }
+
+    /**
+     * This method displays all the user's statuses
+     */
+    private void displayStatusTweets(){
+        StatusesService service = twitterApiClient.getStatusesService();
+        Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
+        call.enqueue(twitterCallback);
+    }
+
+    /**
+     * This initialised the twitterCallback that is used to print the results from either a status or favourite request
+     */
+    private void createTwitterCallback(){
+        twitterCallback = new Callback<List<Tweet>>() {
+            @Override
+            public void success(Result<List<Tweet>> result) {
+                // TODO: Transform the data into a useful output to the user
+                // TODO: Print the output to summary page
+                Log.d(TAG4, "Succesfully got the results");
+
+                // loops through the data and prints each tweat to the debug console
+                List<Tweet> data = result.data;
+                for (int i = 0; i < data.size(); i++){
+                    String tweet = data.get(i).text;
+                    Log.d(TAG4, tweet);
+                }
+            }
+
+            public void failure(TwitterException exception) {
+                //TODO: Add an error
+                Log.d(TAG4, "Didn't get the results");
+            }
+        };
+    }
+
 
 // ------------------------------------------------------------------------------
 // GOOGLE FIT
@@ -147,41 +253,51 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Builds to google client with the required scopes (permissions)
      */
-    private void buildClient(){
+    public void buildAndConnectClient(){
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.HISTORY_API)
                 .addApi(Fitness.RECORDING_API)
+                .addApi(Fitness.CONFIG_API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
                 .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
                 .addScope(new Scope(Scopes.FITNESS_BODY_READ))
                 .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-                .addConnectionCallbacks(this)
-                .enableAutoManage(this, 0, this)
+                .addConnectionCallbacks(
+                        new GoogleApiClient.ConnectionCallbacks() {
+                                @Override
+                                public void onConnected(Bundle bundle) {
+                                    Log.d(TAG2, "Connected!!!");
+                                    new ViewDayGoogleFitTask().execute();
+                                    new ViewWeekGoogleFitTask().execute();
+                                }
+
+                                @Override
+                                public void onConnectionSuspended(int i) {
+                                    // If your connection to the sensor gets lost at some point,
+                                    // you'll be able to determine the reason and react to it here.
+                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+                                        Log.d(TAG2, "Connection lost.  Cause: Network Lost.");
+                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+                                        Log.d(TAG2, "Connection lost.  Reason: Service Disconnected");
+                                    }
+                                }
+                            }
+
+                )
+                .enableAutoManage(this, 0, new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult result) {
+                        Log.i(TAG, "Google Play services connection failed. Cause: " +
+                                result.toString());
+                        Snackbar.make(
+                                MainActivity.this.findViewById(R.id.main_activity_view),
+                                "Exception while connecting to Google Play services: " +
+                                        result.getErrorMessage(),
+                                Snackbar.LENGTH_INDEFINITE).show();
+                    }
+                })
                 .build();
-    }
-
-    /**
-     * This ensures the client is connected to the google play services
-     */
-    private void connectClient(){
         mGoogleApiClient.connect();
-    }
-
-    /**
-     * This is a getter used by SettingsActivity to retrieve the GoogleApiClient
-     * @return the google api client
-     */
-    public static GoogleApiClient getGoogleFitClient(){
-        return mGoogleApiClient;
-    }
-
-    /**
-     * This is the setter used by SettingsActivity to set the GoogleApiClient
-     * Used when it's connected or disconnected from the permissions
-     * @param client : The Google API Client
-     */
-    public static void setGoogleFitClient(GoogleApiClient client){
-        mGoogleApiClient = client;
     }
 
     /**
@@ -209,6 +325,32 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     });
         }
+    }
+
+    private void getSubscriptions(){
+        PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
+        result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                for (Subscription sc : listSubscriptionsResult.getSubscriptions()) {
+                    DataType dt = sc.getDataType();
+                    Log.d(TAG2, "Active subscription for data type: " + dt.getName());
+                }
+            }
+        });
+    }
+
+    private void subscribe(){
+        PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
+        result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+            @Override
+            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+                // if there don't exist subscriptions, subscribe to all data types
+                if (listSubscriptionsResult.getSubscriptions().size() <= 0){
+                    subscribeToDataTypes();
+                }
+            }
+        });
     }
 
     /**

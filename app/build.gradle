@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "part4project.uoa.gather"
-        minSdkVersion 15
+        minSdkVersion 23
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -20,6 +20,9 @@ android {
     }
     repositories {
         mavenCentral()
+        jcenter()
+    }
+    productFlavors {
     }
 }
 
@@ -37,6 +40,6 @@ dependencies {
     compile 'com.facebook.android:facebook-android-sdk:[4,5)'
     compile 'com.google.android.gms:play-services-fitness:9.8.0'
     compile 'com.android.volley:volley:1.0.0'
+    compile 'com.twitter.sdk.android:twitter-core:3.0.0'
     testCompile 'junit:junit:4.12'
-    compile project(':volley')
 }

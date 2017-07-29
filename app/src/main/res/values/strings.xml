@@ -60,4 +60,14 @@
     <!-- Fitbit -->
     <string name="fitbit_not_authenticated">Unable to retrieve data as required permissions are disabled. Go to Settings to give permission.</string>
 
+    <!-- Twitter-->
+    <string name="com.twitter.sdk.android.CONSUMER_KEY">fclM24Zol77H9Js1h78gkuiDy</string>
+    <string name="com.twitter.sdk.android.CONSUMER_SECRET">IWrC84e25OFeC87ULFaaZK7tq8DeQTF6QB1ZGwz38lQGfZDNIa</string>
+
+    <!-- Social Media 2 settings -->
+    <string name="pref_header_social_media_app_2">Social Media App 2</string>
+    <string name="social_media_app_2_name">Twitter</string>
+    <string name="social_media_app_2_favourites">Favourites</string>
+    <string name="social_media_app_2_statuses">Statuses</string>
+
 </resources>
