@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements
             if (!checkPermissionsFB()){
                 facebook.setText(R.string.fb_disabled_permissions);
             } else {
-                new FacebookSummaryTask().execute();
+                new FacebookSummaryTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         } else {
             facebook.setText(R.string.fb_logged_out);
@@ -167,8 +167,8 @@ public class MainActivity extends AppCompatActivity implements
             buildAndConnectClient(); // TODO: Check switch pref
             subscribe();
         } else {
-            new ViewDayGoogleFitTask().execute();
-            new ViewWeekGoogleFitTask().execute();
+            new ViewDayGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new ViewWeekGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
 
         // TWITTER Initialisation continued
@@ -280,8 +280,8 @@ public class MainActivity extends AppCompatActivity implements
                                 @Override
                                 public void onConnected(Bundle bundle) {
                                     Log.d(TAG2, "Connected!!!");
-                                    new ViewDayGoogleFitTask().execute();
-                                    new ViewWeekGoogleFitTask().execute();
+                                    new ViewDayGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                                    new ViewWeekGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                                 }
 
                                 @Override
