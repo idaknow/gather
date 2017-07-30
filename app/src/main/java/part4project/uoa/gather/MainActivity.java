@@ -479,6 +479,8 @@ public class MainActivity extends AppCompatActivity implements
                 JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
                 if (array != null) { // increment count if data object is not empty, depending on length of it
                     Log.d(TAG, "fitness object = " + array.toString());
+                    //TODO: date
+                    fitnessSocial.add("You used fb fitness: " + array.toString());
                 } else {
                     Log.d(TAG, "fitness object is null");
                 }
