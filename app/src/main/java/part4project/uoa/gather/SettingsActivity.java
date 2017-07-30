@@ -129,6 +129,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             if (!super.onMenuItemSelected(featureId, item)) {
                 NavUtils.navigateUpFromSameTask(this);
             }
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
             return true;
         }
         return super.onMenuItemSelected(featureId, item);
@@ -183,6 +184,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -387,6 +389,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -412,6 +415,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -584,6 +588,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -717,6 +722,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);

@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements
 
     // FACEBOOK
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
-    private SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+    public static final SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
@@ -103,12 +103,12 @@ public class MainActivity extends AppCompatActivity implements
     TwitterSession session;
     TwitterApiClient twitterApiClient;
     private static Callback<List<Tweet>> twitterCallback;
-    private SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+    public static final SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
 
     // Week Date
-    Date startOfWeek;
-    Date endOfWeek;
-    Date today;
+    public static Date startOfWeek;
+    public static Date endOfWeek;
+    public static Date today;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
