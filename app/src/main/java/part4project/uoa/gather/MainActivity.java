@@ -110,7 +110,6 @@ public class MainActivity extends AppCompatActivity implements
     Date endOfWeek;
     Date today;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -500,7 +499,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * This printst "Todays" data from HISTORY Api
+     * This prints "Todays" data from HISTORY Api
      */
     private void displayDataForToday() {
         List<DataType> newList = getListOfTypes();
