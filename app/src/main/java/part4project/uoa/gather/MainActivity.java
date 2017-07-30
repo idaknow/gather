@@ -59,12 +59,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
@@ -82,11 +85,12 @@ public class MainActivity extends AppCompatActivity implements
 
     // SOCIAL: Used to summarise
     //TODO: Change to be more extensive depending on words we want to search for
-    private static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active");
-    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Fitness","nutrition","Vegetables", "Vegetarian");
+    public static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active");
+    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Fitness","nutrition","Vegetables", "Vegetarian");
 
     // FACEBOOK
     private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
+    private SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
@@ -99,6 +103,13 @@ public class MainActivity extends AppCompatActivity implements
     TwitterSession session;
     TwitterApiClient twitterApiClient;
     private static Callback<List<Tweet>> twitterCallback;
+    private SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+
+    // Week Date
+    Date startOfWeek;
+    Date endOfWeek;
+    Date today;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +129,18 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        Calendar cal = Calendar.getInstance();
+        today = new Date();
+        cal.setTime(today);
+        cal.add(Calendar.WEEK_OF_YEAR, -1);
+        startOfWeek = cal.getTime();
+        cal.add(Calendar.DAY_OF_WEEK, 7);
+        endOfWeek = cal.getTime();
+
+        Log.d("Date", "Range Start: " + startOfWeek);
+        Log.d("Date", "Range End: " + endOfWeek);
+        Log.d("Date", "Today " + today);
 
         // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
         AccessToken fbToken = SettingsActivity.accessToken;
@@ -212,8 +235,20 @@ public class MainActivity extends AppCompatActivity implements
                 // loops through the data and prints each tweat to the debug console
                 List<Tweet> data = result.data;
                 for (int i = 0; i < data.size(); i++){
-                    String tweet = data.get(i).text;
-                    Log.d(TAG3, tweet);
+                    Log.d(TAG3,"Created at: " + data.get(i).createdAt);
+                    Date parsed;
+                    try {
+                        parsed = twitterDateFormat.parse(data.get(i).createdAt);
+                    }
+                    catch(ParseException pe) {
+                        throw new IllegalArgumentException(pe);
+                    }
+                    boolean isInLastWeek = startOfWeek.before(parsed) && endOfWeek.after(parsed);
+                    Log.d(TAG3, isInLastWeek + " : date " + startOfWeek + " is before " + parsed);
+                    if (isInLastWeek){ // In the last week
+                        String tweet = data.get(i).text;
+                        Log.d(TAG3, tweet);
+                    }
                 }
             }
 
@@ -386,19 +421,9 @@ public class MainActivity extends AppCompatActivity implements
      * TODO: Summarise it somehow
      */
     protected void displayLastWeeksData(){
-        Calendar cal = Calendar.getInstance();
-        Date now = new Date();
-        cal.setTime(now);
-        long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.WEEK_OF_YEAR, -1);
-        long startTime = cal.getTimeInMillis();
-
-        java.text.DateFormat dateFormat = DateFormat.getDateInstance();
-        Log.d(TAG2, "Range Start: " + dateFormat.format(startTime));
-        Log.d(TAG2, "Range End: " + dateFormat.format(endTime));
 
         // The read requests made to the list of datatypes
-        DataReadRequest readRequest = queryData(startTime, endTime, getListOfTypes());
+        DataReadRequest readRequest = queryData(startOfWeek.getTime(), endOfWeek.getTime(), getListOfTypes());
         DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
         if (dataReadResult.getBuckets().size() > 0) { //Used for aggregated data
@@ -531,7 +556,7 @@ public class MainActivity extends AppCompatActivity implements
         if(checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
         //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly - currently assumes gets all
 
-            requestedData+="posts.limit(5),likes.limit(5),events.limit(5)";
+            requestedData+="posts,likes,events";
             AccessToken facebookAccessToken = SettingsActivity.accessToken;
             if (facebookAccessToken == null){
                 facebookAccessToken = AccessToken.getCurrentAccessToken();
@@ -570,7 +595,7 @@ public class MainActivity extends AppCompatActivity implements
      * Checks if user posts, user likes and user events permissions are granted
      * @return true or false whether all 3 permissions are granted
      */
-    private boolean checkPermissionsFB(){
+    public static boolean checkPermissionsFB(){
         List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
         return (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events"));
     }
@@ -581,7 +606,7 @@ public class MainActivity extends AppCompatActivity implements
      * @param wantGranted : true/ false depending on whether wants granted or denied permissions
      * @return List of permissions granted/ denied
      */
-    public List<String> getFBPermissions(boolean wantGranted){
+    public static List<String> getFBPermissions(boolean wantGranted){
         List<String> list; // the returned list
         if (SettingsActivity.accessToken == null){ // settingsActivity has been created
             AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
@@ -691,19 +716,20 @@ public class MainActivity extends AppCompatActivity implements
         int likes = 1;
         int events = 2;
 
-        int countPostsEvents = 0; // the number of times something fitness related is liked/ posted about
-        int countEvents = 0;
+        int countFitness = 0; // the number of times something fitness related is liked/ posted about
+        int countNutrition = 0;
         Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString()); //TESTING
 
             try { // catch JSON exception
                 Log.d(TAG, "length = " +jsonObject.length());
-                if(jsonObject.length() > 1) {
+                if(jsonObject.length() > 1) { // THESE are for testing - so errors aren't thrown if you don't provide some
                     // gets user's POST data
                     JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(posts));
                     Log.d(TAG, "posts object = " + postsObject.toString());
                     JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
                     Log.d(TAG, "posts array = " + postsArray.toString());
-                    countPostsEvents += loopThroughResponse(postsArray, "message", FITNESSKEYWORDS); // adds to count the number of times keywords are used in posts
+                    countFitness += loopThroughResponse(postsArray, "message", "created_time", FITNESSKEYWORDS); // adds to count the number of times keywords are used in posts
+                    countNutrition += loopThroughResponse(postsArray, "message", "created_time", NUTRITIONKEYWORDS);
                 }
                 if (jsonObject.length() > 2) {
                     // gets  user's LIKES data
@@ -711,7 +737,8 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "likes object = " + likesObject.toString());
                     JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
                     Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
-                    countPostsEvents += loopThroughResponse(likesArray, "name", FITNESSKEYWORDS); // adds to count the number of times keywords are used in likes
+                    countFitness += loopThroughResponse(likesArray, "name", "created_time", FITNESSKEYWORDS); // adds to count the number of times keywords are used in likes
+                    countNutrition += loopThroughResponse(likesArray, "name", "created_time", NUTRITIONKEYWORDS);
                 }
                 if (jsonObject.length() > 3) {
                     // gets  user's EVENTS data
@@ -719,7 +746,8 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "events object = " + eventsObject.toString());
                     JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
                     Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
-                    countEvents = loopThroughResponse(eventsArray, "name", FITNESSKEYWORDS); // adds to count the number of times keywords are used in event name (could use descriptions)
+                    countFitness += loopThroughResponse(eventsArray, "name", "start_time", FITNESSKEYWORDS); // adds to count the number of times keywords are used in event name (could use descriptions)
+                    countNutrition += loopThroughResponse(eventsArray, "name", "start_time", NUTRITIONKEYWORDS);
                 }
             } catch (JSONException e){
                 Log.d(TAG,"Error: JSON Exception");
@@ -727,19 +755,19 @@ public class MainActivity extends AppCompatActivity implements
 
         // format string responses plurals accordingly to the output count
         String outputString;
-        if (countPostsEvents == 0){ //POSTS AND LIKES
-            outputString = "You have not posted or liked posts about fitness related things ";
-        } else if (countPostsEvents == 1){
-            outputString = "You have posted or liked about " + countPostsEvents + " fitness related thing ";
+        if (countFitness == 0){ // FITNESS
+            outputString = "You have not done any fitness social activity ";
+        } else if (countFitness == 1){
+            outputString = "You have " + countFitness + " fitness related social activity ";
         } else {
-            outputString = "You have posted or liked about " + countPostsEvents + " fitness related things ";
+            outputString = "You have " + countFitness + " fitness related social activities ";
         }
-        if (countEvents == 0){ //EVENTS
-            outputString += "and attended no events.";
-        } else if (countEvents == 1){
-            outputString += "and attended " + countEvents + " health related events.";
+        if (countNutrition == 0){ // NUTRITION
+            outputString += "and no nutrition social activity.";
+        } else if (countNutrition == 1){
+            outputString += "and " + countNutrition + " nutrition related social activity.";
         } else {
-            outputString += "and attended " + countEvents + " health related events.";
+            outputString += "and " + countNutrition + " nutrition related social activities.";
         }
         return outputString;
     }
@@ -750,18 +778,32 @@ public class MainActivity extends AppCompatActivity implements
      * @param dataType : the type of data it is, such as "message" or "name"
      * @return an integer value representing the number of matches
      */
-    public int loopThroughResponse(JSONArray array, String dataType, List<String> KEYWORDS){
+    public int loopThroughResponse(JSONArray array, String dataType, String timeName, List<String> KEYWORDS){
         int count = 0; // counter of number of times a keyword is matches
+
         try {
             for (int j = 0; j < array.length(); j++) { // loops through each element in the array
                 Log.d(TAG, "values = " + array.get(j)); //TESTING
                 JSONObject obj = (JSONObject) array.get(j);
                 Object value = obj.get(dataType); //gets the parameter according to the data type
                 Log.d(TAG, value.toString()); // TESTING
+                Object time = obj.get(timeName);
+                Log.d(TAG,"Date created: " + time);
 
-                for (String string : KEYWORDS) { // loops through target keywords
-                    if (value.toString().contains(string)) { // checks if the target string is contained within the current object string
-                        count++; // increases the count if there's a match
+                Date parsed;
+                try {
+                    parsed = facebookDateFormat.parse(time.toString());
+                }
+                catch(ParseException pe) {
+                    throw new IllegalArgumentException(pe);
+                }
+                boolean isInLastWeek = startOfWeek.before(parsed) && endOfWeek.after(parsed);
+                Log.d(TAG, isInLastWeek + " : date " + startOfWeek + " is before " + parsed);
+                if (isInLastWeek) {
+                    for (String string : KEYWORDS) { // loops through target keywords
+                        if (value.toString().contains(string)) { // checks if the target string is contained within the current object string
+                            count++; // increases the count if there's a match
+                        }
                     }
                 }
             }
