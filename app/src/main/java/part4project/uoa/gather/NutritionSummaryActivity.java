@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -42,10 +44,9 @@ public class NutritionSummaryActivity extends AppCompatActivity {
     private static List<String> social;
     private static List<String> general;
 
-    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee");
+    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
     TwitterApiClient twitterApiClient;
-    Callback twitterCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,21 +82,13 @@ public class NutritionSummaryActivity extends AppCompatActivity {
             // TODO
             social = new LinkedList<>();
             facebookSummary();
+            displayTweets();
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            Log.d(TAG, "Post execute");
-            if (social.size() < 0){
-                Log.d(TAG, "You did not do any nutrition related social activity.");
-            } else {
-                for (int i = 0; i < social.size(); i++){
-                    Log.d(TAG, i  + " : "+ social.get(i));
-                }
-            }
-
         }
     }
 
@@ -105,18 +98,10 @@ public class NutritionSummaryActivity extends AppCompatActivity {
             general = new LinkedList<>();
             return null;
         }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-        }
     }
 
     public void facebookSummary(){
-        String requestedData = ""; // incase we want to seperate the method depending on permissions
-
         if(MainActivity.checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
-            requestedData+="posts,likes,events";
             AccessToken facebookAccessToken = SettingsActivity.accessToken;
             if (facebookAccessToken == null){
                 facebookAccessToken = AccessToken.getCurrentAccessToken();
@@ -139,38 +124,40 @@ public class NutritionSummaryActivity extends AppCompatActivity {
                     callback
             );
             Bundle parameters = new Bundle();
-            parameters.putString("fields", requestedData); // adds requested permissions
+            parameters.putString("fields", "posts,likes,events"); // adds requested permissions
             req.setParameters(parameters);
             req.executeAsync();
         }
     }
 
     private void transformFacebookPostsEventsLikes(JSONObject jsonObject){
-        // array values
-        int posts = 0;
-        int likes = 1;
-        int events = 2;
 
-        Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString()); //TESTING
         try {
-                JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(posts));
+                JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(0));
                 JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
                 loopThroughResponse(postsArray, "message", "created_time","You posted: ");
 
-                JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(likes));
+                JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(1));
                 JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
                 loopThroughResponse(likesArray, "name", "created_time", "You liked: ");
 
-                JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(events));
+                JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(2));
                 JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
                 loopThroughResponse(eventsArray, "name", "start_time", "You interacted with event: ");
 
-                for (int i = 0; i < social.size(); i++){
-                    Log.d(TAG, i  + " : "+ social.get(i));
-                }
+                setListViewContent();
         } catch (JSONException e){
             Log.d(TAG,"Error: JSON Exception");
         } //TODO add error response
+    }
+
+    private void setListViewContent(){
+        for (int i = 0; i < social.size(); i++){
+            Log.d(TAG, i  + " : "+ social.get(i));
+        }
+        ListView view = (ListView) findViewById(R.id.listView);
+        ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, social);
+        view.setAdapter(adapter);
     }
 
     public void loopThroughResponse(JSONArray array, String dataType, String timeName, String output){
@@ -183,15 +170,11 @@ public class NutritionSummaryActivity extends AppCompatActivity {
                 Date parsed;
                 try {
                     parsed = MainActivity.facebookDateFormat.parse(time.toString());
-                    boolean isInLastWeek = MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
-//                    Log.d(TAG, isInLastWeek + " : date " + MainActivity.startOfWeek + " is before " + parsed);
-                    if (isInLastWeek) {
+                    if (isDateInWeek(parsed)) {
                         Log.d(TAG,"True for string " + value.toString());
-                        for (String string : NUTRITIONKEYWORDS) { // loops through target keywords
-                            if (value.toString().contains(string)) { // checks if the target string is contained within the current object string
-                                Log.d(TAG, "Added string: " + output + value.toString());
-                                social.add(output + value.toString());
-                            }
+                        if (doesStringContainKeyword(value.toString())){
+                            Log.d(TAG, "Added string: " + output + value);
+                            social.add(output + value.toString());
                         }
                     }
                 }
@@ -202,6 +185,78 @@ public class NutritionSummaryActivity extends AppCompatActivity {
         } catch (JSONException e){
             Log.d(TAG,"Error: JSON Exception");
         } //TODO add error response
+    }
+
+    private boolean doesStringContainKeyword(String value){
+        for (String string : NUTRITIONKEYWORDS) { // loops through target keywords
+            if (value.contains(string)) { // checks if the target string is contained within the current object string
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isDateInWeek(Date parsed){
+        return MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
+    }
+
+    private void displayTweets(){
+        twitterApiClient = TwitterCore.getInstance().getApiClient();
+        displayFavouritedTweets();
+        displayStatusTweets();
+    }
+
+    /**
+     * This method displays all the users's favourited tweets
+     */
+    private void displayFavouritedTweets(){
+        FavoriteService service = twitterApiClient.getFavoriteService();
+        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
+        call.enqueue(getTwitterCallback());
+    }
+
+    /**
+     * This method displays all the user's statuses
+     */
+    private void displayStatusTweets(){
+        StatusesService service = twitterApiClient.getStatusesService();
+        Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
+        call.enqueue(getTwitterCallback());
+    }
+
+    /**
+     * This initialised the twitterCallback that is used to print the results from either a status or favourite request
+     */
+    private Callback<List<Tweet>> getTwitterCallback(){
+        return new Callback<List<Tweet>>() {
+            @Override
+            public void success(Result<List<Tweet>> result) {
+                // loops through the data and prints each tweet to the debug console
+                List<Tweet> data = result.data;
+                for (int i = 0; i < data.size(); i++){
+                    Date parsed;
+                    try {
+                        parsed = MainActivity.twitterDateFormat.parse(data.get(i).createdAt);
+                        if (isDateInWeek(parsed)) {
+                            Log.d(TAG,"True for string " + data.get(i).toString());
+                            if (doesStringContainKeyword(data.get(i).text)){
+                                Log.d(TAG, "Added Tweet: " + data.get(i));
+                                social.add("You interacted with tweet: " + data.get(i).text);
+                            }
+                        }
+                    }
+                    catch(ParseException pe) {
+                        throw new IllegalArgumentException(pe);
+                    }
+                }
+                setListViewContent();
+            }
+
+            public void failure(TwitterException exception) {
+                //TODO: Add an error
+                Log.d(TAG, "Didn't get the results");
+            }
+        };
     }
 
 }
