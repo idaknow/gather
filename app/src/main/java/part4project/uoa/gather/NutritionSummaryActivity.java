@@ -42,7 +42,7 @@ public class NutritionSummaryActivity extends AppCompatActivity {
     private static List<String> social;
     private static List<String> general;
 
-    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean");
+    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee");
 
     TwitterApiClient twitterApiClient;
     Callback twitterCallback;
@@ -184,8 +184,9 @@ public class NutritionSummaryActivity extends AppCompatActivity {
                 try {
                     parsed = MainActivity.facebookDateFormat.parse(time.toString());
                     boolean isInLastWeek = MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
-                    Log.d(TAG, isInLastWeek + " : date " + MainActivity.startOfWeek + " is before " + parsed);
+//                    Log.d(TAG, isInLastWeek + " : date " + MainActivity.startOfWeek + " is before " + parsed);
                     if (isInLastWeek) {
+                        Log.d(TAG,"True for string " + value.toString());
                         for (String string : NUTRITIONKEYWORDS) { // loops through target keywords
                             if (value.toString().contains(string)) { // checks if the target string is contained within the current object string
                                 Log.d(TAG, "Added string: " + output + value.toString());
