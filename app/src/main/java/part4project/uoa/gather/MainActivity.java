@@ -1,5 +1,6 @@
 package part4project.uoa.gather;
 
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -85,30 +86,31 @@ public class MainActivity extends AppCompatActivity implements
 
     // SOCIAL: Used to summarise
     //TODO: Change to be more extensive depending on words we want to search for
-    public static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active");
-    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Fitness","nutrition","Vegetables", "Vegetarian");
+    public static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active", "Rhythm");
+    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
-    // FACEBOOK
-    private static int facebookFitnessCount = 0; // The count of how many facebook user_action.fitness the user has done
-    public static final SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+    // Data lists
+    public static List<String> nutritionSocial;
+    public static List<String> nutritionGeneral;
+    public static List<String> fitnessSocial;
+    public static List<String> fitnessGeneral;
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
-    String outputFromWeeksTask; //Used by async tasks to update the summaries
-    String outputFromDaysTask;
+
+    ProgressDialog progress;
 
     // TWITTER
     TwitterSession session;
-    TwitterApiClient twitterApiClient;
-    private static Callback<List<Tweet>> twitterCallback;
-    public static final SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
 
     // Week Date
     public static Date startOfWeek;
     public static Date endOfWeek;
     public static Date today;
+    public static final SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+    public static final SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,25 +143,12 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
 
-        // FACEBOOK Integration: gets the facebook access token and applies to it get update the main activities summary
-        AccessToken fbToken = SettingsActivity.accessToken;
-        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-        if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
-            fbToken = AccessToken.getCurrentAccessToken();
-        }
-        if (fbToken != null) {
-            facebook.setText(R.string.loading);
-            facebookFitnessCount = 0; // reset to default
-            if (!checkPermissionsFB()){
-                facebook.setText(R.string.fb_disabled_permissions);
-            } else {
-                new FacebookSummaryTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            }
-        } else {
-            facebook.setText(R.string.fb_logged_out);
-        }
+        progress = new ProgressDialog(this);
+        progress.setTitle("Loading");
+        progress.setMessage("Wait while loading...");
+        progress.setCancelable(false);
 
-        // GOOGLEFIT Integration: builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
+        // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
         TextView gf = (TextView) findViewById(R.id.food_app_summary);
         gf.setText(R.string.loading);
         if (mGoogleApiClient == null){
@@ -167,20 +156,27 @@ public class MainActivity extends AppCompatActivity implements
             buildAndConnectClient(); // TODO: Check switch pref
             subscribe();
         } else {
-            new ViewDayGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            new ViewWeekGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//            new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
 
-        // TWITTER Initialisation continued
-        session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        createTwitterCallback();
-        if (session == null){
-            Log.d(TAG3, "Twitter: Not logged in");
-            // TODO: Reflect on the summary page in a message
-        } else {
-            displayTweets();
+        // SOCIAL
+        AccessToken fbToken = SettingsActivity.accessToken;
+        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
+        if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
+            fbToken = AccessToken.getCurrentAccessToken();
         }
-        getSubscriptions();
+        if (session == null){
+            session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+            if (checkPermissionsFB() && fbToken!=null) {
+                new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
+        }
+
+        if (session == null || !checkPermissionsFB() || fbToken == null){
+            Log.d(TAG3, "Social: Not logged in to something");
+            facebook.setText(R.string.fb_logged_out);
+            // TODO: Reflect on the summary page in a message
+        }
     }
 
     public void intentFitness(View view) {
@@ -192,76 +188,372 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(new Intent(this,NutritionSummaryActivity.class));
     }
 
-    // ------------------------------------------------------------------------------
-    // TWITTER
-    // ------------------------------------------------------------------------------
+    private class SocialTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progress.show();
+        }
 
-    private void displayTweets(){
-        twitterApiClient = TwitterCore.getInstance().getApiClient();
-        displayFavouritedTweets();
-        displayStatusTweets();
+        protected Void doInBackground(Void... params) { // called on a seperate thread
+            // TODO
+            nutritionSocial = new LinkedList<>();
+            fitnessSocial = new LinkedList<>();
+            Social socialNutritionClass = new Social();
+            socialNutritionClass.displaySocial(true);
+            Social socialFitnessClass = new Social();
+            socialFitnessClass.displaySocial(false);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            progress.dismiss();
+        }
+    }
+
+    private class GeneralTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progress.show();
+        }
+
+        protected Void doInBackground(Void... params) { // called on a seperate thread
+            // TODO
+            nutritionGeneral = new LinkedList<>();
+            fitnessGeneral = new LinkedList<>();
+            General generalNutritionClass = new General();
+            generalNutritionClass.displayGeneral(true);
+            General generalFitnessClass = new General();
+            generalFitnessClass.displayGeneral(false);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Log.d(TAG, "post execute");
+            progress.dismiss();
+        }
     }
 
     /**
-     * This method displays all the users's favourited tweets
+     * This class contains all the methods to create social summary of a week
      */
-    private void displayFavouritedTweets(){
-        FavoriteService service = twitterApiClient.getFavoriteService();
-        Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
-        call.enqueue(twitterCallback);
-    }
+    private class Social {
 
-    /**
-     * This method displays all the user's statuses
-     */
-    private void displayStatusTweets(){
-        StatusesService service = twitterApiClient.getStatusesService();
-        Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
-        call.enqueue(twitterCallback);
-    }
+        private boolean isNutrition = false;
 
-    /**
-     * This initialised the twitterCallback that is used to print the results from either a status or favourite request
-     */
-    private void createTwitterCallback(){
-        twitterCallback = new Callback<List<Tweet>>() {
-            @Override
-            public void success(Result<List<Tweet>> result) {
-                // TODO: Transform the data into a useful output to the user
-                // TODO: Print the output to summary page
-                Log.d(TAG3, "Succesfully got the results");
+        private void displaySocial(boolean isNutrition){
+            this.isNutrition = isNutrition;
+            facebookSummary();
+            twitterSummary();
+        }
 
-                // loops through the data and prints each tweat to the debug console
-                List<Tweet> data = result.data;
-                for (int i = 0; i < data.size(); i++){
-                    Log.d(TAG3,"Created at: " + data.get(i).createdAt);
+        private void facebookSummary(){
+            if(MainActivity.checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
+
+                AccessToken facebookAccessToken = getFBToken();
+
+                //Callback method sent with request
+                GraphRequest.Callback callback = new GraphRequest.Callback() {
+                    @Override
+                    public void onCompleted(GraphResponse response) {
+                        if (response != null) {
+                            transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
+                        } //TODO: Error checking
+                    }
+                };
+                GraphRequest req = new GraphRequest(
+                        facebookAccessToken,
+                        "/me/",
+                        null,
+                        HttpMethod.GET,
+                        callback
+                );
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "posts,likes,events"); // adds requested permissions
+                req.setParameters(parameters);
+                req.executeAsync();
+            }
+        }
+
+        private void transformFacebookPostsEventsLikes(JSONObject jsonObject){
+            try {
+                JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(0));
+                JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
+                loopThroughResponse(postsArray, "message", "created_time","You posted: ");
+
+                JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(1));
+                JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
+                loopThroughResponse(likesArray, "name", "created_time", "You liked: ");
+
+                JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(2));
+                JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
+                loopThroughResponse(eventsArray, "name", "start_time", "You interacted with event: ");
+            } catch (JSONException e){
+                Log.d(TAG,"Error: JSON Exception");
+            } //TODO add error response
+        }
+
+        private void loopThroughResponse(JSONArray array, String dataType, String timeName, String output){
+            try {
+                for (int j = 0; j < array.length(); j++) { // loops through each element in the array
+                    JSONObject obj = (JSONObject) array.get(j);
+                    Object value = obj.get(dataType); //gets the parameter according to the data type
+                    Object time = obj.get(timeName);
+
                     Date parsed;
                     try {
-                        parsed = twitterDateFormat.parse(data.get(i).createdAt);
+                        parsed = MainActivity.facebookDateFormat.parse(time.toString());
+                        if (isDateInWeek(parsed)) {
+                            Log.d(TAG,"True for string " + value.toString());
+                            if (doesStringContainKeyword(value.toString())){
+                                Log.d(TAG, "Added string: " + output + value);
+                                if (isNutrition){
+                                    nutritionSocial.add(output + value.toString());
+                                } else {
+                                    fitnessSocial.add(output + value.toString());
+                                }
+                            }
+                        }
                     }
                     catch(ParseException pe) {
                         throw new IllegalArgumentException(pe);
                     }
-                    boolean isInLastWeek = startOfWeek.before(parsed) && endOfWeek.after(parsed);
-                    Log.d(TAG3, isInLastWeek + " : date " + startOfWeek + " is before " + parsed);
-                    if (isInLastWeek){ // In the last week
-                        String tweet = data.get(i).text;
-                        Log.d(TAG3, tweet);
+                }
+            } catch (JSONException e){
+                Log.d(TAG,"Error: JSON Exception");
+            } //TODO add error response
+        }
+
+        private boolean doesStringContainKeyword(String value){
+            List<String> list = FITNESSKEYWORDS;
+            if (isNutrition){
+                list = NUTRITIONKEYWORDS;
+            }
+
+            for (String string : list) { // loops through target keywords
+                if (value.contains(string)) { // checks if the target string is contained within the current object string
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean isDateInWeek(Date parsed){
+            return MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
+        }
+
+        private void twitterSummary(){
+            TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+            displayFavouritedTweets(twitterApiClient);
+            displayStatusTweets(twitterApiClient);
+        }
+
+        /**
+         * This method displays all the users's favourited tweets
+         */
+        private void displayFavouritedTweets(TwitterApiClient twitterApiClient){
+            FavoriteService service = twitterApiClient.getFavoriteService();
+            Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
+            call.enqueue(getTwitterCallback());
+        }
+
+        /**
+         * This method displays all the user's statuses
+         */
+        private void displayStatusTweets(TwitterApiClient twitterApiClient){
+            StatusesService service = twitterApiClient.getStatusesService();
+            Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
+            call.enqueue(getTwitterCallback());
+        }
+
+        /**
+         * This initialised the twitterCallback that is used to print the results from either a status or favourite request
+         */
+        private Callback<List<Tweet>> getTwitterCallback(){
+            return new Callback<List<Tweet>>() {
+                @Override
+                public void success(Result<List<Tweet>> result) {
+                    // loops through the data and prints each tweet to the debug console
+                    List<Tweet> data = result.data;
+                    for (int i = 0; i < data.size(); i++){
+                        Date parsed;
+                        try {
+                            parsed = MainActivity.twitterDateFormat.parse(data.get(i).createdAt);
+                            if (isDateInWeek(parsed)) {
+                                Log.d(TAG,"True for string " + data.get(i).toString());
+                                if (doesStringContainKeyword(data.get(i).text)){
+                                    Log.d(TAG, "Added Tweet: " + data.get(i));
+                                    if (isNutrition){
+                                        nutritionSocial.add("You interacted with tweet: " + data.get(i).text);
+                                    } else {
+                                        fitnessSocial.add("You interacted with tweet: " + data.get(i).text);
+                                    }
+                                }
+                            }
+                        }
+                        catch(ParseException pe) {
+                            throw new IllegalArgumentException(pe);
+                        }
+                    }
+                }
+
+                public void failure(TwitterException exception) {
+                    //TODO: Add an error
+                    Log.d(TAG, "Didn't get the results");
+                }
+            };
+        }
+
+        private AccessToken getFBToken(){
+            AccessToken facebookAccessToken = SettingsActivity.accessToken;
+            if (facebookAccessToken == null){
+                facebookAccessToken = AccessToken.getCurrentAccessToken();
+            }
+            return facebookAccessToken;
+        }
+
+        /**
+         * This gets the user's data from fitness actions and counts them up
+         * fitness actions include: bikes, walks & runs
+         * Adds up the amount of data to a global variable
+         */
+        public void transformFacebookFitness(){
+            AccessToken facebookAccessToken = getFBToken();
+
+            // the callback used by each
+            GraphRequest.Callback callback = new GraphRequest.Callback() {
+                @Override
+                public void onCompleted(GraphResponse response) {
+                    Log.d(TAG, "Successful completion of asynch call"); // TESTING
+                    Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
+//                    fitnessDataCount(response.getJSONObject()); // uses the response data to count the amount of fitness actions
+                }
+            };
+            // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
+            GraphRequestBatch batch = new GraphRequestBatch(
+                    new GraphRequest(
+                            facebookAccessToken,
+                            "/me/fitness.bikes",
+                            null,
+                            HttpMethod.GET
+                            , callback
+                    ),
+                    new GraphRequest(
+                            facebookAccessToken,
+                            "/me/fitness.walk",
+                            null,
+                            HttpMethod.GET
+                            , callback
+                    ),
+                    new GraphRequest(
+                            facebookAccessToken,
+                            "/me/fitness.runs",
+                            null,
+                            HttpMethod.GET
+                            , callback
+                    )
+            );
+            // adds a callback which uses the incremented count to output to the text on the front screen to the user
+            batch.addCallback(new GraphRequestBatch.Callback() {
+                @Override
+                public void onBatchCompleted(GraphRequestBatch graphRequests) {
+                    // Application code for when the batch finishes
+                    Log.d(TAG,"Graph Batch Executed"); // TESTING
+                }
+            });
+            batch.executeAsync();
+        }
+
+        /**
+         * This is called on each callback to increment the facebook fitness count accordingly
+         * @param jsonObject : the data response object
+         */
+        public void fitnessDataCount(JSONObject jsonObject) {
+            try {
+                JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
+                if (array != null) { // increment count if data object is not empty, depending on length of it
+                    Log.d(TAG, "fitness object = " + array.toString());
+                } else {
+                    Log.d(TAG, "fitness object is null");
+                }
+            } catch (JSONException e) {
+                Log.d(TAG, "Error: JSON Exception");
+            } //TODO: Error handling
+        }
+    }
+
+    private class General{
+
+        boolean isNutrition = false;
+
+        private void displayGeneral(boolean isNutrition){
+            this.isNutrition = isNutrition;
+            displayLastWeeksData();
+        }
+
+        private void displayLastWeeksData(){
+
+            // The read requests made to the list of datatypes
+            DataReadRequest readRequest = queryData(MainActivity.startOfWeek.getTime(), MainActivity.endOfWeek.getTime());
+            DataReadResult dataReadResult = Fitness.HistoryApi.readData(MainActivity.mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
+
+            if (dataReadResult.getBuckets().size() > 0) { //Used for aggregated data
+                Log.d(TAG, "Number of buckets: " + dataReadResult.getBuckets().size());
+                for (Bucket bucket : dataReadResult.getBuckets()) {
+                    List<DataSet> dataSets = bucket.getDataSets();
+                    for (DataSet dataSet : dataSets) {
+                        showDataSet(dataSet);
+                    }
+                }
+            } else if (dataReadResult.getDataSets().size() > 0) { //Used for non-aggregated data
+                Log.d(TAG, "Number of returned DataSets: " + dataReadResult.getDataSets().size());
+
+                for (DataSet dataSet : dataReadResult.getDataSets()) {
+                    showDataSet(dataSet);
+                }
+            }
+        }
+
+        private DataReadRequest queryData(long startTime, long endTime) {
+            List<DataType> types = FITNESSDATATYPES;
+            if (isNutrition){
+                types = NUTRITIONDATATYPES;
+            }
+
+            DataReadRequest.Builder builder = new DataReadRequest.Builder();
+            for (DataType dt : types) {
+                builder.read(dt);
+            }
+            return builder.setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS).build();
+        }
+
+        private void showDataSet(DataSet dataSet) {
+            Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+            DateFormat dateFormat = DateFormat.getDateInstance();
+            DateFormat timeFormat = DateFormat.getTimeInstance();
+
+            for (DataPoint dp : dataSet.getDataPoints()) {
+                Log.d(TAG, "Data point:");
+                Log.d(TAG, "\tType: " + dp.getDataType().getName());
+
+                Log.d(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                Log.d(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                for(Field field : dp.getDataType().getFields()) {
+                    Log.d(TAG, "\tField: " + field.getName() +
+                            " Value: " + dp.getValue(field));
+                    if (field.getName().equals("calories")){
+                        nutritionGeneral.add(field.getName() + " expended are " + dp.getValue(field) + ".");
                     }
                 }
             }
-
-            public void failure(TwitterException exception) {
-                //TODO: Add an error
-                Log.d(TAG3, "Didn't get the results");
-            }
-        };
+        }
     }
-
-
-// ------------------------------------------------------------------------------
-// GOOGLE FIT
-// ------------------------------------------------------------------------------
 
     /**
      * Builds to google client with the required scopes (permissions)
@@ -280,8 +572,8 @@ public class MainActivity extends AppCompatActivity implements
                                 @Override
                                 public void onConnected(Bundle bundle) {
                                     Log.d(TAG2, "Connected!!!");
-                                    new ViewDayGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                                    new ViewWeekGoogleFitTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                                    subscribe(); // double check
+                                    new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                                 }
 
                                 @Override
@@ -318,7 +610,8 @@ public class MainActivity extends AppCompatActivity implements
      * TODO: Call this only on the very startup
      */
     private void subscribeToDataTypes(){
-        List<DataType> newList = getListOfTypes();
+        List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
+        newList.addAll(NUTRITIONDATATYPES);
         for (int i = 0; i < newList.size(); i++){
             Log.d(TAG2, "Subscribing " + newList.get(i).getName());
             // Subscription using RecordingAPI to the Google API Client
@@ -340,19 +633,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void getSubscriptions(){
-        PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
-        result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
-            @Override
-            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
-                for (Subscription sc : listSubscriptionsResult.getSubscriptions()) {
-                    DataType dt = sc.getDataType();
-                    Log.d(TAG2, "Active subscription for data type: " + dt.getName());
-                }
-            }
-        });
-    }
-
     private void subscribe(){
         PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
         result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
@@ -364,150 +644,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         });
-    }
-
-    /**
-     * This is an AsyncTask that is called to retrieve "Today's" data for each subscription
-     * After this has executed, the summary of google fit is set with the calories extended as example
-     */
-    private class ViewDayGoogleFitTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) { // called on a seperate thread
-            displayDataForToday();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (outputFromDaysTask != null) {
-                TextView summary = (TextView) findViewById(R.id.food_app_summary);
-                if (summary.getText().equals("Loading...")) {
-                    summary.setText(outputFromDaysTask);
-                } else {
-                    summary.setText(summary.getText() + " " + outputFromDaysTask);
-                }
-            }
-        }
-    }
-
-    /**
-     * This retrieves the bulk info from GoogleFit and the subscriptions
-     * Outputs this to the summary of google fit
-     */
-    private class ViewWeekGoogleFitTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            displayLastWeeksData();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (outputFromWeeksTask != null) {
-                TextView summary = (TextView) findViewById(R.id.food_app_summary);
-                if (summary.getText().equals("Loading...")) {
-                    summary.setText(outputFromWeeksTask);
-                } else {
-                    summary.setText(summary.getText() + " " + outputFromWeeksTask);
-                }
-            }
-
-        }
-    }
-
-    /**
-     * This logs the bulk amount of data
-     * TODO: Summarise it somehow
-     */
-    protected void displayLastWeeksData(){
-
-        // The read requests made to the list of datatypes
-        DataReadRequest readRequest = queryData(startOfWeek.getTime(), endOfWeek.getTime(), getListOfTypes());
-        DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
-
-        if (dataReadResult.getBuckets().size() > 0) { //Used for aggregated data
-            Log.d(TAG2, "Number of buckets: " + dataReadResult.getBuckets().size());
-            for (Bucket bucket : dataReadResult.getBuckets()) {
-                List<DataSet> dataSets = bucket.getDataSets();
-                for (DataSet dataSet : dataSets) {
-                    showDataSet(dataSet);
-                }
-            }
-        } else if (dataReadResult.getDataSets().size() > 0) { //Used for non-aggregated data
-            outputFromWeeksTask = "Number of returned DataSets: " + dataReadResult.getDataSets().size();
-            Log.d(TAG2, outputFromWeeksTask);
-
-            for (DataSet dataSet : dataReadResult.getDataSets()) {
-                showDataSet(dataSet);
-            }
-        }
-    }
-
-    /**
-     * This method builds the read request using the list of datatypes (adds each one to it)
-     * @param startTime : The start time to query data from
-     * @param endTime : The end time to query data till
-     * @param types : The list of datatypes that are used
-     * @return : The build read request
-     */
-    private DataReadRequest queryData(long startTime, long endTime, List<DataType> types) {
-        // TESTING EXTRAS
-        types.add(DataType.TYPE_ACTIVITY_SAMPLES);
-        types.add(DataType.TYPE_POWER_SAMPLE);
-
-        DataReadRequest.Builder builder = new DataReadRequest.Builder();
-        for (DataType dt : types) {
-            builder.read(dt);
-        }
-        return builder.setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS).build();
-    }
-
-    /**
-     * This is the method that displays the datasets
-     * This is from the Android Get Started Exampler: BasicHistoryApi
-     * @param dataSet : The Data set to be shown
-     */
-    private void showDataSet(DataSet dataSet) {
-        Log.d(TAG2, "Data returned for Data type: " + dataSet.getDataType().getName());
-        DateFormat dateFormat = DateFormat.getDateInstance();
-        DateFormat timeFormat = DateFormat.getTimeInstance();
-
-        for (DataPoint dp : dataSet.getDataPoints()) {
-            Log.d(TAG2, "Data point:");
-            Log.d(TAG2, "\tType: " + dp.getDataType().getName());
-
-            Log.d(TAG2, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            Log.d(TAG2, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            for(Field field : dp.getDataType().getFields()) {
-                Log.d(TAG2, "\tField: " + field.getName() +
-                        " Value: " + dp.getValue(field));
-                if (field.getName().equals("calories")){
-                    outputFromDaysTask= field.getName() + " expended are " + dp.getValue(field) + ".";
-                }
-            }
-        }
-    }
-
-    /**
-     * This uses the permissions to create the datatypes to request
-     * @return the datatypes permitted
-     */
-    private List<DataType> getListOfTypes(){
-        List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
-        newList.addAll(FITNESSDATATYPES);
-        return newList;
-    }
-
-    /**
-     * This prints "Todays" data from HISTORY Api
-     */
-    private void displayDataForToday() {
-        List<DataType> newList = getListOfTypes();
-
-        for (int i = 0; i < newList.size(); i++){
-            DailyTotalResult result = Fitness.HistoryApi.readDailyTotal( mGoogleApiClient, newList.get(i) ).await(1, TimeUnit.MINUTES);
-            showDataSet(result.getTotal());
-        }
     }
 
     @Override
@@ -530,66 +666,6 @@ public class MainActivity extends AppCompatActivity implements
         //TODO: used when the user resumes after accepting/ denying permissions
     }
 
-
-// ------------------------------------------------------------------------------
-// FACEBOOK
-// ------------------------------------------------------------------------------
-
-    /**
-     * This is the async task called when the activity is created.
-     * It updates the summary for facebook on a different thread
-     */
-    private class FacebookSummaryTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            facebookSummary();
-            return null;
-        }
-    }
-
-    /**
-     * This method is called to update the summary on Facebook if there exists an Access Token for Facebook
-     */
-    public void facebookSummary(){
-        String requestedData = ""; // incase we want to seperate the method depending on permissions
-
-        if(checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
-        //TODO: error checking if certain permissions aren't granted (accesses certain values in array accordingly - currently assumes gets all
-
-            requestedData+="posts,likes,events";
-            AccessToken facebookAccessToken = SettingsActivity.accessToken;
-            if (facebookAccessToken == null){
-                facebookAccessToken = AccessToken.getCurrentAccessToken();
-            }
-
-            //Callback method sent with request
-            GraphRequest.Callback callback = new GraphRequest.Callback() {
-                @Override
-                public void onCompleted(GraphResponse response) {
-                    if (response != null) {
-                        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-                        String outputString = transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
-                        Log.d(TAG, "output : " + response.getJSONObject().toString());
-                        facebook.setText(outputString);
-                        if (getFBPermissions(true).contains("user_actions.fitness")){
-                            transformFacebookFitness(); // this uses user_actions.fitness
-                        }
-                    } //TODO: Error checking
-                }
-            };
-            GraphRequest req = new GraphRequest(
-                    facebookAccessToken,
-                    "/me/",
-                    null,
-                    HttpMethod.GET,
-                    callback
-            );
-            Bundle parameters = new Bundle();
-            parameters.putString("fields", requestedData); // adds requested permissions
-            req.setParameters(parameters);
-            req.executeAsync();
-        } // No permissions granted
-    }
-
     /**
      * Checks if user posts, user likes and user events permissions are granted
      * @return true or false whether all 3 permissions are granted
@@ -600,7 +676,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     *
      * This gets the access token and then returns the granted/ denied permissions according to it
      * @param wantGranted : true/ false depending on whether wants granted or denied permissions
      * @return List of permissions granted/ denied
@@ -620,196 +695,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
         return list;
-    }
-
-    /**
-     * This gets the user's data from fitness actions and counts them up
-     * fitness actions include: bikes, walks & runs
-     * Adds up the amount of data to a global variable
-     */
-    public void transformFacebookFitness(){
-        AccessToken facebookAccessToken = SettingsActivity.accessToken;
-        if (facebookAccessToken == null){
-            facebookAccessToken = AccessToken.getCurrentAccessToken();
-        }
-        // the callback used by each
-        GraphRequest.Callback callback = new GraphRequest.Callback() {
-            @Override
-            public void onCompleted(GraphResponse response) {
-                Log.d(TAG, "Successful completion of asynch call"); // TESTING
-                Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
-                fitnessDataCount(response.getJSONObject()); // uses the response data to count the amount of fitness actions
-            }
-        };
-        // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
-        GraphRequestBatch batch = new GraphRequestBatch(
-                new GraphRequest(
-                        facebookAccessToken,
-                        "/me/fitness.bikes",
-                        null,
-                        HttpMethod.GET
-                        , callback
-                ),
-                new GraphRequest(
-                        facebookAccessToken,
-                        "/me/fitness.walk",
-                        null,
-                        HttpMethod.GET
-                        , callback
-                ),
-                new GraphRequest(
-                        facebookAccessToken,
-                        "/me/fitness.runs",
-                        null,
-                        HttpMethod.GET
-                        , callback
-                )
-        );
-        // adds a callback which uses the incremented count to output to the text on the front screen to the user
-        batch.addCallback(new GraphRequestBatch.Callback() {
-            @Override
-            public void onBatchCompleted(GraphRequestBatch graphRequests) {
-                // Application code for when the batch finishes
-                Log.d(TAG,"Graph Batch Executed"); // TESTING
-                TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
-                String outputString = (String) facebook.getText(); // gets the current text
-                if (facebookFitnessCount == 1){ // updates the current text of the facebook summary, takes account of plural of the sentence
-                    outputString += " You have completed " + facebookFitnessCount + " facebook fitness action.";
-                } else {
-                    outputString += " You have completed " + facebookFitnessCount + " facebook fitness actions.";
-                }
-                facebook.setText(outputString); // sets the output text
-            }
-        });
-        batch.executeAsync();
-    }
-
-    /**
-     * This is called on each callback to increment the facebook fitness count accordingly
-     * @param jsonObject : the data response object
-     */
-    public void fitnessDataCount(JSONObject jsonObject){
-        try {
-            JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
-            if (array != null){ // increment count if data object is not empty, depending on length of it
-                Log.d(TAG, "fitness object = " + array.toString());
-                facebookFitnessCount+= array.length();
-            } else {
-                Log.d(TAG, "fitness object is null");
-            }
-        } catch (JSONException e){
-            Log.d(TAG,"Error: JSON Exception");
-        } //TODO: Error handling
-    }
-
-    /**
-     * This takes the input jsonObject which is the reponse from the GraphAPI request
-     * It then transforms this data into a useful summary text string to return to the user
-     * It currently just calculates the amount of times the user includes keywords, such as "fitness" in their fb actions such as posts
-     * @param jsonObject : The response object from the Graph API successful request
-     * @return String : the string to output on the summary page
-     */
-    public String transformFacebookPostsEventsLikes(JSONObject jsonObject){
-        // array values
-        int posts = 0;
-        int likes = 1;
-        int events = 2;
-
-        int countFitness = 0; // the number of times something fitness related is liked/ posted about
-        int countNutrition = 0;
-        Log.d(TAG, "JSON Object reponse in main activity: " + jsonObject.toString()); //TESTING
-
-            try { // catch JSON exception
-                Log.d(TAG, "length = " +jsonObject.length());
-                if(jsonObject.length() > 1) { // THESE are for testing - so errors aren't thrown if you don't provide some
-                    // gets user's POST data
-                    JSONObject postsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(posts));
-                    Log.d(TAG, "posts object = " + postsObject.toString());
-                    JSONArray postsArray = (JSONArray) postsObject.get(postsObject.names().getString(0));
-                    Log.d(TAG, "posts array = " + postsArray.toString());
-                    countFitness += loopThroughResponse(postsArray, "message", "created_time", FITNESSKEYWORDS); // adds to count the number of times keywords are used in posts
-                    countNutrition += loopThroughResponse(postsArray, "message", "created_time", NUTRITIONKEYWORDS);
-                }
-                if (jsonObject.length() > 2) {
-                    // gets  user's LIKES data
-                    JSONObject likesObject = (JSONObject) jsonObject.get(jsonObject.names().getString(likes));
-                    Log.d(TAG, "likes object = " + likesObject.toString());
-                    JSONArray likesArray = (JSONArray) likesObject.get(likesObject.names().getString(0));
-                    Log.d(TAG, "likes array length " + likesArray.length() + " with values = " + likesArray.toString());
-                    countFitness += loopThroughResponse(likesArray, "name", "created_time", FITNESSKEYWORDS); // adds to count the number of times keywords are used in likes
-                    countNutrition += loopThroughResponse(likesArray, "name", "created_time", NUTRITIONKEYWORDS);
-                }
-                if (jsonObject.length() > 3) {
-                    // gets  user's EVENTS data
-                    JSONObject eventsObject = (JSONObject) jsonObject.get(jsonObject.names().getString(events));
-                    Log.d(TAG, "events object = " + eventsObject.toString());
-                    JSONArray eventsArray = (JSONArray) eventsObject.get(eventsObject.names().getString(0));
-                    Log.d(TAG, "events array length " + eventsArray.length() + " with values = " + eventsArray.toString());
-                    countFitness += loopThroughResponse(eventsArray, "name", "start_time", FITNESSKEYWORDS); // adds to count the number of times keywords are used in event name (could use descriptions)
-                    countNutrition += loopThroughResponse(eventsArray, "name", "start_time", NUTRITIONKEYWORDS);
-                }
-            } catch (JSONException e){
-                Log.d(TAG,"Error: JSON Exception");
-            } //TODO add error response
-
-        // format string responses plurals accordingly to the output count
-        String outputString;
-        if (countFitness == 0){ // FITNESS
-            outputString = "You have not done any fitness social activity ";
-        } else if (countFitness == 1){
-            outputString = "You have " + countFitness + " fitness related social activity ";
-        } else {
-            outputString = "You have " + countFitness + " fitness related social activities ";
-        }
-        if (countNutrition == 0){ // NUTRITION
-            outputString += "and no nutrition social activity.";
-        } else if (countNutrition == 1){
-            outputString += "and " + countNutrition + " nutrition related social activity.";
-        } else {
-            outputString += "and " + countNutrition + " nutrition related social activities.";
-        }
-        return outputString;
-    }
-
-    /**
-     * This loops through the given array and looks for key words in it, such as "Fitness"
-     * @param array : of the user's fb data
-     * @param dataType : the type of data it is, such as "message" or "name"
-     * @return an integer value representing the number of matches
-     */
-    public int loopThroughResponse(JSONArray array, String dataType, String timeName, List<String> KEYWORDS){
-        int count = 0; // counter of number of times a keyword is matches
-
-        try {
-            for (int j = 0; j < array.length(); j++) { // loops through each element in the array
-                Log.d(TAG, "values = " + array.get(j)); //TESTING
-                JSONObject obj = (JSONObject) array.get(j);
-                Object value = obj.get(dataType); //gets the parameter according to the data type
-                Log.d(TAG, value.toString()); // TESTING
-                Object time = obj.get(timeName);
-                Log.d(TAG,"Date created: " + time);
-
-                Date parsed;
-                try {
-                    parsed = facebookDateFormat.parse(time.toString());
-                }
-                catch(ParseException pe) {
-                    throw new IllegalArgumentException(pe);
-                }
-                boolean isInLastWeek = startOfWeek.before(parsed) && endOfWeek.after(parsed);
-                Log.d(TAG, isInLastWeek + " : date " + startOfWeek + " is before " + parsed);
-                if (isInLastWeek) {
-                    for (String string : KEYWORDS) { // loops through target keywords
-                        if (value.toString().contains(string)) { // checks if the target string is contained within the current object string
-                            count++; // increases the count if there's a match
-                        }
-                    }
-                }
-            }
-        } catch (JSONException e){
-            Log.d(TAG,"Error: JSON Exception");
-        } //TODO add error response
-        return count;
     }
 
     @Override
