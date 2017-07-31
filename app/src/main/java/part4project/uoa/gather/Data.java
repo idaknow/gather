@@ -8,9 +8,9 @@ import java.util.Date;
 
 class Data{
 
-    Date createdAt;
-    String type;
-    String value;
+    private Date createdAt;
+    private String type;
+    private String value;
 
     Data(Date createdAt, String type, String value){
         this.createdAt = createdAt;
@@ -18,25 +18,13 @@ class Data{
         this.value = value;
     }
 
-    public void setCreatedAt(Date createdAt){
-        this.createdAt = createdAt;
-    }
-
-    public void setType(String type){
-        this.type = type;
-    }
-
-    public void setValue(String value){
-        this.value = value;
-    }
-
-    public Date getCreatedAt(){
+    Date getCreatedAt(){
         return createdAt;
     }
-    public String getType(){
+    String getType(){
         return type;
     }
-    public String getValue(){
+    String getValue(){
         return value;
     }
 }

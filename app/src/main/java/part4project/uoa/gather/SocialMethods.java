@@ -22,13 +22,13 @@ import java.util.Locale;
 
 class SocialMethods {
 
-    public static final SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
-    public static final SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
-    public static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active", "Rhythm");
-    public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
+    private static final SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+    private static final SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+    private static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active", "Rhythm");
+    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
 
-    public static AccessToken getFBToken(){
+    static AccessToken getFBToken(){
         AccessToken facebookAccessToken = SettingsActivity.accessToken;
         if (facebookAccessToken == null){
             facebookAccessToken = AccessToken.getCurrentAccessToken();
@@ -36,9 +36,9 @@ class SocialMethods {
         return facebookAccessToken;
     }
 
-    public static JSONArray getArray(JSONObject jsonObject, int index){
+    static JSONArray getArray(JSONObject jsonObject, int index){
         JSONObject object;
-        JSONArray array = new JSONArray();
+        JSONArray array;
         try {
             object = (JSONObject) jsonObject.get(jsonObject.names().getString(index));
             array = (JSONArray) object.get(object.names().getString(0));
@@ -49,8 +49,8 @@ class SocialMethods {
         return array;
     }
 
-    public static JSONArray getFitnessArray(JSONObject jsonObject){
-        JSONArray array = new JSONArray();
+    static JSONArray getFitnessArray(JSONObject jsonObject){
+        JSONArray array;
         try {
             array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
         } catch (JSONException e){
@@ -60,17 +60,7 @@ class SocialMethods {
         return array;
     }
 
-    public static JSONObject getJsonObject(JSONArray array, int index){
-        JSONObject obj;
-        try {
-            obj = array.getJSONObject(index);
-        } catch (JSONException e) {
-            return null;
-        }
-        return obj;
-    }
-
-    public static Date getDate(String time, boolean isFacebook){
+    static Date getDate(String time, boolean isFacebook){
         Date parsed;
         try {
             if (isFacebook){
@@ -85,7 +75,7 @@ class SocialMethods {
         return parsed;
     }
 
-    public static boolean doesStringContainKeyword(String value, boolean isNutrition){
+    static boolean doesStringContainKeyword(String value, boolean isNutrition){
         List<String> list = FITNESSKEYWORDS;
         if (isNutrition){
             list = NUTRITIONKEYWORDS;
@@ -103,7 +93,7 @@ class SocialMethods {
     * Checks if user posts, user likes and user events permissions are granted
     * @return true or false whether all 3 permissions are granted
     */
-    public static boolean checkPermissionsFB(){
+    static boolean checkPermissionsFB(){
         List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
         return (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events"));
     }
@@ -113,8 +103,9 @@ class SocialMethods {
      * @param wantGranted : true/ false depending on whether wants granted or denied permissions
      * @return List of permissions granted/ denied
      */
-    public static List<String> getFBPermissions(boolean wantGranted){
-        List<String> list = new LinkedList<>(); // the returned list
+    static List<String> getFBPermissions(boolean wantGranted){
+        List<String> list; // the returned list
+        list = new LinkedList<>();
         if (SettingsActivity.accessToken == null){ // settingsActivity has been created
                 AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
                 if (facebookAccessToken != null) {

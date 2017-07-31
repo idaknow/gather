@@ -2,12 +2,7 @@ package part4project.uoa.gather;
 
 import android.util.Log;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by Ida on 1/08/2017.
@@ -18,7 +13,7 @@ class DataCollection {
     /**
      * This loops through each list
      */
-    public static String getWeeksData(List<Data> nutritionGeneral, List<Data> nutritionSocial, List<Data> fitnessGeneral, List<Data> fitnessSocial ){
+    static String getWeeksData(List<Data> nutritionGeneral, List<Data> nutritionSocial, List<Data> fitnessGeneral, List<Data> fitnessSocial ){
         boolean[] isNutrition = new boolean[7];
         boolean[] isFitness = new boolean[7];
 
