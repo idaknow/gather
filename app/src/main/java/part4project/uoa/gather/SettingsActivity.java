@@ -423,7 +423,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     /**
-     * Initialised variables to be used by Facebook - Social Media App
+     * Initialised variables to be used by Facebook - SocialMethods Media App
      */
     private static LoginButton facebookLogin;
     private static CallbackManager callbackManager;

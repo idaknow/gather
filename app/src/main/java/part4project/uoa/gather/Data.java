@@ -6,7 +6,7 @@ import java.util.Date;
  * Created by Ida on 31/07/2017.
  */
 
-public class Data{
+class Data{
 
     Date createdAt;
     String type;
