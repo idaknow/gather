@@ -57,7 +57,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -78,10 +77,8 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
-    //Logging Data tags
-    private static final String TAG = "Facebook";
-    private static final String TAG2 = "GoogleFit";
-    private static final String TAG3 = "Twitter";
+    //Logging Data TAGs
+    private static final String TAG = "MainActivity";
 
     // SOCIAL: Used to summarise
     //TODO: Change to be more extensive depending on words we want to search for
@@ -149,11 +146,9 @@ public class MainActivity extends AppCompatActivity implements
 
         // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
         if (mGoogleApiClient == null){
-            Log.d(TAG2,"Google client is null");
+            Log.d(TAG,"Google client is null");
             buildAndConnectClient(); // TODO: Check switch pref
             subscribe();
-        } else {
-//            new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
 
         // SOCIAL
@@ -591,7 +586,7 @@ public class MainActivity extends AppCompatActivity implements
                         new GoogleApiClient.ConnectionCallbacks() {
                                 @Override
                                 public void onConnected(Bundle bundle) {
-                                    Log.d(TAG2, "Connected!!!");
+                                    Log.d(TAG, "Connected!!!");
                                     subscribe(); // double check
                                     new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                                 }
@@ -601,9 +596,9 @@ public class MainActivity extends AppCompatActivity implements
                                     // If your connection to the sensor gets lost at some point,
                                     // you'll be able to determine the reason and react to it here.
                                     if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-                                        Log.d(TAG2, "Connection lost.  Cause: Network Lost.");
+                                        Log.d(TAG, "Connection lost.  Cause: Network Lost.");
                                     } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-                                        Log.d(TAG2, "Connection lost.  Reason: Service Disconnected");
+                                        Log.d(TAG, "Connection lost.  Reason: Service Disconnected");
                                     }
                                 }
                             }
@@ -633,7 +628,7 @@ public class MainActivity extends AppCompatActivity implements
         List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
         newList.addAll(NUTRITIONDATATYPES);
         for (int i = 0; i < newList.size(); i++){
-            Log.d(TAG2, "Subscribing " + newList.get(i).getName());
+            Log.d(TAG, "Subscribing " + newList.get(i).getName());
             // Subscription using RecordingAPI to the Google API Client
             Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
                     .setResultCallback(new ResultCallback<Status>() {
@@ -641,12 +636,12 @@ public class MainActivity extends AppCompatActivity implements
                         public void onResult(@NonNull Status status) {
                             if (status.isSuccess()) {
                                 if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                    Log.d(TAG2, "Existing subscription for activity detected.");
+                                    Log.d(TAG, "Existing subscription for activity detected.");
                                 } else {
-                                    Log.d(TAG2, "Successfully subscribed!");
+                                    Log.d(TAG, "Successfully subscribed!");
                                 }
                             } else {
-                                Log.d(TAG2, "There was a problem subscribing. " + status);
+                                Log.d(TAG, "There was a problem subscribing. " + status);
                             }
                         }
                     });
@@ -707,12 +702,12 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         String outputString = "Fitness: ";
-        for (int i = 0; i < isFitness.length; i++){
-            outputString += isFitness[i] + " ";
+        for (boolean truth : isFitness) {
+            outputString += truth + " ";
         }
         outputString += "\n\nNutrition: ";
-        for (int i = 0; i < isNutrition.length; i++){
-            outputString += isNutrition[i] + " ";
+        for (boolean truth : isNutrition){
+            outputString += truth + " ";
         }
 
         TextView textView = (TextView) findViewById(R.id.text);
@@ -721,16 +716,16 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.d(TAG2, "HistoryAPI onConnectionSuspended");
+        Log.d(TAG, "HistoryAPI onConnectionSuspended");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG2, "HistoryAPI onConnectionFailed");
+        Log.d(TAG, "HistoryAPI onConnectionFailed");
     }
 
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG2, "HistoryAPI onConnected");
+        Log.d(TAG, "HistoryAPI onConnected");
     }
 
     @Override
