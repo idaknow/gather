@@ -149,6 +149,8 @@ public class MainActivity extends AppCompatActivity implements
             Log.d(TAG,"Google client is null");
             buildAndConnectClient(); // TODO: Check switch pref
             subscribe();
+        } else {
+            getWeeksData();
         }
 
         // SOCIAL
@@ -158,8 +160,10 @@ public class MainActivity extends AppCompatActivity implements
         }
         if (session == null){
             session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-            if (checkPermissionsFB() && fbToken!=null) {
-                new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            if (fbToken!=null) {
+                if (checkPermissionsFB()){
+                    new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                }
             }
         }
     }
@@ -228,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private boolean isDateInWeek(Date parsed){
-        return MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
+        return startOfWeek.before(parsed) && endOfWeek.after(parsed);
     }
 
     /**
@@ -240,7 +244,9 @@ public class MainActivity extends AppCompatActivity implements
 
         private void displaySocial(boolean isNutrition){
             this.isNutrition = isNutrition;
-            facebookSummary();
+            if (getFBToken() != null) {
+                facebookSummary();
+            }
             twitterSummary();
             if (!isNutrition){
                 transformFacebookFitness();
@@ -248,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void facebookSummary(){
-            if(MainActivity.checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
+            if(checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
 
                 AccessToken facebookAccessToken = getFBToken();
 
@@ -256,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements
                 GraphRequest.Callback callback = new GraphRequest.Callback() {
                     @Override
                     public void onCompleted(GraphResponse response) {
-                        if (response != null) {
+                        if (response != null && response.getJSONObject()!= null) {
                             transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
                         } //TODO: Error checking
                     }
@@ -338,9 +344,9 @@ public class MainActivity extends AppCompatActivity implements
             Date parsed;
             try {
                 if (isFacebook){
-                    parsed = MainActivity.facebookDateFormat.parse(time);
+                    parsed = facebookDateFormat.parse(time);
                 } else {
-                    parsed = MainActivity.twitterDateFormat.parse(time);
+                    parsed = twitterDateFormat.parse(time);
                 }
             } catch(ParseException pe) {
                 throw new IllegalArgumentException(pe);
@@ -351,8 +357,10 @@ public class MainActivity extends AppCompatActivity implements
 
         private void twitterSummary(){
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
-            displayFavouritedTweets(twitterApiClient);
-            displayStatusTweets(twitterApiClient);
+            if (twitterApiClient != null){
+                displayFavouritedTweets(twitterApiClient);
+                displayStatusTweets(twitterApiClient);
+            }
         }
 
         /**
@@ -427,8 +435,10 @@ public class MainActivity extends AppCompatActivity implements
                 @Override
                 public void onCompleted(GraphResponse response) {
                     Log.d(TAG, "Successful completion of asynch call"); // TESTING
-                    Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
-                    getFacebookFitnessActions(response.getJSONObject()); // uses the response data to count the amount of fitness actions
+                    if (response != null && response.getJSONObject() != null){
+                        Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
+                        getFacebookFitnessActions(response.getJSONObject()); // uses the response data to count the amount of fitness actions
+                    }
                 }
             };
             // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
@@ -726,6 +736,7 @@ public class MainActivity extends AppCompatActivity implements
 
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "HistoryAPI onConnected");
+
     }
 
     @Override
@@ -749,12 +760,14 @@ public class MainActivity extends AppCompatActivity implements
      * @return List of permissions granted/ denied
      */
     public static List<String> getFBPermissions(boolean wantGranted){
-        List<String> list; // the returned list
+        List<String> list = new LinkedList<>(); // the returned list
         if (SettingsActivity.accessToken == null){ // settingsActivity has been created
             AccessToken facebookAccessToken = AccessToken.getCurrentAccessToken();
-            list = new LinkedList<>(facebookAccessToken.getPermissions());
-            if (!wantGranted) {
-                list = new LinkedList<>(facebookAccessToken.getDeclinedPermissions());
+            if (facebookAccessToken != null) {
+                list = new LinkedList<>(facebookAccessToken.getPermissions());
+                if (!wantGranted) {
+                    list = new LinkedList<>(facebookAccessToken.getDeclinedPermissions());
+                }
             }
         } else {
             list = SettingsActivity.grantedFBPermissions;
