@@ -70,6 +70,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import part4project.uoa.gather.Data;
 
 import retrofit2.Call;
 
@@ -90,10 +91,10 @@ public class MainActivity extends AppCompatActivity implements
     public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
     // Data lists
-    public static List<String> nutritionSocial;
-    public static List<String> nutritionGeneral;
-    public static List<String> fitnessSocial;
-    public static List<String> fitnessGeneral;
+    public static List<Data> nutritionSocial;
+    public static List<Data> nutritionGeneral;
+    public static List<Data> fitnessSocial;
+    public static List<Data> fitnessGeneral;
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
@@ -313,10 +314,11 @@ public class MainActivity extends AppCompatActivity implements
                             Log.d(TAG,"True for string " + value.toString());
                             if (doesStringContainKeyword(value.toString())){
                                 Log.d(TAG, "Added string: " + output + value);
+                                Data data = new Data(parsed, output, value.toString());
                                 if (isNutrition){
-                                    nutritionSocial.add(output + value.toString());
+                                    nutritionSocial.add(data);
                                 } else {
-                                    fitnessSocial.add(output + value.toString());
+                                    fitnessSocial.add(data);
                                 }
                             }
                         }
@@ -389,10 +391,11 @@ public class MainActivity extends AppCompatActivity implements
                                 Log.d(TAG,"True for string " + data.get(i).toString());
                                 if (doesStringContainKeyword(data.get(i).text)){
                                     Log.d(TAG, "Added Tweet: " + data.get(i));
+                                    Data tweetData = new Data(parsed, "You interacted with tweet: ", data.get(i).text);
                                     if (isNutrition){
-                                        nutritionSocial.add("You interacted with tweet: " + data.get(i).text);
+                                        nutritionSocial.add(tweetData);
                                     } else {
-                                        fitnessSocial.add("You interacted with tweet: " + data.get(i).text);
+                                        fitnessSocial.add(tweetData);
                                     }
                                 }
                             }
@@ -479,8 +482,9 @@ public class MainActivity extends AppCompatActivity implements
                 JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
                 if (array != null) { // increment count if data object is not empty, depending on length of it
                     Log.d(TAG, "fitness object = " + array.toString());
+                    Data data = new Data(new Date(), "You used fb fitness: ", array.toString());
                     //TODO: date
-                    fitnessSocial.add("You used fb fitness: " + array.toString());
+                    fitnessSocial.add(data);
                 } else {
                     Log.d(TAG, "fitness object is null");
                 }
@@ -550,7 +554,8 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "\tField: " + field.getName() +
                             " Value: " + dp.getValue(field));
                     if (field.getName().equals("calories")){
-                        nutritionGeneral.add(field.getName() + " expended are " + dp.getValue(field) + ".");
+                        Data data = new Data(new Date(dp.getStartTime(TimeUnit.MILLISECONDS)), field.getName() + " expended are ", dp.getValue(field).toString());
+                        nutritionGeneral.add(data);
                     }
                 }
             }
@@ -730,3 +735,5 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 }
+
+

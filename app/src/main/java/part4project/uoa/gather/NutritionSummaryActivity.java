@@ -10,6 +10,7 @@ import android.widget.ListView;
 import android.widget.ToggleButton;
 
 
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -63,16 +64,17 @@ public class NutritionSummaryActivity extends AppCompatActivity {
 
     private void setListViewContent(boolean isSocial){
         ListView view = (ListView) findViewById(R.id.listView);
-        List<String> list;
+        List<Data> list;
         if (isSocial) {
             list = MainActivity.nutritionSocial;
         } else {
             list = MainActivity.nutritionGeneral;
         }
+        List<String> listToPrint = new LinkedList<>();
         for (int i = 0; i < list.size(); i++) {
-            Log.d(TAG, i + " : " + list.get(i));
+            listToPrint.add(list.get(i).getType() + list.get(i).getValue());
         }
-        ArrayAdapter adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_listview, list);
+        ArrayAdapter adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_listview, listToPrint);
         view.setAdapter(adapter);
     }
 }
