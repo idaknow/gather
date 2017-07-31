@@ -310,25 +310,20 @@ public class MainActivity extends AppCompatActivity implements
                     Object value = obj.get(dataType); //gets the parameter according to the data type
                     Object time = obj.get(timeName);
 
-                    Date parsed;
-                    try {
-                        parsed = MainActivity.facebookDateFormat.parse(time.toString());
-                        if (isDateInWeek(parsed)) {
-                            Log.d(TAG,"True for string " + value.toString());
-                            if (doesStringContainKeyword(value.toString())){
-                                Log.d(TAG, "Added string: " + output + value);
-                                Data data = new Data(parsed, output, value.toString());
-                                if (isNutrition){
-                                    nutritionSocial.add(data);
-                                } else {
-                                    fitnessSocial.add(data);
-                                }
+                    Date parsed = getDate(time.toString(), true);
+                    if (isDateInWeek(parsed)) {
+                        Log.d(TAG,"True for string " + value.toString());
+                        if (doesStringContainKeyword(value.toString())){
+                            Log.d(TAG, "Added string: " + output + value);
+                            Data data = new Data(parsed, output, value.toString());
+                            if (isNutrition){
+                                nutritionSocial.add(data);
+                            } else {
+                                fitnessSocial.add(data);
                             }
                         }
                     }
-                    catch(ParseException pe) {
-                        throw new IllegalArgumentException(pe);
-                    }
+
                 }
             } catch (JSONException e){
                 Log.d(TAG,"Error: JSON Exception");
@@ -351,6 +346,21 @@ public class MainActivity extends AppCompatActivity implements
 
         private boolean isDateInWeek(Date parsed){
             return MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
+        }
+
+        private Date getDate(String time, boolean isFacebook){
+            Date parsed;
+            try {
+                if (isFacebook){
+                    parsed = MainActivity.facebookDateFormat.parse(time.toString());
+                } else {
+                    parsed = MainActivity.twitterDateFormat.parse(time.toString());
+                }
+            } catch(ParseException pe) {
+                throw new IllegalArgumentException(pe);
+            }
+
+            return parsed;
         }
 
         private void twitterSummary(){
@@ -387,24 +397,18 @@ public class MainActivity extends AppCompatActivity implements
                     // loops through the data and prints each tweet to the debug console
                     List<Tweet> data = result.data;
                     for (int i = 0; i < data.size(); i++){
-                        Date parsed;
-                        try {
-                            parsed = MainActivity.twitterDateFormat.parse(data.get(i).createdAt);
-                            if (isDateInWeek(parsed)) {
-                                Log.d(TAG,"True for string " + data.get(i).toString());
-                                if (doesStringContainKeyword(data.get(i).text)){
-                                    Log.d(TAG, "Added Tweet: " + data.get(i));
-                                    Data tweetData = new Data(parsed, "You interacted with tweet: ", data.get(i).text);
-                                    if (isNutrition){
-                                        nutritionSocial.add(tweetData);
-                                    } else {
-                                        fitnessSocial.add(tweetData);
-                                    }
+                        Date parsed = getDate(data.get(i).createdAt, false);
+                        if (isDateInWeek(parsed)) {
+                            Log.d(TAG,"True for string " + data.get(i).toString());
+                            if (doesStringContainKeyword(data.get(i).text)){
+                                Log.d(TAG, "Added Tweet: " + data.get(i));
+                                Data tweetData = new Data(parsed, "You interacted with tweet: ", data.get(i).text);
+                                if (isNutrition){
+                                    nutritionSocial.add(tweetData);
+                                } else {
+                                    fitnessSocial.add(tweetData);
                                 }
                             }
-                        }
-                        catch(ParseException pe) {
-                            throw new IllegalArgumentException(pe);
                         }
                     }
                 }
@@ -438,7 +442,7 @@ public class MainActivity extends AppCompatActivity implements
                 public void onCompleted(GraphResponse response) {
                     Log.d(TAG, "Successful completion of asynch call"); // TESTING
                     Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
-                    fitnessDataCount(response.getJSONObject()); // uses the response data to count the amount of fitness actions
+                    getFacebookFitnessActions(response.getJSONObject()); // uses the response data to count the amount of fitness actions
                 }
             };
             // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
@@ -480,7 +484,7 @@ public class MainActivity extends AppCompatActivity implements
          * This is called on each callback to increment the facebook fitness count accordingly
          * @param jsonObject : the data response object
          */
-        public void fitnessDataCount(JSONObject jsonObject) {
+        public void getFacebookFitnessActions(JSONObject jsonObject) {
             try {
                 JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
                 if (array != null && array.length() != 0) { // increment count if data object is not empty, depending on length of it
@@ -489,19 +493,14 @@ public class MainActivity extends AppCompatActivity implements
                         JSONObject obj = array.getJSONObject(i);
                         Log.d(TAG, "Fitness OBJ: " + obj.getString("end_time"));
                         String time = obj.getString("start_time");
-                        Date parsed;
-                        try {
-                            parsed = MainActivity.facebookDateFormat.parse(time.toString());
-                            if (isDateInWeek(parsed)){
-                                Data data = new Data(parsed, "You used fb fitness: ", obj.getString("type"));
-                                fitnessSocial.add(data);
-                            } else {
-                                Log.d(TAG, "Fitness data "+ obj.getString("type") + " isn't within the week" );
-                            }
-                        } catch(ParseException pe) {
-                            throw new IllegalArgumentException(pe);
-                        }
+                        Date parsed = getDate(time.toString(), true);
 
+                        if (isDateInWeek(parsed)){
+                            Data data = new Data(parsed, "You used fb fitness: ", obj.getString("type"));
+                            fitnessSocial.add(data);
+                        } else {
+                            Log.d(TAG, "Fitness data "+ obj.getString("type") + " isn't within the week" );
+                        }
                     }
                 } else {
                     Log.d(TAG, "fitness object is null");
