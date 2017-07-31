@@ -86,10 +86,10 @@ public class MainActivity extends AppCompatActivity implements
     public static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
     // Data lists
-    public static List<Data> nutritionSocial;
-    public static List<Data> nutritionGeneral;
-    public static List<Data> fitnessSocial;
-    public static List<Data> fitnessGeneral;
+    public static List<Data> nutritionSocial = new LinkedList<>();
+    public static List<Data> nutritionGeneral = new LinkedList<>();
+    public static List<Data> fitnessSocial = new LinkedList<>();
+    public static List<Data> fitnessGeneral  = new LinkedList<>();
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
     List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
@@ -127,22 +127,8 @@ public class MainActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Calendar cal = Calendar.getInstance();
-        today = new Date();
-        cal.setTime(today);
-        cal.add(Calendar.WEEK_OF_YEAR, -1);
-        startOfWeek = cal.getTime();
-        cal.add(Calendar.DAY_OF_WEEK, 7);
-        endOfWeek = cal.getTime();
-
-        Log.d("Date", "Range Start: " + startOfWeek);
-        Log.d("Date", "Range End: " + endOfWeek);
-        Log.d("Date", "Today " + today);
-
-        progress = new ProgressDialog(this);
-        progress.setTitle("Loading");
-        progress.setMessage("Wait while loading...");
-        progress.setCancelable(false);
+        setupDates();
+        setupProgressDialog();
 
         // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
         if (mGoogleApiClient == null){
@@ -160,23 +146,61 @@ public class MainActivity extends AppCompatActivity implements
         }
         if (session == null){
             session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-            if (fbToken!=null) {
-                if (checkPermissionsFB()){
+            if (fbToken != null && session != null) {
                     new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                }
             }
         }
     }
 
+    /**
+     * Sets up the progress spinning dialog
+     */
+    private void setupProgressDialog(){
+        progress = new ProgressDialog(this);
+        progress.setTitle("Loading");
+        progress.setMessage("Please wait while loading...");
+        progress.setCancelable(false);
+    }
+
+
+    /**
+     * Sets up the start and end dates
+     */
+    //TODO: Change start time to be a week, not a week from today
+    private void setupDates(){
+        Calendar cal = Calendar.getInstance();
+        today = new Date();
+        cal.setTime(today);
+        cal.add(Calendar.WEEK_OF_YEAR, -1); // minus a week
+        startOfWeek = cal.getTime();
+        cal.add(Calendar.DAY_OF_WEEK, 7);
+        endOfWeek = cal.getTime();
+
+        Log.d("Date", "Range Start: " + startOfWeek);
+        Log.d("Date", "Range End: " + endOfWeek);
+        Log.d("Date", "Today " + today);
+    }
+
+    /**
+     * Used to start the fitness summary page
+     * @param view : The current view
+     */
     public void intentFitness(View view) {
         startActivity(new Intent(this,FitnessSummaryActivity.class));
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
+    /**
+     * This is used to begin the nutrition summary page (activity)
+     * @param view : The current view
+     */
     public void intentNutrition(View view) {
         startActivity(new Intent(this,NutritionSummaryActivity.class));
     }
 
+    /**
+     * This tasks executes getting data from facebook & twitter
+     */
     private class SocialTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -185,11 +209,13 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
-            // TODO
+            // clear both the social lists
             nutritionSocial = new LinkedList<>();
             fitnessSocial = new LinkedList<>();
+            // Begins the social nutrition data collection
             Social socialNutritionClass = new Social();
             socialNutritionClass.displaySocial(true);
+            // Begins the fitness social data collection
             Social socialFitnessClass = new Social();
             socialFitnessClass.displaySocial(false);
             return null;
@@ -199,7 +225,6 @@ public class MainActivity extends AppCompatActivity implements
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             progress.dismiss();
-//            getWeeksData();
         }
     }
 
@@ -671,45 +696,17 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
+    /**
+     * This loops through each list
+     */
     private void getWeeksData(){
         boolean[] isNutrition = new boolean[7];
-        if (nutritionGeneral != null) {
-            Log.d("Weeks","Nutrition general" + nutritionGeneral.size());
-            for (int i = 0; i < nutritionGeneral.size(); i++){
-                long diff = endOfWeek.getTime() - nutritionGeneral.get(i).getCreatedAt().getTime();
-                long days = Math.abs(diff / (86400000));
-                Log.d("Weeks","days diff = " + days);
-                isNutrition[(int)days] = true;
-            }
-        }
-        if (nutritionSocial != null) {
-            Log.d("Weeks","Nutrition social" + nutritionSocial.size());
-            for (int i = 0; i < nutritionSocial.size(); i++) {
-                long diff = endOfWeek.getTime() - nutritionSocial.get(i).getCreatedAt().getTime();
-                long days = Math.abs(diff / (86400000));
-                Log.d("Weeks","days diff = " + days);
-                isNutrition[(int) days] = true;
-            }
-        }
         boolean[] isFitness = new boolean[7];
-        if (fitnessGeneral != null) {
-            Log.d("Weeks","Fitness general" + fitnessGeneral.size());
-            for (int i = 0; i < fitnessGeneral.size(); i++) {
-                long diff = endOfWeek.getTime() - fitnessGeneral.get(i).getCreatedAt().getTime();
-                long days = Math.abs(diff / (86400000));
-                Log.d("Weeks","days diff = " + days);
-                isFitness[(int) days] = true;
-            }
-        }
-        if (fitnessSocial != null) {
-            Log.d("Weeks","Fitness social" + fitnessSocial.size());
-            for (int i = 0; i < fitnessSocial.size(); i++) {
-                long diff = endOfWeek.getTime() - fitnessSocial.get(i).getCreatedAt().getTime();
-                long days = Math.abs(diff / (86400000));
-                Log.d("Weeks","days diff = " + days);
-                isFitness[(int) days] = true;
-            }
-        }
+        
+        isNutrition = loopThroughList(nutritionGeneral, isNutrition);
+        isNutrition = loopThroughList(nutritionSocial, isNutrition);
+        isFitness = loopThroughList(fitnessGeneral, isFitness);
+        isFitness = loopThroughList(fitnessSocial, isFitness);
 
         String outputString = "Fitness: ";
         for (boolean truth : isFitness) {
@@ -722,6 +719,19 @@ public class MainActivity extends AppCompatActivity implements
 
         TextView textView = (TextView) findViewById(R.id.text);
         textView.setText(outputString);
+    }
+
+    private boolean[] loopThroughList(List<Data> list, boolean[] array){
+        if (list != null) {
+            Log.d("Weeks","Nutrition general" + list.size());
+            for (int i = 0; i < list.size(); i++){
+                long diff = endOfWeek.getTime() - list.get(i).getCreatedAt().getTime();
+                long days = Math.abs(diff / (86400000));
+                Log.d("Weeks","days diff = " + days);
+                array[(int)days] = true;
+            }
+        }
+        return array;
     }
 
     @Override
