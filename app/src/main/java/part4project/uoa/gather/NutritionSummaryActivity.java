@@ -74,7 +74,7 @@ public class NutritionSummaryActivity extends AppCompatActivity {
         for (int i = 0; i < list.size(); i++) {
             listToPrint.add(list.get(i).getType() + list.get(i).getValue());
         }
-        ArrayAdapter adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_listview, listToPrint);
+        ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.activity_listview, listToPrint);
         view.setAdapter(adapter);
     }
 }

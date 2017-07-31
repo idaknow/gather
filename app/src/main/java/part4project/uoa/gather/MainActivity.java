@@ -36,9 +36,7 @@ import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.request.DataReadRequest;
-import com.google.android.gms.fitness.result.DailyTotalResult;
 import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.twitter.sdk.android.core.Callback;
@@ -70,7 +68,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-import part4project.uoa.gather.Data;
 
 import retrofit2.Call;
 
@@ -241,6 +238,10 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private boolean isDateInWeek(Date parsed){
+        return MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
+    }
+
     /**
      * This class contains all the methods to create social summary of a week
      */
@@ -344,17 +345,13 @@ public class MainActivity extends AppCompatActivity implements
             return false;
         }
 
-        private boolean isDateInWeek(Date parsed){
-            return MainActivity.startOfWeek.before(parsed) && MainActivity.endOfWeek.after(parsed);
-        }
-
         private Date getDate(String time, boolean isFacebook){
             Date parsed;
             try {
                 if (isFacebook){
-                    parsed = MainActivity.facebookDateFormat.parse(time.toString());
+                    parsed = MainActivity.facebookDateFormat.parse(time);
                 } else {
-                    parsed = MainActivity.twitterDateFormat.parse(time.toString());
+                    parsed = MainActivity.twitterDateFormat.parse(time);
                 }
             } catch(ParseException pe) {
                 throw new IllegalArgumentException(pe);
@@ -433,7 +430,7 @@ public class MainActivity extends AppCompatActivity implements
          * fitness actions include: bikes, walks & runs
          * Adds up the amount of data to a global variable
          */
-        public void transformFacebookFitness(){
+        private void transformFacebookFitness(){
             AccessToken facebookAccessToken = getFBToken();
 
             // the callback used by each
@@ -484,7 +481,7 @@ public class MainActivity extends AppCompatActivity implements
          * This is called on each callback to increment the facebook fitness count accordingly
          * @param jsonObject : the data response object
          */
-        public void getFacebookFitnessActions(JSONObject jsonObject) {
+        private void getFacebookFitnessActions(JSONObject jsonObject) {
             try {
                 JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
                 if (array != null && array.length() != 0) { // increment count if data object is not empty, depending on length of it
@@ -493,7 +490,7 @@ public class MainActivity extends AppCompatActivity implements
                         JSONObject obj = array.getJSONObject(i);
                         Log.d(TAG, "Fitness OBJ: " + obj.getString("end_time"));
                         String time = obj.getString("start_time");
-                        Date parsed = getDate(time.toString(), true);
+                        Date parsed = getDate(time, true);
 
                         if (isDateInWeek(parsed)){
                             Data data = new Data(parsed, "You used fb fitness: ", obj.getString("type"));
@@ -521,7 +518,6 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void displayLastWeeksData(){
-
             // The read requests made to the list of datatypes
             DataReadRequest readRequest = queryData(MainActivity.startOfWeek.getTime(), MainActivity.endOfWeek.getTime());
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(MainActivity.mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
@@ -567,12 +563,18 @@ public class MainActivity extends AppCompatActivity implements
 
                 Log.d(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
                 Log.d(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+
+                Date parsed = new Date(dp.getStartTime(TimeUnit.MILLISECONDS));
+                Log.d(TAG, "Parsed data : " + parsed);
+
                 for(Field field : dp.getDataType().getFields()) {
                     Log.d(TAG, "\tField: " + field.getName() +
                             " Value: " + dp.getValue(field));
-                    if (field.getName().equals("calories")){
-                        Data data = new Data(new Date(dp.getStartTime(TimeUnit.MILLISECONDS)), field.getName() + " expended are ", dp.getValue(field).toString());
-                        nutritionGeneral.add(data);
+                    if (isDateInWeek(parsed)) {
+                        if (field.getName().equals("calories")) {
+                            Data data = new Data(parsed, field.getName() + " expended are ", dp.getValue(field).toString());
+                            nutritionGeneral.add(data);
+                        }
                     }
                 }
             }
