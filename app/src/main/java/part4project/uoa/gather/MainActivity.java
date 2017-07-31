@@ -487,8 +487,21 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "fitness object = " + array.toString());
                     for (int i = 0; i < array.length(); i++){
                         JSONObject obj = array.getJSONObject(i);
-                        Data data = new Data(new Date(), "You used fb fitness: ", obj.toString());
-                        fitnessSocial.add(data);
+                        Log.d(TAG, "Fitness OBJ: " + obj.getString("end_time"));
+                        String time = obj.getString("start_time");
+                        Date parsed;
+                        try {
+                            parsed = MainActivity.facebookDateFormat.parse(time.toString());
+                            if (isDateInWeek(parsed)){
+                                Data data = new Data(parsed, "You used fb fitness: ", obj.getString("type"));
+                                fitnessSocial.add(data);
+                            } else {
+                                Log.d(TAG, "Fitness data "+ obj.getString("type") + " isn't within the week" );
+                            }
+                        } catch(ParseException pe) {
+                            throw new IllegalArgumentException(pe);
+                        }
+
                     }
                 } else {
                     Log.d(TAG, "fitness object is null");
