@@ -252,6 +252,9 @@ public class MainActivity extends AppCompatActivity implements
             this.isNutrition = isNutrition;
             facebookSummary();
             twitterSummary();
+            if (!isNutrition){
+                transformFacebookFitness();
+            }
         }
 
         private void facebookSummary(){
@@ -435,7 +438,7 @@ public class MainActivity extends AppCompatActivity implements
                 public void onCompleted(GraphResponse response) {
                     Log.d(TAG, "Successful completion of asynch call"); // TESTING
                     Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
-//                    fitnessDataCount(response.getJSONObject()); // uses the response data to count the amount of fitness actions
+                    fitnessDataCount(response.getJSONObject()); // uses the response data to count the amount of fitness actions
                 }
             };
             // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
@@ -480,11 +483,13 @@ public class MainActivity extends AppCompatActivity implements
         public void fitnessDataCount(JSONObject jsonObject) {
             try {
                 JSONArray array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
-                if (array != null) { // increment count if data object is not empty, depending on length of it
+                if (array != null && array.length() != 0) { // increment count if data object is not empty, depending on length of it
                     Log.d(TAG, "fitness object = " + array.toString());
-                    Data data = new Data(new Date(), "You used fb fitness: ", array.toString());
-                    //TODO: date
-                    fitnessSocial.add(data);
+                    for (int i = 0; i < array.length(); i++){
+                        JSONObject obj = array.getJSONObject(i);
+                        Data data = new Data(new Date(), "You used fb fitness: ", obj.toString());
+                        fitnessSocial.add(data);
+                    }
                 } else {
                     Log.d(TAG, "fitness object is null");
                 }
