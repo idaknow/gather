@@ -57,6 +57,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -146,9 +147,10 @@ public class MainActivity extends AppCompatActivity implements
         progress.setMessage("Wait while loading...");
         progress.setCancelable(false);
 
+        TextView textView = (TextView) findViewById(R.id.text);
+        textView.setText(R.string.loading);
+
         // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
-        TextView gf = (TextView) findViewById(R.id.food_app_summary);
-        gf.setText(R.string.loading);
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
             buildAndConnectClient(); // TODO: Check switch pref
@@ -159,7 +161,6 @@ public class MainActivity extends AppCompatActivity implements
 
         // SOCIAL
         AccessToken fbToken = SettingsActivity.accessToken;
-        TextView facebook = (TextView) findViewById(R.id.social_media_app_summary);
         if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
             fbToken = AccessToken.getCurrentAccessToken();
         }
@@ -169,12 +170,7 @@ public class MainActivity extends AppCompatActivity implements
                 new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
-
-        if (session == null || !checkPermissionsFB() || fbToken == null){
-            Log.d(TAG3, "Social: Not logged in to something");
-            facebook.setText(R.string.fb_logged_out);
-            // TODO: Reflect on the summary page in a message
-        }
+        getWeeksData();
     }
 
     public void intentFitness(View view) {
@@ -208,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             progress.dismiss();
+            getWeeksData();
         }
     }
 
@@ -235,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
             progress.dismiss();
+            getWeeksData();
         }
     }
 
@@ -519,8 +517,8 @@ public class MainActivity extends AppCompatActivity implements
 
         private void displayLastWeeksData(){
             // The read requests made to the list of datatypes
-            DataReadRequest readRequest = queryData(MainActivity.startOfWeek.getTime(), MainActivity.endOfWeek.getTime());
-            DataReadResult dataReadResult = Fitness.HistoryApi.readData(MainActivity.mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
+            DataReadRequest readRequest = queryData(startOfWeek.getTime(), endOfWeek.getTime());
+            DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
             if (dataReadResult.getBuckets().size() > 0) { //Used for aggregated data
                 Log.d(TAG, "Number of buckets: " + dataReadResult.getBuckets().size());
@@ -670,6 +668,55 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         });
+    }
+
+    private void getWeeksData(){
+        boolean[] isNutrition = new boolean[7];
+        if (nutritionGeneral != null) {
+            Log.d("Weeks","Nutrition general" + nutritionGeneral.size());
+            for (int i = 0; i < nutritionGeneral.size(); i++){
+                long diff = endOfWeek.getTime() - nutritionGeneral.get(i).getCreatedAt().getTime();
+                long days = Math.abs(diff / (86400000));
+                isNutrition[(int)days] = true;
+            }
+        }
+        if (nutritionSocial != null) {
+            Log.d("Weeks","Nutrition social" + nutritionSocial.size());
+            for (int i = 0; i < nutritionSocial.size(); i++) {
+                long diff = endOfWeek.getTime() - nutritionSocial.get(i).getCreatedAt().getTime();
+                long days = Math.abs(diff / (86400000));
+                isNutrition[(int) days] = true;
+            }
+        }
+        boolean[] isFitness = new boolean[7];
+        if (fitnessGeneral != null) {
+            Log.d("Weeks","Fitness general" + fitnessGeneral.size());
+            for (int i = 0; i < fitnessGeneral.size(); i++) {
+                long diff = endOfWeek.getTime() - fitnessGeneral.get(i).getCreatedAt().getTime();
+                long days = Math.abs(diff / (86400000));
+                isFitness[(int) days] = true;
+            }
+        }
+        if (fitnessSocial != null) {
+            Log.d("Weeks","Fitness social" + fitnessSocial.size());
+            for (int i = 0; i < fitnessSocial.size(); i++) {
+                long diff = endOfWeek.getTime() - fitnessSocial.get(i).getCreatedAt().getTime();
+                long days = Math.abs(diff / (86400000));
+                isFitness[(int) days] = true;
+            }
+        }
+
+        String outputString = "Fitness: ";
+        for (int i = 0; i < isFitness.length; i++){
+            outputString += isFitness[i] + " ";
+        }
+        outputString += "\n\nNutrition: ";
+        for (int i = 0; i < isNutrition.length; i++){
+            outputString += isNutrition[i] + " ";
+        }
+
+        TextView textView = (TextView) findViewById(R.id.text);
+        textView.setText(outputString);
     }
 
     @Override

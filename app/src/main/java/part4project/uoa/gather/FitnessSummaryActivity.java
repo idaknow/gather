@@ -52,12 +52,12 @@ public class FitnessSummaryActivity extends AppCompatActivity {
         } else {
             list = MainActivity.fitnessGeneral;
         }
-
         List<String> listToPrint = new LinkedList<>();
-        for (int i = 0; i < list.size(); i++) {
-            listToPrint.add(list.get(i).getType() + list.get(i).getValue());
+        if (list != null) {
+            for (int i = 0; i < list.size(); i++) {
+                listToPrint.add(list.get(i).getType() + list.get(i).getValue());
+            }
         }
-
         ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.activity_listview, listToPrint);
         view.setAdapter(adapter);
     }
