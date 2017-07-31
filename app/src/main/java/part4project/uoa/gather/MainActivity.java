@@ -147,9 +147,6 @@ public class MainActivity extends AppCompatActivity implements
         progress.setMessage("Wait while loading...");
         progress.setCancelable(false);
 
-        TextView textView = (TextView) findViewById(R.id.text);
-        textView.setText(R.string.loading);
-
         // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
         if (mGoogleApiClient == null){
             Log.d(TAG2,"Google client is null");
@@ -170,7 +167,6 @@ public class MainActivity extends AppCompatActivity implements
                 new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
-        getWeeksData();
     }
 
     public void intentFitness(View view) {
@@ -204,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             progress.dismiss();
-            getWeeksData();
+//            getWeeksData();
         }
     }
 
@@ -677,6 +673,7 @@ public class MainActivity extends AppCompatActivity implements
             for (int i = 0; i < nutritionGeneral.size(); i++){
                 long diff = endOfWeek.getTime() - nutritionGeneral.get(i).getCreatedAt().getTime();
                 long days = Math.abs(diff / (86400000));
+                Log.d("Weeks","days diff = " + days);
                 isNutrition[(int)days] = true;
             }
         }
@@ -685,6 +682,7 @@ public class MainActivity extends AppCompatActivity implements
             for (int i = 0; i < nutritionSocial.size(); i++) {
                 long diff = endOfWeek.getTime() - nutritionSocial.get(i).getCreatedAt().getTime();
                 long days = Math.abs(diff / (86400000));
+                Log.d("Weeks","days diff = " + days);
                 isNutrition[(int) days] = true;
             }
         }
@@ -694,6 +692,7 @@ public class MainActivity extends AppCompatActivity implements
             for (int i = 0; i < fitnessGeneral.size(); i++) {
                 long diff = endOfWeek.getTime() - fitnessGeneral.get(i).getCreatedAt().getTime();
                 long days = Math.abs(diff / (86400000));
+                Log.d("Weeks","days diff = " + days);
                 isFitness[(int) days] = true;
             }
         }
@@ -702,6 +701,7 @@ public class MainActivity extends AppCompatActivity implements
             for (int i = 0; i < fitnessSocial.size(); i++) {
                 long diff = endOfWeek.getTime() - fitnessSocial.get(i).getCreatedAt().getTime();
                 long days = Math.abs(diff / (86400000));
+                Log.d("Weeks","days diff = " + days);
                 isFitness[(int) days] = true;
             }
         }
