@@ -2,48 +2,93 @@ package part4project.uoa.gather;
 
 import android.util.Log;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by Ida on 1/08/2017.
+ * This is a helper class that provides methods for MainActivity and other activities to use
+ * These are to do with collecting data and are not specific to a social or general type
  */
 
 class DataCollection {
 
     /**
-     * This loops through each list
+     * This loops through each list and outputs to main activity a string depending on enabled & disabled fitness or social for each day
+     * @param list1 : The first list to loop through
+     * @param list2 : The second list to loop through
+     * @return : The boolean array where each day is represented by an array field
      */
-    static String getWeeksData(List<Data> nutritionGeneral, List<Data> nutritionSocial, List<Data> fitnessGeneral, List<Data> fitnessSocial ){
-        boolean[] isNutrition = new boolean[7];
-        boolean[] isFitness = new boolean[7];
+    static boolean[] getWeeksData(List<Data> list1, List<Data> list2){
+        boolean[] booleanArray = new boolean[7];
 
-        isNutrition = loopThroughList(nutritionGeneral, isNutrition);
-        isNutrition = loopThroughList(nutritionSocial, isNutrition);
-        isFitness = loopThroughList(fitnessGeneral, isFitness);
-        isFitness = loopThroughList(fitnessSocial, isFitness);
+        booleanArray = loopThroughList(list1, booleanArray);
+        booleanArray = loopThroughList(list2, booleanArray);
 
-        String outputString = "Fitness: ";
-        for (boolean truth : isFitness) {
-            outputString += truth + " ";
-        }
-        outputString += "\n\nNutrition: ";
-        for (boolean truth : isNutrition){
-            outputString += truth + " ";
-        }
-
-        return outputString;
+        return booleanArray;
     }
 
+    /**
+     * This loops through the list and sets the appropriate boolean array index to true
+     * @param list : The list to loop through
+     * @param array : The current array
+     * @return : The new array
+     */
     private static boolean[] loopThroughList(List<Data> list, boolean[] array){
-        if (list != null) {
+        if (list != null) { // Checks isn't empty/ uninitialised
             Log.d("Weeks","Nutrition general" + list.size());
-            for (int i = 0; i < list.size(); i++){
+            for (int i = 0; i < list.size(); i++){ // loops through each index
+                // Gets the difference in days (to get the index)
                 long diff = MainActivity.endOfWeek.getTime() - list.get(i).getCreatedAt().getTime();
                 long days = Math.abs(diff / (86400000));
                 Log.d("Weeks","days diff = " + days);
+                // Sets the array index as true
                 array[(int)days] = true;
             }
         }
         return array;
+    }
+
+    /**
+     * This method returns a list that can be printed
+     * @param isNutrition : T = nutrition, F = fitness
+     * @param isSocial : T = Social, F = General
+     * @return : String list of what to print on the screen
+     */
+    static List<String> getListToShow(boolean isNutrition, boolean isSocial){
+
+        // Gets data list to use depending on whether it is nutrition, general, social and/or fitness
+        List<Data> list = getListToUse(isNutrition, isSocial);
+
+        // Loops through and gets the text
+        List<String> listToPrint = new LinkedList<>();
+        if (list != null) {
+            for (int i = 0; i < list.size(); i++) {
+                listToPrint.add(list.get(i).getType().toString() + list.get(i).getValue());
+            }
+        }
+        return listToPrint;
+    }
+
+    /**
+     * Gets the appropriate list to use depending on whether social/ general and nutrition/fitness
+     * @param isNutrition : T = nutrition, F = fitness
+     * @param isSocial : T = Social, F = General
+     * @return : the list to use
+     */
+    private static List<Data> getListToUse(boolean isNutrition, boolean isSocial){
+        if (isNutrition){
+            if (isSocial){
+                return MainActivity.nutritionSocial;
+            } else {
+                return MainActivity.nutritionGeneral;
+            }
+        } else {
+            if (isSocial){
+                return MainActivity.fitnessSocial;
+            } else {
+                return MainActivity.fitnessGeneral;
+            }
+        }
     }
 }

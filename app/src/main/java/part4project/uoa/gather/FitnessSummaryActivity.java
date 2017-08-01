@@ -9,56 +9,46 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ToggleButton;
 
-import java.util.LinkedList;
 import java.util.List;
 
 public class FitnessSummaryActivity extends AppCompatActivity {
 
+    //TESTING: Log data
     private static final String TAG = "Fitness";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fitness_summary);
+        // Set toggle on click listener
         ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButton);
         toggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                displayData((ToggleButton) v);
+                setListViewContent(((ToggleButton) v).isChecked());
             }
         });
-        displayData(toggle);
+        // Initially displays the information for the default value
+        setListViewContent(toggle.isChecked());
     }
 
+    /**
+     * This is used when the back button is clicked
+     * This begins the main activity and uses the appropriate animation
+     * @param view : The provided view
+     */
     public void intentMainActivity(View view) {
         startActivity(new Intent(this,MainActivity.class));
     }
 
-    private void displayData(ToggleButton toggle){
-        if (toggle.isChecked()){
-            Log.d(TAG, "Toggle Button is checked");
-            setListViewContent(true);
-        } else {
-            Log.d(TAG, "Toggle Button is NOT checked");
-            setListViewContent(false);
-        }
-    }
-
+    /**
+     * This method sets the UI to the appropriate list
+     * @param isSocial : True if the list must be social, False if the list must be general
+     */
     private void setListViewContent(boolean isSocial){
+        List<String> list = DataCollection.getListToShow(false,isSocial);
         ListView view = (ListView) findViewById(R.id.listView);
-        List<Data> list;
-        if (isSocial) {
-            list = MainActivity.fitnessSocial;
-        } else {
-            list = MainActivity.fitnessGeneral;
-        }
-        List<String> listToPrint = new LinkedList<>();
-        if (list != null) {
-            for (int i = 0; i < list.size(); i++) {
-                listToPrint.add(list.get(i).getType() + list.get(i).getValue());
-            }
-        }
-        ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.activity_listview, listToPrint);
+        ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.activity_listview, list);
         view.setAdapter(adapter);
     }
 

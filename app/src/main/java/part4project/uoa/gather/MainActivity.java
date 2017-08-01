@@ -301,19 +301,19 @@ public class MainActivity extends AppCompatActivity implements
         private void transformFacebookPostsEventsLikes(JSONObject jsonObject){
             JSONArray postsArray = SocialMethods.getArray(jsonObject, 0);
             if (postsArray != null) {
-                loopThroughResponse(postsArray, "message", "created_time", "You posted: ");
+                loopThroughResponse(postsArray, "message", "created_time", DataCollectionType.FPOST);
             }
             JSONArray likesArray = SocialMethods.getArray(jsonObject, 1);
             if (likesArray != null) {
-                loopThroughResponse(likesArray, "name", "created_time", "You liked: ");
+                loopThroughResponse(likesArray, "name", "created_time", DataCollectionType.FLIKE);
             }
             JSONArray eventsArray = SocialMethods.getArray(jsonObject, 2);
             if (likesArray != null) {
-                loopThroughResponse(eventsArray, "name", "start_time", "You interacted with event: ");
+                loopThroughResponse(eventsArray, "name", "start_time", DataCollectionType.FEVENT);
             }
         }
 
-        private void loopThroughResponse(JSONArray array, String dataType, String timeName, String output){
+        private void loopThroughResponse(JSONArray array, String dataType, String timeName, DataCollectionType dct){
             try {
                 for (int j = 0; j < array.length(); j++) { // loops through each element in the array
                     JSONObject obj = (JSONObject) array.get(j);
@@ -324,8 +324,8 @@ public class MainActivity extends AppCompatActivity implements
                     if (isDateInWeek(parsed)) {
                         Log.d(TAG,"True for string " + value.toString());
                         if (doesStringContainKeyword(value.toString(), isNutrition)){
-                            Log.d(TAG, "Added string: " + output + value);
-                            Data data = new Data(parsed, output, value.toString());
+                            Log.d(TAG, "Added string: " + dct.toString() + value);
+                            Data data = new Data(parsed, dct, value.toString());
                             if (isNutrition){
                                 nutritionSocial.add(data);
                             } else {
@@ -381,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements
                             Log.d(TAG,"True for string " + data.get(i).toString());
                             if (doesStringContainKeyword(data.get(i).text, isNutrition)){
                                 Log.d(TAG, "Added Tweet: " + data.get(i));
-                                Data tweetData = new Data(parsed, "You interacted with tweet: ", data.get(i).text);
+                                Data tweetData = new Data(parsed, DataCollectionType.TWEET, data.get(i).text);
                                 if (isNutrition){
                                     nutritionSocial.add(tweetData);
                                 } else {
@@ -469,7 +469,7 @@ public class MainActivity extends AppCompatActivity implements
                         Date parsed = getDate(time, true);
 
                         if (isDateInWeek(parsed)){
-                            Data data = new Data(parsed, "You used fb fitness: ", obj.getString("type"));
+                            Data data = new Data(parsed, DataCollectionType.FFITNESS, obj.getString("type"));
                             fitnessSocial.add(data);
                         } else {
                             Log.d(TAG, "Fitness data "+ obj.getString("type") + " isn't within the week" );
@@ -548,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements
                             " Value: " + dp.getValue(field));
                     if (isDateInWeek(parsed)) {
                         if (field.getName().equals("calories")) {
-                            Data data = new Data(parsed, field.getName() + " expended are ", dp.getValue(field).toString());
+                            Data data = new Data(parsed, DataCollectionType.GCALORIES, dp.getValue(field).toString());
                             nutritionGeneral.add(data);
                         }
                     }
@@ -617,7 +617,7 @@ public class MainActivity extends AppCompatActivity implements
          */
         private void subscribeToDataTypes(){
             List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
-            newList.addAll(NUTRITIONDATATYPES);
+            newList.addAll(FITNESSDATATYPES);
             for (int i = 0; i < newList.size(); i++){
                 Log.d(TAG, "Subscribing " + newList.get(i).getName());
                 // Subscription using RecordingAPI to the Google API Client
@@ -657,7 +657,18 @@ public class MainActivity extends AppCompatActivity implements
      * This loops through each list
      */
     private void getWeeksData(){
-        String outputString = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial,fitnessGeneral, fitnessSocial);
+        boolean[] isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
+        boolean[] isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
+
+        String outputString = "Fitness: ";
+        for (boolean truth : isFitness) {
+            outputString += truth + " ";
+        }
+        outputString += "\n\nNutrition: ";
+        for (boolean truth : isNutrition){
+            outputString += truth + " ";
+        }
+
         TextView textView = (TextView) findViewById(R.id.text);
         textView.setText(outputString);
     }

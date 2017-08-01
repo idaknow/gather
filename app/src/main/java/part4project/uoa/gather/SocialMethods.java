@@ -1,6 +1,8 @@
 package part4project.uoa.gather;
 
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import com.facebook.AccessToken;
 
@@ -18,16 +20,23 @@ import java.util.Locale;
 
 /**
  * Created by Ida on 1/08/2017.
+ * This is a helper class for Social tasks
  */
 
 class SocialMethods {
 
+    // This provides the date format for both twitter and facebook that can transform a string into a Date object
     private static final SimpleDateFormat twitterDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
     private static final SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+
+    // These are the keywords to search for in your social media accounts
     private static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active", "Rhythm");
     private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
-
+    /**
+     * This returns the Facebook Access Token
+     * @return : The current fb access token
+     */
     static AccessToken getFBToken(){
         AccessToken facebookAccessToken = SettingsActivity.accessToken;
         if (facebookAccessToken == null){
@@ -36,6 +45,12 @@ class SocialMethods {
         return facebookAccessToken;
     }
 
+    /**
+     * This returns the JSON array from a response JSON Object
+     * @param jsonObject : The response JSON Object
+     * @param index : The index of the array within the object
+     * @return : The JSON Array
+     */
     static JSONArray getArray(JSONObject jsonObject, int index){
         JSONObject object;
         JSONArray array;
@@ -49,6 +64,12 @@ class SocialMethods {
         return array;
     }
 
+    /**
+     * This is used with Facebook_Actions Fitness to get the JSON Array from a JSON Object
+     * This is similar to the getArray() method, but does one less step
+     * @param jsonObject : This is the JSON Object
+     * @return the JSON Array
+     */
     static JSONArray getFitnessArray(JSONObject jsonObject){
         JSONArray array;
         try {
@@ -60,6 +81,12 @@ class SocialMethods {
         return array;
     }
 
+    /**
+     * This uses the Date formatter to turn a Facebook or Twitter time to a java Date object
+     * @param time : This is the time in a string format from Twitter or Facebook
+     * @param isFacebook : True if the object is a facebook time, False if the object is a Twitter time
+     * @return : The date object parsed using the date format of twitter or facebook
+     */
     static Date getDate(String time, boolean isFacebook){
         Date parsed;
         try {
@@ -75,6 +102,12 @@ class SocialMethods {
         return parsed;
     }
 
+    /**
+     * This returns true or false depending on whether a social action contains a keyword
+     * @param value : The social activity that needs to be searched in
+     * @param isNutrition : True if you need to search through for nutrition keywords, False if you need to search through fitness keywords
+     * @return True or False depending on whether a keyword is found within the given social activity
+     */
     static boolean doesStringContainKeyword(String value, boolean isNutrition){
         List<String> list = FITNESSKEYWORDS;
         if (isNutrition){
@@ -103,7 +136,7 @@ class SocialMethods {
      * @param wantGranted : true/ false depending on whether wants granted or denied permissions
      * @return List of permissions granted/ denied
      */
-    static List<String> getFBPermissions(boolean wantGranted){
+    private static List<String> getFBPermissions(boolean wantGranted){
         List<String> list; // the returned list
         list = new LinkedList<>();
         if (SettingsActivity.accessToken == null){ // settingsActivity has been created
