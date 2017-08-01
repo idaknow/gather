@@ -87,8 +87,8 @@ public class MainActivity extends AppCompatActivity implements
     public static List<Data> fitnessGeneral  = new LinkedList<>();
 
     // GOOGLEFIT: Each of the permissions and datatypes categorised into different lists
-    List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
-    List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
+    public static final List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
+    public static final List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
 
     ProgressDialog progress;
@@ -495,10 +495,10 @@ public class MainActivity extends AppCompatActivity implements
 
         private void displayLastWeeksData(){
             // The read requests made to the list of datatypes
-            DataReadRequest readRequest = queryData(startOfWeek.getTime(), endOfWeek.getTime());
+            DataReadRequest readRequest = GeneralMethods.queryData(isNutrition);
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
-            if (dataReadResult.getBuckets().size() > 0) { //Used for aggregated data
+            if (dataReadResult.getBuckets().size() > 0) { // Used for aggregated data
                 Log.d(TAG, "Number of buckets: " + dataReadResult.getBuckets().size());
                 for (Bucket bucket : dataReadResult.getBuckets()) {
                     List<DataSet> dataSets = bucket.getDataSets();
@@ -513,19 +513,6 @@ public class MainActivity extends AppCompatActivity implements
                     showDataSet(dataSet);
                 }
             }
-        }
-
-        private DataReadRequest queryData(long startTime, long endTime) {
-            List<DataType> types = FITNESSDATATYPES;
-            if (isNutrition){
-                types = NUTRITIONDATATYPES;
-            }
-
-            DataReadRequest.Builder builder = new DataReadRequest.Builder();
-            for (DataType dt : types) {
-                builder.read(dt);
-            }
-            return builder.setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS).build();
         }
 
         private void showDataSet(DataSet dataSet) {
@@ -559,12 +546,14 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * Moved all GoogleFit instantiation into its own class
+     * NOTE: has to stay in this activity because it uses mGoogleAPIClient
+     * which doesn't work well connecting to in other classes
      */
     private class GoogleFit{
         /**
          * Builds to google client with the required scopes (permissions)
          */
-        public void buildAndConnectClient(){
+        void buildAndConnectClient(){
             mGoogleApiClient = new GoogleApiClient.Builder(MainActivity.this)
                     .addApi(Fitness.HISTORY_API)
                     .addApi(Fitness.RECORDING_API)
@@ -615,11 +604,10 @@ public class MainActivity extends AppCompatActivity implements
          * The initial subscription to all data types to record the output
          * TODO: Call this only on the very startup
          */
-        private void subscribeToDataTypes(){
+        void subscribeToDataTypes(){
             List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
             newList.addAll(FITNESSDATATYPES);
             for (int i = 0; i < newList.size(); i++){
-                Log.d(TAG, "Subscribing " + newList.get(i).getName());
                 // Subscription using RecordingAPI to the Google API Client
                 Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
                         .setResultCallback(new ResultCallback<Status>() {
@@ -639,7 +627,10 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
-        private void subscribe(){
+        /**
+         * This class subscribes to datatypes only if no subscriptions currently exist
+         */
+        void subscribe(){
             PendingResult<ListSubscriptionsResult> result = Fitness.RecordingApi.listSubscriptions(mGoogleApiClient);
             result.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
                 @Override

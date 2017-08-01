@@ -3,7 +3,6 @@ package part4project.uoa.gather;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -14,7 +13,7 @@ import java.util.List;
 public class FitnessSummaryActivity extends AppCompatActivity {
 
     //TESTING: Log data
-    private static final String TAG = "Fitness";
+//    private static final String TAG = "Fitness";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

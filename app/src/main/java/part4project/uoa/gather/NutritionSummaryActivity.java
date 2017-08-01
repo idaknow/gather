@@ -15,7 +15,7 @@ import java.util.List;
 public class NutritionSummaryActivity extends AppCompatActivity {
 
     //Logging Data tags
-    private static final String TAG = "Nutrition";
+//    private static final String TAG = "Nutrition";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

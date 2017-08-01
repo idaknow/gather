@@ -1,8 +1,6 @@
 package part4project.uoa.gather;
 
 import android.util.Log;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 import com.facebook.AccessToken;
 
