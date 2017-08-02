@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements
             gf.buildAndConnectClient(); // TODO: Check switch pref
             gf.subscribe();
         } else {
-            getWeeksData();
+//            getWeeksData();
             showIcons(0);
         }
 
@@ -198,6 +198,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void showIcons(int days){
+        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
+        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
         ImageView fitnessIcon = (ImageView) findViewById(R.id.fitness_icon);
         ImageView nutritionIcon = (ImageView) findViewById(R.id.nutrition_icon);
         if (isFitness[days]){
@@ -287,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
             progress.dismiss();
-            getWeeksData();
+//            getWeeksData();
             showIcons(0);
         }
     }
@@ -687,8 +689,7 @@ public class MainActivity extends AppCompatActivity implements
      * This loops through each list
      */
     private void getWeeksData(){
-        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
+
 
         String outputString = "Fitness: ";
         for (boolean truth : isFitness) {
