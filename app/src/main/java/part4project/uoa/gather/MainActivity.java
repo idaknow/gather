@@ -927,10 +927,12 @@ public class MainActivity extends AppCompatActivity implements
             }
             in.close();
 
-            JSONArray fitbitJson = new JSONArray(response);
-            String goals = fitbitJson.getString(1);
-            //print result
-            Log.d(TAG3, "Goals: " + goals);
+//            JSONObject jsonResponse = JSONObject.parse(response.toString());
+//            Log.d(TAG3, "first response: " + response);
+//            Log.d(TAG3, response.getJSON);
+//            JSONObject goalSteps = response.getJSONObject('goals');
+//            Log.d(TAG3, "steps " + goalSteps);
+
 
         } catch (Exception e) {
 
