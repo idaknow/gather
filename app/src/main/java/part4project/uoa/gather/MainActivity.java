@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 import android.widget.CalendarView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -135,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements
             gf.subscribe();
         } else {
             getWeeksData();
+            showIcons(0);
         }
 
         // SOCIAL
@@ -190,8 +192,24 @@ public class MainActivity extends AppCompatActivity implements
                 // Sets the array index as true
                 Log.d("Calendar", "is Fitness = " + isFitness[(int)days]);
                 Log.d("Calendar", "is Nutrition = " + isNutrition[(int)days]);
+                showIcons((int) days);
             }
         });
+    }
+
+    public void showIcons(int days){
+        ImageView fitnessIcon = (ImageView) findViewById(R.id.fitness_icon);
+        ImageView nutritionIcon = (ImageView) findViewById(R.id.nutrition_icon);
+        if (isFitness[days]){
+            fitnessIcon.setVisibility(View.VISIBLE);
+        } else {
+            fitnessIcon.setVisibility(View.INVISIBLE);
+        }
+        if (isNutrition[days]){
+            nutritionIcon.setVisibility(View.VISIBLE);
+        } else {
+            nutritionIcon.setVisibility(View.INVISIBLE);
+        }
     }
 
     /**
@@ -270,6 +288,7 @@ public class MainActivity extends AppCompatActivity implements
             Log.d(TAG, "post execute");
             progress.dismiss();
             getWeeksData();
+            showIcons(0);
         }
     }
 
