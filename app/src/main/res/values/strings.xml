@@ -56,6 +56,9 @@
     <string name="permission_rationale_access_fine_location">Please grant permission: Information (e.g. speed) may prove useful to a health practitioner.</string>
     <string name="permission_rationale_body_sensors">Please grant permission: Information (e.g. basal metabolic rate) may prove useful to a health practitioner.</string>
 
+    <!-- Fitbit -->
+    <string name="fitbit_not_authenticated">Unable to retrieve data as required permissions are disabled. Go to Settings to give permission.</string>
+
     <!-- Twitter-->
     <string name="com.twitter.sdk.android.CONSUMER_KEY">fclM24Zol77H9Js1h78gkuiDy</string>
     <string name="com.twitter.sdk.android.CONSUMER_SECRET">IWrC84e25OFeC87ULFaaZK7tq8DeQTF6QB1ZGwz38lQGfZDNIa</string>

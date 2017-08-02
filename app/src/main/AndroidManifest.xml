@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="part4project.uoa.gather">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -35,6 +33,12 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="part4project.uoa.gather.MainActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="fitbit" android:scheme="gather"></data>
+            </intent-filter>
         </activity>
         <activity
             android:name="com.facebook.FacebookActivity"
@@ -55,5 +59,7 @@
         <activity android:name=".FitnessSummaryActivity" />
         <activity android:name=".NutritionSummaryActivity"></activity>
     </application>
+    <uses-permission android:name="android.permission.ACCOUNT_MANAGER" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
 </manifest>
