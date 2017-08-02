@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements
             gf.buildAndConnectClient(); // TODO: Check switch pref
             gf.subscribe();
         } else {
-            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime()));
+            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
         }
 
 //        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
                 cal.set(year, month, dayOfMonth);
                 Log.d("Calendar", "date clicked = " + cal.getTime());
-                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime());
+                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime(), true);
                 Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
                 Log.d("Calendar", "is Fitness = " + isFitness[days]);
@@ -329,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements
 //            getWeeksData();
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime()));
+            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
         }
     }
 
