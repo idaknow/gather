@@ -9,24 +9,6 @@
         android:key="social_media_all"
         android:title="@string/social_media_app_name" />
 
-    <!--<SwitchPreference-->
-        <!--android:defaultValue="false"-->
-        <!--android:dependency="social_media_all"-->
-        <!--android:key="public_profile"-->
-        <!--android:title="@string/social_media_app_public_profile" />-->
-
-    <!--<SwitchPreference-->
-        <!--android:defaultValue="false"-->
-        <!--android:dependency="social_media_all"-->
-        <!--android:key="email"-->
-        <!--android:title="@string/social_media_app_email" />-->
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="social_media_all"
-        android:key="user_friends"
-        android:title="@string/social_media_app_friends" />
-
     <SwitchPreference
         android:defaultValue="false"
         android:dependency="social_media_all"

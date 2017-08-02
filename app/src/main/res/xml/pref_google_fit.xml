@@ -11,36 +11,6 @@
     <SwitchPreference
         android:defaultValue="false"
         android:dependency="google_fit_all"
-        android:key="HR"
-        android:title="@string/gf_heart_rate" />
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="google_fit_all"
-        android:key="BMR"
-        android:title="@string/gf_basal_metabolic_rate" />
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="google_fit_all"
-        android:key="distance"
-        android:title="@string/gf_distance" />
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="google_fit_all"
-        android:key="speed"
-        android:title="@string/gf_speed" />
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="google_fit_all"
-        android:key="fat"
-        android:title="@string/gf_fat" />
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="google_fit_all"
         android:key="calories"
         android:title="@string/gf_calories" />
 
@@ -67,11 +37,5 @@
         android:dependency="google_fit_all"
         android:key="step"
         android:title="@string/gf_step_count" />
-
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="google_fit_all"
-        android:key="power"
-        android:title="@string/gf_power" />
 
 </PreferenceScreen>

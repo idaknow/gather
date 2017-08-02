@@ -154,6 +154,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             if (!super.onMenuItemSelected(featureId, item)) {
                 NavUtils.navigateUpFromSameTask(this);
             }
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
             return true;
         }
         return super.onMenuItemSelected(featureId, item);
@@ -184,9 +185,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || FitnessPreferenceFragment.class.getName().equals(fragmentName)
-                || FoodPreferenceFragment.class.getName().equals(fragmentName)
-                || SocialMediaPreferenceFragment.class.getName().equals(fragmentName)
-                || SocialMedia2PreferenceFragment.class.getName().equals(fragmentName)
+                || GoogleFitPreferenceFragment.class.getName().equals(fragmentName)
+                || FacebookPreferenceFragment.class.getName().equals(fragmentName)
+                || TwitterPreferenceFragment.class.getName().equals(fragmentName)
                 ;
     }
 
@@ -209,6 +210,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -217,18 +219,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     //GOOGLEFIT Initialised variables
     private static final String TAG2 = "GoogleFit"; // log Tag
-    private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_HEART_RATE_SUMMARY, DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY,DataType.AGGREGATE_DISTANCE_DELTA, DataType.AGGREGATE_SPEED_SUMMARY, DataType.AGGREGATE_BODY_FAT_PERCENTAGE_SUMMARY, DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA,DataType.AGGREGATE_POWER_SUMMARY);
-    private static List<String> PREFNAMES = Arrays.asList("HR", "BMR","distance", "speed", "fat", "calories", "hydration", "nutrition", "activity", "step", "power");
+    private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
+    private static List<String> PREFNAMES = Arrays.asList("calories", "hydration", "nutrition", "activity", "step");
     private static Preference.OnPreferenceClickListener eachPreferenceListener;
     private static Preference.OnPreferenceClickListener googleFitParentListener;
-//    public static List<String> grantedGFPermissions = new LinkedList<>(); //TODO
-//    public static List<String> deniedGFPermissions  = new LinkedList<>(); //TODO
 
     /**
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    public static class FoodPreferenceFragment extends PreferenceFragment {
+    public static class GoogleFitPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -421,6 +421,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -584,6 +585,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -591,7 +593,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     /**
-     * Initialised variables to be used by Facebook - Social Media App
+     * Initialised variables to be used by Facebook - SocialMethods Media App
      */
     private static LoginButton facebookLogin;
     private static CallbackManager callbackManager;
@@ -599,13 +601,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static AccessToken accessToken;
     private static ProfileTracker profileTracker;
     private static final String TAG = "Facebook"; // log Tag
-    private static final List<String> PERMISSIONS = Arrays.asList("email","user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile", "user_friends");
-    private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness", "user_friends");
+    private static final List<String> PERMISSIONS = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile");
+    private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness");
     public static List<String> grantedFBPermissions = new LinkedList<>();
     public static List<String> deniedFBPermissions  = new LinkedList<>();
 
-    // GET CURRENT PERMISSIONS: AccessToken.getCurrentAccessToken().getPermissions();
-    public static class SocialMediaPreferenceFragment extends PreferenceFragment {
+    public static class FacebookPreferenceFragment extends PreferenceFragment {
 
         @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         @Override
@@ -758,6 +759,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -801,7 +803,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static TwitterSession session; // the twitter session variable
     private static final String TAG4 = "Twitter"; // for logging
 
-    public static class SocialMedia2PreferenceFragment extends PreferenceFragment {
+    public static class TwitterPreferenceFragment extends PreferenceFragment {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -898,6 +900,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             int id = item.getItemId();
             if (id == android.R.id.home) {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 return true;
             }
             return super.onOptionsItemSelected(item);
