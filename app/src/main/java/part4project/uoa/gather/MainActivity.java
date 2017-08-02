@@ -352,7 +352,24 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void facebookSummary(){
-            if(SocialMethods.checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
+            boolean[] fbPermissions = SocialMethods.checkPermissionsFB();
+            String output = "";
+            for (int i = 0; i < fbPermissions.length; i++){
+                if (fbPermissions[i]){
+                    switch (i){
+                        case 0: output+="posts,";
+                            break;
+                        case 1: output+="likes,";
+                            break;
+                        case 2: output+="events";
+                            break;
+                    }
+                }
+            }
+            if (output.endsWith(",")){
+                output = output.substring(0,output.lastIndexOf(","));
+            }
+            if (!output.equals("")){ // gets the Denied and Granted permissions according to the access token
                 AccessToken facebookAccessToken = SocialMethods.getFBToken();
 
                 //Callback method sent with request
@@ -372,24 +389,34 @@ public class MainActivity extends AppCompatActivity implements
                         callback
                 );
                 Bundle parameters = new Bundle();
-                parameters.putString("fields", "posts,likes,events"); // adds requested permissions
+                parameters.putString("fields", output); // adds requested permissions
                 req.setParameters(parameters);
                 req.executeAsync();
             }
         }
 
         private void transformFacebookPostsEventsLikes(JSONObject jsonObject){
-            JSONArray postsArray = SocialMethods.getArray(jsonObject, 0);
-            if (postsArray != null) {
-                loopThroughResponse(postsArray, "message", "created_time", DataCollectionType.FPOST);
+            boolean[] fbPermissions = SocialMethods.checkPermissionsFB();
+            int i = 0;
+            if (fbPermissions[0]) {
+                JSONArray postsArray = SocialMethods.getArray(jsonObject, i);
+                if (postsArray != null) {
+                    loopThroughResponse(postsArray, "message", "created_time", DataCollectionType.FPOST);
+                }
+                i++;
             }
-            JSONArray likesArray = SocialMethods.getArray(jsonObject, 1);
-            if (likesArray != null) {
-                loopThroughResponse(likesArray, "name", "created_time", DataCollectionType.FLIKE);
+            if (fbPermissions[1]) {
+                JSONArray likesArray = SocialMethods.getArray(jsonObject, i);
+                if (likesArray != null) {
+                    loopThroughResponse(likesArray, "name", "created_time", DataCollectionType.FLIKE);
+                }
+                i++;
             }
-            JSONArray eventsArray = SocialMethods.getArray(jsonObject, 2);
-            if (likesArray != null) {
-                loopThroughResponse(eventsArray, "name", "start_time", DataCollectionType.FEVENT);
+            if (fbPermissions[2]) {
+                JSONArray eventsArray = SocialMethods.getArray(jsonObject, i);
+                if (eventsArray != null) {
+                    loopThroughResponse(eventsArray, "name", "start_time", DataCollectionType.FEVENT);
+                }
             }
         }
 

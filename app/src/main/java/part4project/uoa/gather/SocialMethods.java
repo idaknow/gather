@@ -124,9 +124,13 @@ class SocialMethods {
     * Checks if user posts, user likes and user events permissions are granted
     * @return true or false whether all 3 permissions are granted
     */
-    static boolean checkPermissionsFB(){
+    static boolean[] checkPermissionsFB(){
         List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
-        return (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events"));
+        boolean[] permissions = new boolean[3];
+        permissions[0] = grantedPermissions.contains("user_posts");
+        permissions[1] = grantedPermissions.contains("user_likes");
+        permissions[2] = grantedPermissions.contains("user_events");
+        return permissions;
     }
 
     /**
