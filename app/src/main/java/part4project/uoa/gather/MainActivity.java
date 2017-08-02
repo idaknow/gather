@@ -1,9 +1,7 @@
 package part4project.uoa.gather;
 
-import android.Manifest.permission;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -74,6 +72,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HttpsURLConnection;
 
 import retrofit2.Call;
+
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -124,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Log.d(TAG3, "Creating main page");
+        Log.d(TAG, "Creating main page");
 
         setupDates();
         setupProgressDialog();
@@ -139,8 +138,8 @@ public class MainActivity extends AppCompatActivity implements
             getWeeksData();
         }
 
-        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
-        fitbitView.setText(R.string.loading);
+       // TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
+        //fitbitView.setText(R.string.loading);
         new FitbitSummaryTask().execute();
 //        if (SettingsActivity.fitbitToken != null) {
 //            Log.d(TAG3, "Fitbit token on main page: " + SettingsActivity.fitbitToken);
@@ -766,8 +765,8 @@ public class MainActivity extends AppCompatActivity implements
             //Send the request
             int responseCode = conn.getResponseCode();
             String responseType = conn.getContentType();
-            Log.d(TAG3, "\nResponse Type : " + responseType);
-            Log.d(TAG3, "Response Code : " + responseCode);
+            Log.d(TAG, "\nResponse Type : " + responseType);
+            Log.d(TAG, "Response Code : " + responseCode);
 
             //Read the input received
             BufferedReader in = new BufferedReader(
