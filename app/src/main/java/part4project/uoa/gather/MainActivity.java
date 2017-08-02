@@ -71,6 +71,7 @@ import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
 
+import static part4project.uoa.gather.DataCollection.getDiffDate;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -136,8 +137,7 @@ public class MainActivity extends AppCompatActivity implements
             gf.buildAndConnectClient(); // TODO: Check switch pref
             gf.subscribe();
         } else {
-//            getWeeksData();
-            showIcons(0);
+            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime()));
         }
 
         // SOCIAL
@@ -188,13 +188,12 @@ public class MainActivity extends AppCompatActivity implements
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
                 cal.set(year, month, dayOfMonth);
                 Log.d("Calendar", "date clicked = " + cal.getTime());
-                long diff = MainActivity.endOfWeek.getTime() - cal.getTime().getTime();
-                double days = Math.abs(Math.ceil( (double) diff / (86400000)));
+                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime());
                 Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
                 Log.d("Calendar", "is Fitness = " + isFitness[(int)days]);
                 Log.d("Calendar", "is Nutrition = " + isNutrition[(int)days]);
-                showIcons((int) days);
+                showIcons(days);
             }
         });
     }
@@ -294,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements
 //            getWeeksData();
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-            showIcons(0);
+            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime()));
         }
     }
 

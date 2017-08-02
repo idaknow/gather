@@ -39,14 +39,25 @@ class DataCollection {
             Log.d("Weeks","Nutrition general" + list.size());
             for (int i = 0; i < list.size(); i++){ // loops through each index
                 // Gets the difference in days (to get the index)
-                long diff = MainActivity.endOfWeek.getTime() - list.get(i).getCreatedAt().getTime();
-                long days = Math.abs(diff / (86400000));
+                int days = getDiffDate(MainActivity.endOfWeek.getTime(), list.get(i).getCreatedAt().getTime());
                 Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
                 array[(int)days] = true;
             }
         }
         return array;
+    }
+
+    /**
+     * returns the difference in number of days between two dates
+     * @param time1 : milliseconds of time 1
+     * @param time2 : milliseconds of time 2
+     * @return : how many days are in between those two dates
+     */
+    public static int getDiffDate(long time1, long time2){
+        long diff = time1 - time2;
+        double days = Math.abs(Math.ceil( (double) diff / (86400000)));
+        return (int) days;
     }
 
     /**

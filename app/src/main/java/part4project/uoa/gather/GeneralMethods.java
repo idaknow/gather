@@ -28,7 +28,7 @@ class GeneralMethods {
         for (DataType dt : types) {
             builder.read(dt);
         }
-        return builder.setTimeRange(MainActivity.startOfWeek.getTime(), MainActivity.endOfWeek.getTime(), TimeUnit.MILLISECONDS).build();
+        return builder.setTimeRange(MainActivity.startOfWeek.getTime(), MainActivity.today.getTime(), TimeUnit.MILLISECONDS).build();
     }
 
 }
