@@ -179,6 +179,13 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
 
+        setupCalendar();
+    }
+
+    /**
+     * Sets up the calendar view with an onclick listener and sets the min & max dates
+     */
+    private void setupCalendar(){
         CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
         simpleCalendarView.setMaxDate(endOfWeek.getTime());
         simpleCalendarView.setMinDate(startOfWeek.getTime());
@@ -198,17 +205,22 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
-    public void showIcons(int days){
+    /**
+     * This method takes the index of the array to check if there occurred a fitness or nutrition thing on that day
+     * If there did the icon is shown on screen
+     * @param index : The array index, representing the day clicked
+     */
+    public void showIcons(int index){
 
         ImageView fitnessIcon = (ImageView) findViewById(R.id.fitness_icon);
         ImageView nutritionIcon = (ImageView) findViewById(R.id.nutrition_icon);
 
-        if (isFitness[days]){
+        if (isFitness[index]){
             fitnessIcon.setVisibility(View.VISIBLE);
         } else {
             fitnessIcon.setVisibility(View.INVISIBLE);
         }
-        if (isNutrition[days]){
+        if (isNutrition[index]){
             nutritionIcon.setVisibility(View.VISIBLE);
         } else {
             nutritionIcon.setVisibility(View.INVISIBLE);
@@ -232,6 +244,11 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(new Intent(this,NutritionSummaryActivity.class));
     }
 
+    /**
+     * This returns true/ false depending whether a date object is between the start and end date
+     * @param parsed : The date to search for
+     * @return T/F depending on whether is in between start & end date
+     */
     private boolean isDateInWeek(Date parsed){
         return startOfWeek.before(parsed) && endOfWeek.after(parsed);
     }
