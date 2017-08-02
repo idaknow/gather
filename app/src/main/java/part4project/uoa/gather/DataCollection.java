@@ -56,6 +56,8 @@ class DataCollection {
      * returns the difference in number of days between two dates
      * @param time1 : milliseconds of time 1
      * @param time2 : milliseconds of time 2
+     * @param isCeil : This is true/ false depending on whether the value must be rounded up or down
+     *               it must be rounded down for queries on data objects, but rounded up for queries on calendar view dates compared to today
      * @return : how many days are in between those two dates
      */
     static int getDiffDate(long time1, long time2, boolean isCeil){
