@@ -56,8 +56,12 @@
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>
-        <activity android:name=".FitnessSummaryActivity" />
-        <activity android:name=".NutritionSummaryActivity"></activity>
+        <activity
+            android:name=".FitnessSummaryActivity"
+            android:label="Gather Fitness Summary" />
+        <activity
+            android:name=".NutritionSummaryActivity"
+            android:label="Gather Nutrition Summary"></activity>
     </application>
     <uses-permission android:name="android.permission.ACCOUNT_MANAGER" />
     <uses-permission android:name="android.permission.INTERNET"/>
