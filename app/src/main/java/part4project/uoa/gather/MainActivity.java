@@ -66,6 +66,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
@@ -165,29 +166,30 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Sets up the start and end dates
      */
-    //TODO: Change start time to be a week, not a week from today
     private void setupDates(){
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
-        cal.setTime(today);
-        cal.add(Calendar.WEEK_OF_YEAR, -1); // minus a week
+        cal.setTime(today); // sets todays date
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         startOfWeek = cal.getTime();
-        cal.add(Calendar.DAY_OF_WEEK, 7);
+        cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
 
         Log.d("Date", "Range Start: " + startOfWeek);
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
+
         CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
         simpleCalendarView.setMaxDate(endOfWeek.getTime());
         simpleCalendarView.setMinDate(startOfWeek.getTime());
         simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-                Calendar cal = Calendar.getInstance();
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
                 cal.set(year, month, dayOfMonth);
+                Log.d("Calendar", "date clicked = " + cal.getTime());
                 long diff = MainActivity.endOfWeek.getTime() - cal.getTime().getTime();
-                long days = Math.abs(diff / (86400000));
+                double days = Math.abs(Math.ceil( (double) diff / (86400000)));
                 Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
                 Log.d("Calendar", "is Fitness = " + isFitness[(int)days]);
@@ -198,10 +200,10 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void showIcons(int days){
-        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
+
         ImageView fitnessIcon = (ImageView) findViewById(R.id.fitness_icon);
         ImageView nutritionIcon = (ImageView) findViewById(R.id.nutrition_icon);
+
         if (isFitness[days]){
             fitnessIcon.setVisibility(View.VISIBLE);
         } else {
@@ -290,6 +292,8 @@ public class MainActivity extends AppCompatActivity implements
             Log.d(TAG, "post execute");
             progress.dismiss();
 //            getWeeksData();
+            isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
+            isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
             showIcons(0);
         }
     }
@@ -689,7 +693,6 @@ public class MainActivity extends AppCompatActivity implements
      * This loops through each list
      */
     private void getWeeksData(){
-
 
         String outputString = "Fitness: ";
         for (boolean truth : isFitness) {

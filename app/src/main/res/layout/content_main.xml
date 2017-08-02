@@ -51,21 +51,6 @@
         app:layout_constraintVertical_bias="0.982"
         tools:layout_editor_absoluteY="454dp" />
 
-    <TextView
-        android:id="@+id/text"
-        android:layout_width="243dp"
-        android:layout_height="86dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="73dp"
-        android:text="Loading..."
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.847"
-        tools:layout_editor_absoluteY="366dp" />
-
     <CalendarView
         android:id="@+id/simpleCalendarView"
         android:layout_width="322dp"
