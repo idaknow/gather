@@ -127,7 +127,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             if (host.equals("fitbit")){
                 String resultFragment = String.valueOf(data.getFragment());
                 FitnessPreferenceFragment.setToken(resultFragment);
-                FitnessPreferenceFragment.setGrantedScopes(resultFragment);
+                if (getPreferenceManager() != null) {
+                    FitnessPreferenceFragment.setGrantedScopes(resultFragment, getPreferenceManager());
+                }
                 fitbitConnected = true;
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
 
@@ -515,7 +517,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     if (pref.isChecked()) {
                         browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
                         startActivity(browserIntent);
-                        Toast.makeText(getActivity(), scope + " permission enabled for Fitbit", Toast.LENGTH_LONG).show();
                     } else {
                         grantedfitbitPermissions.remove(scope);
                         Toast.makeText(getActivity(), scope + " permission disabled for Fitbit", Toast.LENGTH_LONG).show();
@@ -553,6 +554,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 wr.close();
                 revokeCon.disconnect();
                 fitbitToken = null;
+                Log.d(TAG3, "revoked token: " + fitbitToken);
                 fitbitConnected = false;
             } catch (Exception e) {
 
@@ -564,16 +566,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         Adds the granted scopes to an arraylist to keep track of and sets the preferences to true
         or false accordingly.
          */
-        private static void setGrantedScopes(String responseFragment) {
+        private static void setGrantedScopes(String responseFragment, PreferenceManager prefManager) {
             try {
                 String temp = responseFragment.split("&")[2];
                 String scopeFragment = temp.substring(6);
                 String[] scopes = scopeFragment.split("\\+");
                 grantedfitbitPermissions.clear();
-                for (String scope : scopes){
-                    grantedfitbitPermissions.add(scope);
-                    String prefName = "fitbit_" + scope;
-                    //Set the appropriate preferences to enabled
+                if (scopes.length != 0) {
+                    for (String scope : scopes) {
+                        grantedfitbitPermissions.add(scope);
+                        String prefName = "fitbit_" + scope;
+                        //Set the appropriate preferences to enabled
+                        SwitchPreference switchPreference = (SwitchPreference) prefManager.findPreference(prefName);
+                        switchPreference.setEnabled(true);
+                    }
                 }
             } catch (PatternSyntaxException ex) {
                 // error handling
