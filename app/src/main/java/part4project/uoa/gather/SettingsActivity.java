@@ -555,7 +555,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 fitbitToken = null;
                 fitbitConnected = false;
             } catch (Exception e) {
-
+                Log.d("Fitbit", e.toString());
             }
 
         }
