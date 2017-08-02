@@ -740,7 +740,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private class FitbitSummaryTask extends AsyncTask<Void, Void, Void> {
         protected Void doInBackground(Void... params) {
-            Log.d(TAG3, "fitbit async");
+            Log.d(TAG, "fitbit async");
             retrieveFitbitData();
             return null;
         }
@@ -748,7 +748,7 @@ public class MainActivity extends AppCompatActivity implements
 
     public void retrieveFitbitData() {
         try {
-            Log.d(TAG3, "fitbit retrieval");
+            Log.d(TAG, "fitbit retrieval");
 
             String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
             URL url = new URL(dataRequestUrl);
@@ -781,10 +781,10 @@ public class MainActivity extends AppCompatActivity implements
             in.close();
 
 //            JSONObject jsonResponse = JSONObject.parse(response.toString());
-//            Log.d(TAG3, "first response: " + response);
-//            Log.d(TAG3, response.getJSON);
+//            Log.d(TAG, "first response: " + response);
+//            Log.d(TAG, response.getJSON);
 //            JSONObject goalSteps = response.getJSONObject('goals');
-//            Log.d(TAG3, "steps " + goalSteps);
+//            Log.d(TAG, "steps " + goalSteps);
 
 
         } catch (Exception e) {
