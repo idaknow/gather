@@ -146,8 +146,8 @@ public class MainActivity extends AppCompatActivity implements
             showIcons(getDiffDate(endOfWeek.getTime(),today.getTime()));
         }
 
-        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
-        fitbitView.setText(R.string.loading);
+//        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
+//        fitbitView.setText(R.string.loading);
         new FitbitSummaryTask().execute();
 //        if (SettingsActivity.fitbitToken != null) {
 //            Log.d(TAG3, "Fitbit token on main page: " + SettingsActivity.fitbitToken);
@@ -210,15 +210,15 @@ public class MainActivity extends AppCompatActivity implements
         simpleCalendarView.setMinDate(startOfWeek.getTime());
         simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
-            public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
+            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
                 cal.set(year, month, dayOfMonth);
                 Log.d("Calendar", "date clicked = " + cal.getTime());
                 int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime());
                 Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
-                Log.d("Calendar", "is Fitness = " + isFitness[(int)days]);
-                Log.d("Calendar", "is Nutrition = " + isNutrition[(int)days]);
+                Log.d("Calendar", "is Fitness = " + isFitness[days]);
+                Log.d("Calendar", "is Nutrition = " + isNutrition[days]);
                 showIcons(days);
             }
         });
@@ -724,24 +724,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    /**
-     * This loops through each list
-     */
-    private void getWeeksData(){
-
-        String outputString = "Fitness: ";
-        for (boolean truth : isFitness) {
-            outputString += truth + " ";
-        }
-        outputString += "\n\nNutrition: ";
-        for (boolean truth : isNutrition){
-            outputString += truth + " ";
-        }
-
-        TextView textView = (TextView) findViewById(R.id.text);
-        textView.setText(outputString);
-    }
-
     @Override
     public void onConnectionSuspended(int i) {
         Log.d(TAG, "HistoryAPI onConnectionSuspended");
@@ -846,7 +828,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
         } catch (Exception e) {
-
+            Log.d("Fitbit", e.toString());
         }
 
     }

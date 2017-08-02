@@ -42,7 +42,7 @@ class DataCollection {
                 int days = getDiffDate(MainActivity.endOfWeek.getTime(), list.get(i).getCreatedAt().getTime());
                 Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
-                array[(int)days] = true;
+                array[days] = true;
             }
         }
         return array;
@@ -54,7 +54,7 @@ class DataCollection {
      * @param time2 : milliseconds of time 2
      * @return : how many days are in between those two dates
      */
-    public static int getDiffDate(long time1, long time2){
+    static int getDiffDate(long time1, long time2){
         long diff = time1 - time2;
         double days = Math.abs(Math.ceil( (double) diff / (86400000)));
         return (int) days;
