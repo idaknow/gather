@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
+import android.widget.CalendarView;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -90,6 +91,9 @@ public class MainActivity extends AppCompatActivity implements
     public static final List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     public static final List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
+
+    boolean[] isFitness = new boolean[7];
+    boolean[] isNutrition = new boolean[7];
 
     ProgressDialog progress;
 
@@ -172,6 +176,22 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Range Start: " + startOfWeek);
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
+        CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
+        simpleCalendarView.setMaxDate(endOfWeek.getTime());
+        simpleCalendarView.setMinDate(startOfWeek.getTime());
+        simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+            @Override
+            public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
+                Calendar cal = Calendar.getInstance();
+                cal.set(year, month, dayOfMonth);
+                long diff = MainActivity.endOfWeek.getTime() - cal.getTime().getTime();
+                long days = Math.abs(diff / (86400000));
+                Log.d("Weeks","days diff = " + days);
+                // Sets the array index as true
+                Log.d("Calendar", "is Fitness = " + isFitness[(int)days]);
+                Log.d("Calendar", "is Nutrition = " + isNutrition[(int)days]);
+            }
+        });
     }
 
     /**
@@ -648,8 +668,8 @@ public class MainActivity extends AppCompatActivity implements
      * This loops through each list
      */
     private void getWeeksData(){
-        boolean[] isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-        boolean[] isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
+        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
+        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
 
         String outputString = "Fitness: ";
         for (boolean truth : isFitness) {
