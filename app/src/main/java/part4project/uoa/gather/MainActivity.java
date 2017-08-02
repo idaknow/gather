@@ -1,5 +1,8 @@
 package part4project.uoa.gather;
 
+import android.Manifest.permission;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -10,10 +13,9 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.content.Intent;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -57,6 +59,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,11 +71,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import retrofit2.Call;
+import javax.net.ssl.HttpsURLConnection;
 
+import retrofit2.Call;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
-
 
 @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
 public class MainActivity extends AppCompatActivity implements
@@ -119,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        Log.d(TAG3, "Creating main page");
 
         setupDates();
         setupProgressDialog();
@@ -133,11 +139,24 @@ public class MainActivity extends AppCompatActivity implements
             getWeeksData();
         }
 
+        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
+        fitbitView.setText(R.string.loading);
+        new FitbitSummaryTask().execute();
+//        if (SettingsActivity.fitbitToken != null) {
+//            Log.d(TAG3, "Fitbit token on main page: " + SettingsActivity.fitbitToken);
+//            String url = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
+//            retrieveFitbitData(url);
+//        } else {
+//            Log.d(TAG3, "Fitbit token is null");
+//            fitbitView.setText(R.string.fitbit_not_authenticated);
+//        }
+
         // SOCIAL
         AccessToken fbToken = SettingsActivity.accessToken;
         if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
             fbToken = AccessToken.getCurrentAccessToken();
         }
+
         if (session == null){
             session = TwitterCore.getInstance().getSessionManager().getActiveSession();
             if (fbToken != null && session != null) {
@@ -159,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Sets up the start and end dates
      */
+
     //TODO: Change start time to be a week, not a week from today
     private void setupDates(){
         Calendar cal = Calendar.getInstance();
@@ -715,6 +735,62 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(intent);
         return true;
     }
+
+//FITBIT
+
+    private class FitbitSummaryTask extends AsyncTask<Void, Void, Void> {
+        protected Void doInBackground(Void... params) {
+            Log.d(TAG, "fitbit async");
+            retrieveFitbitData();
+            return null;
+        }
+    }
+
+    public void retrieveFitbitData() {
+        try {
+            Log.d(TAG, "fitbit retrieval");
+
+            String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
+            URL url = new URL(dataRequestUrl);
+
+            //set up the connection with the Authorisation header containing the previously obtained
+            //access token
+            //TO DO: currently hardcoded token
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setReadTimeout(10000);//this is in milliseconds
+            conn.setConnectTimeout(15000);//this is in milliseconds
+            conn.setRequestMethod("GET");
+            conn.setDoInput(true);
+            conn.addRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1QkRXRFEiLCJhdWQiOiIyMjhLUVciLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJociBybnV0IiwiZXhwIjoxNTAxNjc1MDYwLCJpYXQiOjE1MDEzMDExNjV9.dVwRx9kOFT8VcR9NupTnuveBIMRR-2uLgQ23OcOUVSo");            //starts the query
+
+            //Send the request
+            int responseCode = conn.getResponseCode();
+            String responseType = conn.getContentType();
+            Log.d(TAG3, "\nResponse Type : " + responseType);
+            Log.d(TAG3, "Response Code : " + responseCode);
+
+            //Read the input received
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+//            JSONObject jsonResponse = JSONObject.parse(response.toString());
+//            Log.d(TAG, "first response: " + response);
+//            Log.d(TAG, response.getJSON);
+//            JSONObject goalSteps = response.getJSONObject('goals');
+//            Log.d(TAG, "steps " + goalSteps);
+
+
+        } catch (Exception e) {
+
+        }
+
+    }
+
 }
-
-
