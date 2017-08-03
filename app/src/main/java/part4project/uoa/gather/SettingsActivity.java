@@ -127,9 +127,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             if (host.equals("fitbit")){
                 String resultFragment = String.valueOf(data.getFragment());
                 FitnessPreferenceFragment.setToken(resultFragment);
-                if (getPreferenceManager() != null) {
-                    FitnessPreferenceFragment.setGrantedScopes(resultFragment, getPreferenceManager());
-                }
+                PreferenceFragment fitbitFragment = (PreferenceFragment) getFragmentManager().findFragmentById();
+                FitnessPreferenceFragment.setGrantedScopes(resultFragment, fitbitFragment.getPreferenceManager());
                 fitbitConnected = true;
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
 
@@ -491,8 +490,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         grantedfitbitPermissions.clear();
                         revokeToken();
                         for (int i = 0; i < PREFS.size(); i++) {
-                            Preference pref2 = getPreferenceManager().findPreference(PREFS.get(i));
+                            SwitchPreference pref2 = (SwitchPreference) getPreferenceManager().findPreference(PREFS.get(i));
                             pref2.setEnabled(false);
+                            pref2.setChecked(false);
                         }
                         Toast.makeText(getActivity(), "Permission disabled for access to Fitbit", Toast.LENGTH_LONG).show();
                     }
@@ -568,6 +568,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private static void setGrantedScopes(String responseFragment, PreferenceManager prefManager) {
             try {
+                Log.d(TAG3, "set granted scopes");
                 String temp = responseFragment.split("&")[2];
                 String scopeFragment = temp.substring(6);
                 String[] scopes = scopeFragment.split("\\+");
@@ -576,9 +577,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     for (String scope : scopes) {
                         grantedfitbitPermissions.add(scope);
                         String prefName = "fitbit_" + scope;
+                        Log.d(TAG3, "pref name: " + prefName);
                         //Set the appropriate preferences to enabled
                         SwitchPreference switchPreference = (SwitchPreference) prefManager.findPreference(prefName);
                         switchPreference.setEnabled(true);
+                        switchPreference.setChecked(true);
                     }
                 }
             } catch (PatternSyntaxException ex) {

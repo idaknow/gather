@@ -12,7 +12,7 @@
     <string name="pref_default_display_name">John Smith</string>
 
     <!-- Fitness settings -->
-    <string name="pref_header_fitness_app">Fitness App</string>
+    <string name="pref_header_fitness_app">Fitbit</string>
     <string name="fitness_app_name">Fitness App Name</string>
     <string name="fitness_app_activity">Activity</string>
 
