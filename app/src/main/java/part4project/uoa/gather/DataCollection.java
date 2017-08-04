@@ -2,8 +2,10 @@ package part4project.uoa.gather;
 
 import android.util.Log;
 
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Created by Ida on 1/08/2017.
@@ -39,14 +41,32 @@ class DataCollection {
             Log.d("Weeks","Nutrition general" + list.size());
             for (int i = 0; i < list.size(); i++){ // loops through each index
                 // Gets the difference in days (to get the index)
-                long diff = MainActivity.endOfWeek.getTime() - list.get(i).getCreatedAt().getTime();
-                long days = Math.abs(diff / (86400000));
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+                cal.setTime(list.get(i).getCreatedAt());
+                int days = getDiffDate(MainActivity.endOfWeek.getTime(), cal.getTime().getTime(), false);
                 Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
-                array[(int)days] = true;
+                array[days] = true;
             }
         }
         return array;
+    }
+
+    /**
+     * returns the difference in number of days between two dates
+     * @param time1 : milliseconds of time 1
+     * @param time2 : milliseconds of time 2
+     * @param isCeil : This is true/ false depending on whether the value must be rounded up or down
+     *               it must be rounded down for queries on data objects, but rounded up for queries on calendar view dates compared to today
+     * @return : how many days are in between those two dates
+     */
+    static int getDiffDate(long time1, long time2, boolean isCeil){
+        long diff = time1 - time2;
+        double days = (Math.abs( (double) diff / (86400000)));
+        if (isCeil){
+            days = Math.ceil(days);
+        }
+        return (int) days;
     }
 
     /**
@@ -64,7 +84,11 @@ class DataCollection {
         List<String> listToPrint = new LinkedList<>();
         if (list != null) {
             for (int i = 0; i < list.size(); i++) {
-                listToPrint.add(list.get(i).getType().toString() + list.get(i).getValue());
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+                cal.setTime(list.get(i).getCreatedAt());
+                int day = cal.get(Calendar.DAY_OF_MONTH);
+                int month = cal.get(Calendar.MONTH);
+                listToPrint.add(day + "/" + month + " | " + list.get(i).getType().toString() + list.get(i).getValue());
             }
         }
         return listToPrint;

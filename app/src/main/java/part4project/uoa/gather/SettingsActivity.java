@@ -557,7 +557,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Log.d(TAG3, "revoked token: " + fitbitToken);
                 fitbitConnected = false;
             } catch (Exception e) {
-
+                Log.d("Fitbit", e.toString());
             }
 
         }

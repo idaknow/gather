@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CalendarView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -67,16 +69,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import static part4project.uoa.gather.DataCollection.getDiffDate;
 import retrofit2.Call;
 
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
-@RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
@@ -94,6 +97,9 @@ public class MainActivity extends AppCompatActivity implements
     public static final List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     public static final List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
+
+    boolean[] isFitness = new boolean[7];
+    boolean[] isNutrition = new boolean[7];
 
     ProgressDialog progress;
 
@@ -135,11 +141,12 @@ public class MainActivity extends AppCompatActivity implements
             gf.buildAndConnectClient(); // TODO: Check switch pref
             gf.subscribe();
         } else {
-            getWeeksData();
+            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
         }
 
-       // TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
-        //fitbitView.setText(R.string.loading);
+//        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
+//        fitbitView.setText(R.string.loading);
+
         new FitbitSummaryTask().execute();
 //        if (SettingsActivity.fitbitToken != null) {
 //            Log.d(TAG3, "Fitbit token on main page: " + SettingsActivity.fitbitToken);
@@ -177,20 +184,65 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Sets up the start and end dates
      */
-
-    //TODO: Change start time to be a week, not a week from today
     private void setupDates(){
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
-        cal.setTime(today);
-        cal.add(Calendar.WEEK_OF_YEAR, -1); // minus a week
+        cal.setTime(today); // sets todays date
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         startOfWeek = cal.getTime();
-        cal.add(Calendar.DAY_OF_WEEK, 7);
+        cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
 
         Log.d("Date", "Range Start: " + startOfWeek);
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
+
+        setupCalendar();
+    }
+
+    /**
+     * Sets up the calendar view with an onclick listener and sets the min & max dates
+     */
+    private void setupCalendar(){
+        CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
+        simpleCalendarView.setMaxDate(endOfWeek.getTime());
+        simpleCalendarView.setMinDate(startOfWeek.getTime());
+        simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+            @Override
+            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+                cal.set(year, month, dayOfMonth);
+                Log.d("Calendar", "date clicked = " + cal.getTime());
+                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime(), true);
+                Log.d("Weeks","days diff = " + days);
+                // Sets the array index as true
+                Log.d("Calendar", "is Fitness = " + isFitness[days]);
+                Log.d("Calendar", "is Nutrition = " + isNutrition[days]);
+                showIcons(days);
+            }
+        });
+    }
+
+    /**
+     * This method takes the index of the array to check if there occurred a fitness or nutrition thing on that day
+     * If there did the icon is shown on screen
+     * @param index : The array index, representing the day clicked
+     */
+    public void showIcons(int index){
+
+        ImageView fitnessIcon = (ImageView) findViewById(R.id.fitness_icon);
+        ImageView nutritionIcon = (ImageView) findViewById(R.id.nutrition_icon);
+
+        if (isFitness[index]){
+            fitnessIcon.setVisibility(View.VISIBLE);
+        } else {
+            fitnessIcon.setVisibility(View.INVISIBLE);
+        }
+        if (isNutrition[index]){
+            nutritionIcon.setVisibility(View.VISIBLE);
+        } else {
+            nutritionIcon.setVisibility(View.INVISIBLE);
+        }
     }
 
     /**
@@ -210,6 +262,11 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(new Intent(this,NutritionSummaryActivity.class));
     }
 
+    /**
+     * This returns true/ false depending whether a date object is between the start and end date
+     * @param parsed : The date to search for
+     * @return T/F depending on whether is in between start & end date
+     */
     private boolean isDateInWeek(Date parsed){
         return startOfWeek.before(parsed) && endOfWeek.after(parsed);
     }
@@ -268,7 +325,10 @@ public class MainActivity extends AppCompatActivity implements
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
             progress.dismiss();
-            getWeeksData();
+//            getWeeksData();
+            isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
+            isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
+            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
         }
     }
 
@@ -663,26 +723,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    /**
-     * This loops through each list
-     */
-    private void getWeeksData(){
-        boolean[] isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-        boolean[] isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-
-        String outputString = "Fitness: ";
-        for (boolean truth : isFitness) {
-            outputString += truth + " ";
-        }
-        outputString += "\n\nNutrition: ";
-        for (boolean truth : isNutrition){
-            outputString += truth + " ";
-        }
-
-        TextView textView = (TextView) findViewById(R.id.text);
-        textView.setText(outputString);
-    }
-
     @Override
     public void onConnectionSuspended(int i) {
         Log.d(TAG, "HistoryAPI onConnectionSuspended");
@@ -787,7 +827,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
         } catch (Exception e) {
-
+            Log.d("Fitbit", e.toString());
         }
 
     }
