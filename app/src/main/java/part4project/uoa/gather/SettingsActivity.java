@@ -127,8 +127,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             if (host.equals("fitbit")){
                 String resultFragment = String.valueOf(data.getFragment());
                 FitnessPreferenceFragment.setToken(resultFragment);
-                PreferenceFragment fitbitFragment = (PreferenceFragment) getFragmentManager().findFragmentById();
-                FitnessPreferenceFragment.setGrantedScopes(resultFragment, fitbitFragment.getPreferenceManager());
+                browserResponseFragment = resultFragment;
                 fitbitConnected = true;
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
 
@@ -441,6 +440,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static boolean fitbitConnected =  false;
     public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>();
     private static String encoded = "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3";
+    public static String browserResponseFragment;
 
     /**
      * This fragment shows data and sync preferences only. It is used when the
@@ -453,6 +453,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_fitness);
             setHasOptionsMenu(true);
+            PreferenceManager prefManager = getPreferenceManager();
+            if (browserResponseFragment != null){
+                setGrantedScopes(prefManager);
+            }
 
             // Adds the Preference Listeners to the parent and children preferences accordingly
             if (fitbitParentListener == null) {
@@ -488,13 +492,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         }
                     } else {
                         grantedfitbitPermissions.clear();
-                        revokeToken();
                         for (int i = 0; i < PREFS.size(); i++) {
                             SwitchPreference pref2 = (SwitchPreference) getPreferenceManager().findPreference(PREFS.get(i));
                             pref2.setEnabled(false);
                             pref2.setChecked(false);
                         }
                         Toast.makeText(getActivity(), "Permission disabled for access to Fitbit", Toast.LENGTH_LONG).show();
+                        revokeToken();
                     }
                     return true;
                 }
@@ -566,10 +570,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         Adds the granted scopes to an arraylist to keep track of and sets the preferences to true
         or false accordingly.
          */
-        private static void setGrantedScopes(String responseFragment, PreferenceManager prefManager) {
+        private static void setGrantedScopes(PreferenceManager prefManager) {
             try {
                 Log.d(TAG3, "set granted scopes");
-                String temp = responseFragment.split("&")[2];
+                String temp = browserResponseFragment.split("&")[2];
                 String scopeFragment = temp.substring(6);
                 String[] scopes = scopeFragment.split("\\+");
                 grantedfitbitPermissions.clear();
@@ -584,6 +588,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         switchPreference.setChecked(true);
                     }
                 }
+                browserResponseFragment = null;
             } catch (PatternSyntaxException ex) {
                 // error handling
             }
