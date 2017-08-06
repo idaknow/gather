@@ -191,7 +191,12 @@ public class MainActivity extends AppCompatActivity implements
         cal.setTime(today); // sets todays date
         if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+            if (cal.get(Calendar.WEEK_OF_YEAR) == cal.getFirstDayOfWeek()){ //TODO test
+                cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) - 1);
+                cal.set(Calendar.WEEK_OF_YEAR, cal.getWeeksInWeekYear());
+            }
             cal.set(Calendar.WEEK_OF_YEAR,cal.get(Calendar.WEEK_OF_YEAR)-1);
+
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
@@ -358,24 +363,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void facebookSummary(){
-            boolean[] fbPermissions = SocialMethods.checkPermissionsFB();
-            String output = "";
-            for (int i = 0; i < fbPermissions.length; i++){
-                if (fbPermissions[i]){
-                    switch (i){
-                        case 0: output+="posts,";
-                            break;
-                        case 1: output+="likes,";
-                            break;
-                        case 2: output+="events";
-                            break;
-                    }
-                }
-            }
-            if (output.endsWith(",")){
-                output = output.substring(0,output.lastIndexOf(","));
-            }
-            if (!output.equals("")){ // gets the Denied and Granted permissions according to the access token
+            if (SocialMethods.checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
                 AccessToken facebookAccessToken = SocialMethods.getFBToken();
 
                 //Callback method sent with request
@@ -395,33 +383,28 @@ public class MainActivity extends AppCompatActivity implements
                         callback
                 );
                 Bundle parameters = new Bundle();
-                parameters.putString("fields", output); // adds requested permissions
+                parameters.putString("fields", "posts,likes,events"); // adds requested permissions
                 req.setParameters(parameters);
                 req.executeAsync();
             }
         }
 
         private void transformFacebookPostsEventsLikes(JSONObject jsonObject){
-            boolean[] fbPermissions = SocialMethods.checkPermissionsFB();
-            int i = 0;
-            if (fbPermissions[0]) {
-                JSONArray postsArray = SocialMethods.getArray(jsonObject, i);
-                if (postsArray != null) {
-                    loopThroughResponse(postsArray, "message", "created_time", DataCollectionType.FPOST);
-                }
-                i++;
-            }
-            if (fbPermissions[1]) {
-                JSONArray likesArray = SocialMethods.getArray(jsonObject, i);
-                if (likesArray != null) {
-                    loopThroughResponse(likesArray, "name", "created_time", DataCollectionType.FLIKE);
-                }
-                i++;
-            }
-            if (fbPermissions[2]) {
-                JSONArray eventsArray = SocialMethods.getArray(jsonObject, i);
-                if (eventsArray != null) {
-                    loopThroughResponse(eventsArray, "name", "start_time", DataCollectionType.FEVENT);
+            String[] array = {"posts", "likes", "events"};
+            for (int index = 0; index < array.length; index++){
+                JSONArray jsonArray = SocialMethods.getArray(jsonObject, array[index]);
+                if (jsonArray != null){
+                    switch(index){
+                        case 0:
+                            loopThroughResponse(jsonArray, "message", "created_time", DataCollectionType.FPOST);
+                            break;
+                        case 1:
+                            loopThroughResponse(jsonArray, "name", "created_time", DataCollectionType.FLIKE);
+                            break;
+                        case 2:
+                            loopThroughResponse(jsonArray, "name", "start_time", DataCollectionType.FEVENT);
+                            break;
+                    }
                 }
             }
         }

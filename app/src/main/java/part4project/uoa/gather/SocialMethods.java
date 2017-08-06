@@ -46,14 +46,14 @@ class SocialMethods {
     /**
      * This returns the JSON array from a response JSON Object
      * @param jsonObject : The response JSON Object
-     * @param index : The index of the array within the object
+     * @param name : The index name of the array within the object
      * @return : The JSON Array
      */
-    static JSONArray getArray(JSONObject jsonObject, int index){
+    static JSONArray getArray(JSONObject jsonObject, String name){
         JSONObject object;
         JSONArray array;
         try {
-            object = (JSONObject) jsonObject.get(jsonObject.names().getString(index));
+            object = (JSONObject) jsonObject.get(name);
             array = (JSONArray) object.get(object.names().getString(0));
         } catch (JSONException e){
             Log.d("SOCIAL", e.toString());
@@ -124,13 +124,12 @@ class SocialMethods {
     * Checks if user posts, user likes and user events permissions are granted
     * @return true or false whether all 3 permissions are granted
     */
-    static boolean[] checkPermissionsFB(){
+    static boolean checkPermissionsFB(){
         List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
-        boolean[] permissions = new boolean[3];
-        permissions[0] = grantedPermissions.contains("user_posts");
-        permissions[1] = grantedPermissions.contains("user_likes");
-        permissions[2] = grantedPermissions.contains("user_events");
-        return permissions;
+        if (grantedPermissions != null){
+            return grantedPermissions.contains("user_posts") || grantedPermissions.contains("user_likes") || grantedPermissions.contains("user_events");
+        }
+        return false;
     }
 
     /**
