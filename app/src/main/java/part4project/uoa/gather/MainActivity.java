@@ -189,7 +189,13 @@ public class MainActivity extends AppCompatActivity implements
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
         cal.setTime(today); // sets todays date
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+        if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
+            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+            cal.set(Calendar.WEEK_OF_YEAR,cal.get(Calendar.WEEK_OF_YEAR)-1);
+        } else {
+            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+        }
+
         startOfWeek = cal.getTime();
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
@@ -450,9 +456,23 @@ public class MainActivity extends AppCompatActivity implements
         private void twitterSummary(){
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
-                displayFavouritedTweets(twitterApiClient);
-                displayStatusTweets(twitterApiClient);
+                if (isFavouriteEnabled()){
+                    displayFavouritedTweets(twitterApiClient);
+                }
+                if (isStatusEnabled()){
+                    displayStatusTweets(twitterApiClient);
+                }
             }
+        }
+
+        private boolean isFavouriteEnabled(){
+            //TODO
+            return true;
+        }
+
+        private boolean isStatusEnabled(){
+            //TODO
+            return true;
         }
 
         /**

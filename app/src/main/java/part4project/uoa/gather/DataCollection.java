@@ -61,12 +61,23 @@ class DataCollection {
      * @return : how many days are in between those two dates
      */
     static int getDiffDate(long time1, long time2, boolean isCeil){
-        long diff = time1 - time2;
-        double days = (Math.abs( (double) diff / (86400000)));
-        if (isCeil){
-            days = Math.ceil(days);
+        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+        cal1.setTimeInMillis(time1);
+        int day1 = cal1.get(Calendar.DAY_OF_YEAR); // TODO: Check documentation of day of the year
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+        cal2.setTimeInMillis(time2);
+        int day2 = cal2.get(Calendar.DAY_OF_YEAR); // TODO: Check documentation of day of the year
+
+        int days = Math.abs(day1 - day2);
+        if (cal1.get(Calendar.YEAR) != cal2.get(Calendar.YEAR)){ // (Year after) Jan -> Dec (Year below)
+            Calendar temp = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+            temp.set(cal1.get(Calendar.YEAR),Calendar.DECEMBER, 31); // Set to last day of december to get number of days in the year
+            // TODO: Might be 30 if day 1 = 0
+            int daysTillEndOfYear = temp.get(Calendar.DAY_OF_YEAR) - day1; // number of days till the end of the year
+            days = day2 + daysTillEndOfYear;
         }
-        return (int) days;
+
+        return days;
     }
 
     /**
