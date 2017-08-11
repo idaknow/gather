@@ -182,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements
 
         // Get a reference for the week view in the layout.
         mWeekView = (WeekView) findViewById(R.id.weekView);
+        mWeekView.setNumberOfVisibleDays(7);
 
 //// Set an action when any event is clicked.
         mWeekView.setOnEventClickListener(this);
@@ -312,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements
         List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
 
         Calendar startTime = Calendar.getInstance();
+//        startTime.setTime(startOfWeek);
         startTime.set(Calendar.HOUR_OF_DAY, 3);
         startTime.set(Calendar.MINUTE, 0);
         startTime.set(Calendar.MONTH, newMonth-1);
