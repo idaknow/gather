@@ -1,15 +1,16 @@
 package part4project.uoa.gather;
 
-import android.Manifest.permission;
+import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
+import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -19,8 +20,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CalendarView;
 import android.widget.ImageView;
-import android.widget.TextView;
 
+import com.alamkanak.weekview.MonthLoader;
+import com.alamkanak.weekview.WeekView;
+import com.alamkanak.weekview.WeekViewEvent;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphRequestBatch;
@@ -84,7 +87,11 @@ import static part4project.uoa.gather.SocialMethods.getDate;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.OnConnectionFailedListener,
+        WeekView.EventClickListener,
+        MonthLoader.MonthChangeListener,
+        WeekView.EventLongPressListener,
+        WeekView.EmptyViewLongPressListener {
 
     //Logging Data TAGs
     private static final String TAG = "MainActivity";
@@ -102,6 +109,8 @@ public class MainActivity extends AppCompatActivity implements
 
     boolean[] isFitness = new boolean[7];
     boolean[] isNutrition = new boolean[7];
+
+    WeekView mWeekView;
 
     ProgressDialog progress;
 
@@ -170,6 +179,19 @@ public class MainActivity extends AppCompatActivity implements
                     new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
+
+        // Get a reference for the week view in the layout.
+        mWeekView = (WeekView) findViewById(R.id.weekView);
+
+//// Set an action when any event is clicked.
+        mWeekView.setOnEventClickListener(this);
+//        MonthLoader.MonthChangeListener mMonthChangeListener = new MonthLoader.MonthChangeListener(this);
+// The week view has infinite scrolling horizontally. We have to provide the events of a
+// month every time the month changes on the week view.
+        mWeekView.setMonthChangeListener(this);
+//
+//// Set long press listener for events.
+        mWeekView.setEventLongPressListener(this);
     }
 
     /**
@@ -283,6 +305,132 @@ public class MainActivity extends AppCompatActivity implements
         return startOfWeek.before(parsed) && endOfWeek.after(parsed);
     }
 
+    @Override
+    public List<WeekViewEvent> onMonthChange(int newYear, int newMonth) {
+
+        // Populate the week view with some events.
+        List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
+
+        Calendar startTime = Calendar.getInstance();
+        startTime.set(Calendar.HOUR_OF_DAY, 3);
+        startTime.set(Calendar.MINUTE, 0);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        Calendar endTime = (Calendar) startTime.clone();
+        endTime.add(Calendar.HOUR, 1);
+        endTime.set(Calendar.MONTH, newMonth-1);
+        WeekViewEvent event = new WeekViewEvent(1, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_01));
+        events.add(event);
+
+        startTime = Calendar.getInstance();
+        startTime.set(Calendar.HOUR_OF_DAY, 3);
+        startTime.set(Calendar.MINUTE, 30);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        endTime = (Calendar) startTime.clone();
+        endTime.set(Calendar.HOUR_OF_DAY, 4);
+        endTime.set(Calendar.MINUTE, 30);
+        endTime.set(Calendar.MONTH, newMonth-1);
+        event = new WeekViewEvent(10, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_02));
+        events.add(event);
+
+        startTime = Calendar.getInstance();
+        startTime.set(Calendar.HOUR_OF_DAY, 4);
+        startTime.set(Calendar.MINUTE, 20);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        endTime = (Calendar) startTime.clone();
+        endTime.set(Calendar.HOUR_OF_DAY, 5);
+        endTime.set(Calendar.MINUTE, 0);
+        event = new WeekViewEvent(10, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_03));
+        events.add(event);
+
+        startTime = Calendar.getInstance();
+        startTime.set(Calendar.HOUR_OF_DAY, 5);
+        startTime.set(Calendar.MINUTE, 30);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        endTime = (Calendar) startTime.clone();
+        endTime.add(Calendar.HOUR_OF_DAY, 2);
+        endTime.set(Calendar.MONTH, newMonth-1);
+        event = new WeekViewEvent(2, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_02));
+        events.add(event);
+
+        startTime = Calendar.getInstance();
+        startTime.set(Calendar.HOUR_OF_DAY, 5);
+        startTime.set(Calendar.MINUTE, 0);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        startTime.add(Calendar.DATE, 1);
+        endTime = (Calendar) startTime.clone();
+        endTime.add(Calendar.HOUR_OF_DAY, 3);
+        endTime.set(Calendar.MONTH, newMonth - 1);
+        event = new WeekViewEvent(3, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_03));
+        events.add(event);
+
+        startTime = Calendar.getInstance();
+        startTime.set(Calendar.DAY_OF_MONTH, 15);
+        startTime.set(Calendar.HOUR_OF_DAY, 3);
+        startTime.set(Calendar.MINUTE, 0);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        endTime = (Calendar) startTime.clone();
+        endTime.add(Calendar.HOUR_OF_DAY, 3);
+        event = new WeekViewEvent(4, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_04));
+        events.add(event);
+
+        startTime = Calendar.getInstance();
+        startTime.set(Calendar.DAY_OF_MONTH, 1);
+        startTime.set(Calendar.HOUR_OF_DAY, 3);
+        startTime.set(Calendar.MINUTE, 0);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        endTime = (Calendar) startTime.clone();
+        endTime.add(Calendar.HOUR_OF_DAY, 3);
+        event = new WeekViewEvent(5, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_01));
+        events.add(event);
+
+        startTime = Calendar.getInstance();
+        startTime.set(Calendar.DAY_OF_MONTH, startTime.getActualMaximum(Calendar.DAY_OF_MONTH));
+        startTime.set(Calendar.HOUR_OF_DAY, 15);
+        startTime.set(Calendar.MINUTE, 0);
+        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.YEAR, newYear);
+        endTime = (Calendar) startTime.clone();
+        endTime.add(Calendar.HOUR_OF_DAY, 3);
+        event = new WeekViewEvent(5, getEventTitle(startTime), startTime, endTime);
+//        event.setColor(getResources().getColor(R.color.event_color_02));
+        events.add(event);
+
+        return events;
+    }
+
+    private String getEventTitle(Calendar time) {
+        return String.format("Event of %02d:%02d %s/%d", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE), time.get(Calendar.MONTH)+1, time.get(Calendar.DAY_OF_MONTH));
+    }
+
+    @Override
+    public void onEmptyViewLongPress(Calendar time) {
+
+    }
+
+    @Override
+    public void onEventClick(WeekViewEvent event, RectF eventRect) {
+
+    }
+
+    @Override
+    public void onEventLongPress(WeekViewEvent event, RectF eventRect) {
+
+    }
+
     /**
      * This tasks executes getting data from facebook & twitter
      */
@@ -290,7 +438,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progress.show();
+//            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
@@ -389,10 +537,15 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
+        /**
+         * This method loops through the information in the response JSON Object
+         * Calls loopThroughResponse method on each jsonArray: Posts, likes and events data
+         * @param jsonObject : The JSON response object
+         */
         private void transformFacebookPostsEventsLikes(JSONObject jsonObject){
-            String[] array = {"posts", "likes", "events"};
+            String[] array = {"posts", "likes", "events"}; // array of permissions
             for (int index = 0; index < array.length; index++){
-                JSONArray jsonArray = SocialMethods.getArray(jsonObject, array[index]);
+                JSONArray jsonArray = SocialMethods.getArray(jsonObject, array[index]); // gets the data object
                 if (jsonArray != null){
                     switch(index){
                         case 0:
@@ -409,6 +562,13 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
+        /**
+         * This method loops through the response JSON data array for each permission
+         * @param array: This is the JSON response array
+         * @param dataType: The string name of the data type provided
+         * @param timeName: The time variable name - dependent on JSONarray provided
+         * @param dct: Data Collection Type - which type to store if passes requirement
+         */
         private void loopThroughResponse(JSONArray array, String dataType, String timeName, DataCollectionType dct){
             try {
                 for (int j = 0; j < array.length(); j++) { // loops through each element in the array
@@ -436,25 +596,34 @@ public class MainActivity extends AppCompatActivity implements
             } //TODO add error response
         }
 
+        /**
+         * Uses the twitterAPIClient to get statusees and favourites
+         */
         private void twitterSummary(){
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
-                if (isFavouriteEnabled()){
+//                if (isTwitterEnabled(true)){
                     displayFavouritedTweets(twitterApiClient);
-                }
-                if (isStatusEnabled()){
+//                }
+//                if (isTwitterEnabled(false)){
                     displayStatusTweets(twitterApiClient);
-                }
+//                }
             }
         }
 
-        private boolean isFavouriteEnabled(){
+        /**
+         * This checks the favourite or status switch preference for twitter is enabled
+         * @return true if enabled, false if disabled
+         */
+        private boolean isTwitterEnabled(boolean isFavEnabled){
             //TODO
-            return true;
-        }
+//            SettingsActivity SA = new SettingsActivity();
+            String name = "statuses";
+            if (isFavEnabled){
+                name = "favourites";
+            }
 
-        private boolean isStatusEnabled(){
-            //TODO
+
             return true;
         }
 
