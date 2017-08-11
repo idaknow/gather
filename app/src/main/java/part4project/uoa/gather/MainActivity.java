@@ -231,31 +231,31 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
 
-        setupCalendar();
+//        setupCalendar();
     }
 
     /**
      * Sets up the calendar view with an onclick listener and sets the min & max dates
      */
-    private void setupCalendar(){
-        CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
-        simpleCalendarView.setMaxDate(endOfWeek.getTime());
-        simpleCalendarView.setMinDate(startOfWeek.getTime());
-        simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
-            @Override
-            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-                cal.set(year, month, dayOfMonth);
-                Log.d("Calendar", "date clicked = " + cal.getTime());
-                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime(), true);
-                Log.d("Weeks","days diff = " + days);
-                // Sets the array index as true
-                Log.d("Calendar", "is Fitness = " + isFitness[days]);
-                Log.d("Calendar", "is Nutrition = " + isNutrition[days]);
-                showIcons(days);
-            }
-        });
-    }
+//    private void setupCalendar(){
+//        CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
+//        simpleCalendarView.setMaxDate(endOfWeek.getTime());
+//        simpleCalendarView.setMinDate(startOfWeek.getTime());
+//        simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+//            @Override
+//            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
+//                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+//                cal.set(year, month, dayOfMonth);
+//                Log.d("Calendar", "date clicked = " + cal.getTime());
+//                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime(), true);
+//                Log.d("Weeks","days diff = " + days);
+//                // Sets the array index as true
+//                Log.d("Calendar", "is Fitness = " + isFitness[days]);
+//                Log.d("Calendar", "is Nutrition = " + isNutrition[days]);
+//                showIcons(days);
+//            }
+//        });
+//    }
 
     /**
      * This method takes the index of the array to check if there occurred a fitness or nutrition thing on that day
