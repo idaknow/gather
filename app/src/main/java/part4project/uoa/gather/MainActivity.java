@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -192,7 +193,11 @@ public class MainActivity extends AppCompatActivity implements
         mWeekView.setEventLongPressListener(this);
         setupDateTimeInterpreter();
         mWeekView.setHourHeight(80);
+//        mWeekView.notifyDatasetChanged();
+        Log.d("STATUS", "Created");
     }
+
+
 
     /**
      * Sets up the progress spinning dialog
@@ -266,9 +271,10 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private List<WeekViewEvent> displayEvents(){
-        List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
+        List<WeekViewEvent> events = new ArrayList<>();
         int j = 0;
-        int colour = getResources().getColor(R.color.fitness);
+//        int colour = getResources().getColor(R.color.fitness);
+        int colour = ContextCompat.getColor(getApplicationContext(), R.color.fitness);
         while (j < 4){
             List<Data> list = null;
             switch(j){
@@ -279,11 +285,11 @@ public class MainActivity extends AppCompatActivity implements
                     list = fitnessSocial;
                     break;
                 case 2:
-                    colour = getResources().getColor(R.color.nutrition);
+                    colour = ContextCompat.getColor(getApplicationContext(), R.color.nutrition);
                     list = nutritionSocial;
                     break;
                 case 3:
-                    colour = getResources().getColor(R.color.nutrition);
+                    colour = ContextCompat.getColor(getApplicationContext(), R.color.nutrition);
                     list = nutritionGeneral;
                     break;
             }
@@ -849,13 +855,6 @@ public class MainActivity extends AppCompatActivity implements
 
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "HistoryAPI onConnected");
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //TODO: used when the user resumes after accepting/ denying permissions
     }
 
     @Override

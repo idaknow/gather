@@ -29,9 +29,9 @@
 
     <TextView
         android:id="@+id/welcome_message"
-        android:layout_width="239dp"
+        android:layout_width="400dp"
         android:layout_height="51dp"
-        android:text="Hello, John!"
+        android:text="Your weekly activity"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintLeft_toLeftOf="parent"
