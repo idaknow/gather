@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -191,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements
         mWeekView.setMonthChangeListener(this);
         mWeekView.setEventLongPressListener(this);
         setupDateTimeInterpreter();
-//        mWeekView.notifyDatasetChanged();
     }
 
     /**
@@ -233,29 +233,6 @@ public class MainActivity extends AppCompatActivity implements
 
 //        setupCalendar();
     }
-
-    /**
-     * Sets up the calendar view with an onclick listener and sets the min & max dates
-     */
-//    private void setupCalendar(){
-//        CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
-//        simpleCalendarView.setMaxDate(endOfWeek.getTime());
-//        simpleCalendarView.setMinDate(startOfWeek.getTime());
-//        simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
-//            @Override
-//            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-//                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-//                cal.set(year, month, dayOfMonth);
-//                Log.d("Calendar", "date clicked = " + cal.getTime());
-//                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime(), true);
-//                Log.d("Weeks","days diff = " + days);
-//                // Sets the array index as true
-//                Log.d("Calendar", "is Fitness = " + isFitness[days]);
-//                Log.d("Calendar", "is Nutrition = " + isNutrition[days]);
-//                showIcons(days);
-//            }
-//        });
-//    }
 
     /**
      * This method takes the index of the array to check if there occurred a fitness or nutrition thing on that day
@@ -307,12 +284,13 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public List<WeekViewEvent> onMonthChange(int newYear, int newMonth) {
-        return displayEvents(newYear,newMonth);
+        return displayEvents();
     }
 
-    private List<WeekViewEvent> displayEvents(int newYear, int newMonth){
+    private List<WeekViewEvent> displayEvents(){
         List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
         int j = 0;
+        int colour = getResources().getColor(R.color.fitness);
         while (j < 4){
             List<Data> list = null;
             switch(j){
@@ -323,24 +301,26 @@ public class MainActivity extends AppCompatActivity implements
                     list = fitnessSocial;
                     break;
                 case 2:
+                    colour = getResources().getColor(R.color.nutrition);
                     list = nutritionSocial;
                     break;
                 case 3:
+                    colour = getResources().getColor(R.color.nutrition);
                     list = nutritionGeneral;
                     break;
             }
-        if (list!=null){
-            for (int i = 0; i < list.size(); i++){
-                Calendar startTime = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-                startTime.setTime(list.get(i).getCreatedAt());
-                Calendar endTime = (Calendar) startTime.clone();
-                endTime.add(Calendar.HOUR, 1);
-                WeekViewEvent event = new WeekViewEvent(1, getEventTitle(startTime), startTime, endTime);
-//        event.setColor(getResources().getColor(R.color.event_color_01));
-                events.add(event);
+            if (list!=null){
+                for (int i = 0; i < list.size(); i++){
+                    Calendar startTime = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+                    startTime.setTime(list.get(i).getCreatedAt());
+                    Calendar endTime = (Calendar) startTime.clone();
+                    endTime.add(Calendar.HOUR, 1);
+                    WeekViewEvent event = new WeekViewEvent(1, getEventTitle(startTime), startTime, endTime);
+                    event.setColor(colour);
+                    events.add(event);
+                }
             }
-        }
-        j++;
+            j++;
         }
         return events;
     }
@@ -355,12 +335,6 @@ public class MainActivity extends AppCompatActivity implements
             public String interpretDate(Calendar date) {
                 SimpleDateFormat weekdayNameFormat = new SimpleDateFormat("EEE", Locale.getDefault());
                 String weekday = weekdayNameFormat.format(date.getTime());
-                SimpleDateFormat format = new SimpleDateFormat(" M/d", Locale.getDefault());
-
-                // All android api level do not have a standard way of getting the first letter of
-                // the week day name. Hence we get the first char programmatically.
-                // Details: http://stackoverflow.com/questions/16959502/get-one-letter-abbreviation-of-week-day-of-a-date-in-java#answer-16959657
-
                 weekday = String.valueOf(weekday.charAt(0));
                 return weekday.toUpperCase();
             }
@@ -373,7 +347,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private String getEventTitle(Calendar time) {
-        return String.format("Event of %02d:%02d %s/%d", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE), time.get(Calendar.MONTH)+1, time.get(Calendar.DAY_OF_MONTH));
+        return " ";
+//        return String.format("Event of %02d:%02d %s/%d", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE), time.get(Calendar.MONTH)+1, time.get(Calendar.DAY_OF_MONTH));
     }
 
     @Override
