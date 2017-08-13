@@ -156,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements
             gf.buildAndConnectClient(); // TODO: Check switch pref
             gf.subscribe();
         } else {
-            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
             mWeekView = (WeekView) findViewById(R.id.weekView);
             mWeekView.notifyDatasetChanged();
         }
@@ -192,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements
         mWeekView.setMonthChangeListener(this);
         mWeekView.setEventLongPressListener(this);
         setupDateTimeInterpreter();
+        mWeekView.setHourHeight(80);
     }
 
     /**
@@ -232,28 +232,6 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Today " + today);
 
 //        setupCalendar();
-    }
-
-    /**
-     * This method takes the index of the array to check if there occurred a fitness or nutrition thing on that day
-     * If there did the icon is shown on screen
-     * @param index : The array index, representing the day clicked
-     */
-    public void showIcons(int index){
-
-        ImageView fitnessIcon = (ImageView) findViewById(R.id.fitness_icon);
-        ImageView nutritionIcon = (ImageView) findViewById(R.id.nutrition_icon);
-
-        if (isFitness[index]){
-            fitnessIcon.setVisibility(View.VISIBLE);
-        } else {
-            fitnessIcon.setVisibility(View.INVISIBLE);
-        }
-        if (isNutrition[index]){
-            nutritionIcon.setVisibility(View.VISIBLE);
-        } else {
-            nutritionIcon.setVisibility(View.INVISIBLE);
-        }
     }
 
     /**
@@ -423,7 +401,6 @@ public class MainActivity extends AppCompatActivity implements
 //            getWeeksData();
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
             mWeekView = (WeekView) findViewById(R.id.weekView);
             mWeekView.notifyDatasetChanged();
         }
