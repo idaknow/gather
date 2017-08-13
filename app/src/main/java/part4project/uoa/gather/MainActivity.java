@@ -1,13 +1,13 @@
 package part4project.uoa.gather;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -17,7 +17,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CalendarView;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
@@ -74,9 +73,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import static part4project.uoa.gather.DataCollection.getDiffDate;
 import retrofit2.Call;
 
+import static part4project.uoa.gather.DataCollection.getDiffDate;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -111,9 +110,18 @@ public class MainActivity extends AppCompatActivity implements
     public static Date endOfWeek;
     public static Date today;
 
+    //Get SharedPreferences for Fitbit to store access token
+    public static SharedPreferences fitbitPreferences = null;
+    public static Context fitbitContext;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Save the context so it can be accessed statically
+        fitbitContext = this;
 
         // TWITTER Initialised
         String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
@@ -144,18 +152,8 @@ public class MainActivity extends AppCompatActivity implements
             showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
         }
 
-//        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
-//        fitbitView.setText(R.string.loading);
-
+        //Get user information from Fitbit by starting the Async Task
         new FitbitSummaryTask().execute();
-//        if (SettingsActivity.fitbitToken != null) {
-//            Log.d(TAG3, "Fitbit token on main page: " + SettingsActivity.fitbitToken);
-//            String url = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
-//            retrieveFitbitData(url);
-//        } else {
-//            Log.d(TAG3, "Fitbit token is null");
-//            fitbitView.setText(R.string.fitbit_not_authenticated);
-//        }
 
         // SOCIAL
         AccessToken fbToken = SettingsActivity.accessToken;
@@ -787,37 +785,41 @@ public class MainActivity extends AppCompatActivity implements
 
     public void retrieveFitbitData() {
         try {
-            Log.d(TAG, "fitbit retrieval");
 
-            String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
-            URL url = new URL(dataRequestUrl);
+            Log.d(TAG, "fitbit retrieval");
 
             //set up the connection with the Authorisation header containing the previously obtained
             //access token
-            //TO DO: currently hardcoded token
+            String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
+            URL url = new URL(dataRequestUrl);
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             conn.setReadTimeout(10000);//this is in milliseconds
             conn.setConnectTimeout(15000);//this is in milliseconds
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
-            conn.addRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1QkRXRFEiLCJhdWQiOiIyMjhLUVciLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJociBybnV0IiwiZXhwIjoxNTAxNjc1MDYwLCJpYXQiOjE1MDEzMDExNjV9.dVwRx9kOFT8VcR9NupTnuveBIMRR-2uLgQ23OcOUVSo");            //starts the query
+            String access_token = fitbitPreferences.getString("access_token", null);
+            if (access_token != null) {
+                conn.addRequestProperty("Authorization", "Bearer " + access_token);
 
-            //Send the request
-            int responseCode = conn.getResponseCode();
-            String responseType = conn.getContentType();
-            Log.d(TAG, "\nResponse Type : " + responseType);
-            Log.d(TAG, "Response Code : " + responseCode);
+                //Send the request
+                int responseCode = conn.getResponseCode();
+                String responseType = conn.getContentType();
+                Log.d(TAG, "\nResponse Type : " + responseType);
+                Log.d(TAG, "Response Code : " + responseCode);
 
-            //Read the input received
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
+                //Read the input received
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
 
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+            } else {
+                Log.e(TAG, "fitbit token is null");
             }
-            in.close();
 
 //            JSONObject jsonResponse = JSONObject.parse(response.toString());
 //            Log.d(TAG, "first response: " + response);

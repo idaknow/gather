@@ -59,6 +59,9 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import static part4project.uoa.gather.MainActivity.fitbitContext;
+import static part4project.uoa.gather.MainActivity.fitbitPreferences;
+
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
  * handset devices, settings are presented as a single list. On tablets,
@@ -128,7 +131,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 String resultFragment = String.valueOf(data.getFragment());
                 FitnessPreferenceFragment.setToken(resultFragment);
                 browserResponseFragment = resultFragment;
-                fitbitConnected = true;
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
 
             }
@@ -436,8 +438,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static Preference.OnPreferenceClickListener fitbitParentListener;
     private static Intent browserIntent; //Intent used to open the authentication page
     private static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=604800";
-    public static String fitbitToken = null;
-    public static boolean fitbitConnected =  false;
     public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>();
     private static String encoded = "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3";
     public static String browserResponseFragment;
@@ -536,8 +536,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private static void setToken(String uriFragment){
             String temp = uriFragment.split("&")[0];
-            fitbitToken = temp.substring(13);
-            Log.d(TAG3, "Token: " + fitbitToken);
+            fitbitPreferences = fitbitContext.getSharedPreferences("myprefs", MODE_PRIVATE);
+            fitbitPreferences.edit().putString("access_token", temp.substring(13)).commit();
+            Log.d(TAG3, "Token: " + temp.substring(13));
         }
 
         /*
@@ -545,21 +546,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private static void revokeToken(){
             try {
+
+                // Send post request to revoke the user access token
                 String revoke = "https://api.fitbit.com/oauth2/revoke";
                 URL revokeUrl = new URL(revoke);
                 HttpsURLConnection revokeCon = (HttpsURLConnection) revokeUrl.openConnection();
                 revokeCon.setRequestMethod("POST");
                 revokeCon.setRequestProperty  ("Authorization", "Basic " + encoded);
-
-                // Send post request
                 revokeCon.setDoOutput(true);
                 DataOutputStream wr = new DataOutputStream(revokeCon.getOutputStream());
                 wr.flush();
                 wr.close();
                 revokeCon.disconnect();
-                fitbitToken = null;
-                Log.d(TAG3, "revoked token: " + fitbitToken);
-                fitbitConnected = false;
+
+                //Remove from MainActivity's SharedPreferences
+                MainActivity.fitbitPreferences.edit().remove("access_token");
+
+
             } catch (Exception e) {
                 Log.d("Fitbit", e.toString());
             }
