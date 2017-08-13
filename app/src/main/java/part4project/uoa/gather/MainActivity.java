@@ -153,6 +153,8 @@ public class MainActivity extends AppCompatActivity implements
             gf.subscribe();
         } else {
             showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
+            mWeekView = (WeekView) findViewById(R.id.weekView);
+            mWeekView.notifyDatasetChanged();
         }
 
 //        TextView fitbitView = (TextView) findViewById(R.id.fitness_app_summary);
@@ -185,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements
         mWeekView.setOnEventClickListener(this);
         mWeekView.setMonthChangeListener(this);
         mWeekView.setEventLongPressListener(this);
+//        mWeekView.notifyDatasetChanged();
     }
 
     /**
@@ -328,7 +331,6 @@ public class MainActivity extends AppCompatActivity implements
                 startTime.setTime(list.get(i).getCreatedAt());
                 Calendar endTime = (Calendar) startTime.clone();
                 endTime.add(Calendar.HOUR, 1);
-//                endTime.set(Calendar.MONTH, newMonth-1);
                 WeekViewEvent event = new WeekViewEvent(1, getEventTitle(startTime), startTime, endTime);
 //        event.setColor(getResources().getColor(R.color.event_color_01));
                 events.add(event);
@@ -416,6 +418,8 @@ public class MainActivity extends AppCompatActivity implements
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
             showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
+            mWeekView = (WeekView) findViewById(R.id.weekView);
+            mWeekView.notifyDatasetChanged();
         }
     }
 

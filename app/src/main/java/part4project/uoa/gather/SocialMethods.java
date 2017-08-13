@@ -29,7 +29,7 @@ class SocialMethods {
 
     // These are the keywords to search for in your social media accounts
     private static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active", "Rhythm");
-    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
+    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Revive","Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
     /**
      * This returns the Facebook Access Token
