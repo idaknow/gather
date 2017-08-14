@@ -1,6 +1,7 @@
 package part4project.uoa.gather;
 
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -14,6 +15,8 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
@@ -119,7 +122,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
         addPreferencesFromResource(R.xml.pref_headers);
@@ -141,6 +144,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             @Override
             public void onCheckedChanged(Switch buttonView, boolean isChecked) {
                 Log.d("Preference","Google Fit Preference Changed");
+                GoogleFitPreferenceFragment fragment = (GoogleFitPreferenceFragment) getFragmentManager().findFragmentById(R.id.GoogleFit);
+                Preference pref = getPreferenceManager().findPreference("google_fit_all");
+                Log.d("Preference","Enabling: " + pref);
+                Log.d("Preference","Frag: " + fragment);
+                android.app.FragmentManager fm = getFragmentManager();
+                fm.beginTransaction().replace(android.R.id.content, new GoogleFitPreferenceFragment()).commit();
+//                Fragment fragment = fm.findFragmentById(R.id.GoogleFit);
+                if (isChecked){
+//                    fragment.connectGoogleFit();
+//                    MainActivity.mGoogleApiClient.reconnect();
+                } else {
+
+                }
             }
 
             @Override
@@ -325,9 +341,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         /**
          * Methods called by the parent listener
+         * This connects the API Client to the Google Play Services
+         */
+        public void connectGoogleFit() {
+            MainActivity.mGoogleApiClient.reconnect();
+            Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
+        }
+
+        /**
+         * Methods called by the parent listener
          * This disconnects the API Client to the Google Play Services
          */
-        private void disconnectGoogleFit() {
+        public void disconnectGoogleFit() {
             if (!MainActivity.mGoogleApiClient.isConnected()){
                 Log.d(TAG2, "Google Client API Wasn't connected");
                 MainActivity.mGoogleApiClient.connect();
@@ -345,15 +370,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     }
                 }
             });
-        }
-
-        /**
-         * Methods called by the parent listener
-         * This connects the API Client to the Google Play Services
-         */
-        private void connectGoogleFit() {
-            MainActivity.mGoogleApiClient.reconnect();
-            Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
         }
 
         /**
