@@ -116,10 +116,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     @Override
-    protected void onCreate(final Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-        addPreferencesFromResource(R.xml.pref_headers);
+
         data = getIntent().getData();
         Log.i("App uri", String.valueOf(data));
         if (data != null) {
@@ -165,14 +165,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public boolean onIsMultiPane() {
         return isXLargeTablet(this);
     }
-//
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    public void onBuildHeaders(List<Header> target) {
-//        loadHeadersFromResource(R.xml.pref_headers, target);
-//    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onBuildHeaders(List<Header> target) {
+        loadHeadersFromResource(R.xml.pref_headers, target);
+    }
 
     /**
      * This method stops fragment injection in malicious applications.
