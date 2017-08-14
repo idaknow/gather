@@ -193,7 +193,6 @@ public class MainActivity extends AppCompatActivity implements
         mWeekView.setEventLongPressListener(this);
         setupDateTimeInterpreter();
         mWeekView.setHourHeight(80);
-//        mWeekView.notifyDatasetChanged();
         Log.d("STATUS", "Created");
     }
 
@@ -227,10 +226,13 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
+
+        // Set time to be 12 am for start and end date
         cal.set(Calendar.HOUR, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
+
         startOfWeek = cal.getTime();
 
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
@@ -239,8 +241,6 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Range Start: " + startOfWeek);
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
-
-//        setupCalendar();
     }
 
     /**
@@ -274,41 +274,42 @@ public class MainActivity extends AppCompatActivity implements
         return displayEvents();
     }
 
+    /**
+     * This loops through the lists of fitness and social data and adds them accordingly to the calendar
+     * @return : The list of WeekViewEvents which are added to the calendar
+     */
     private List<WeekViewEvent> displayEvents(){
-        List<WeekViewEvent> events = new ArrayList<>();
-        int j = 0;
-//        int colour = getResources().getColor(R.color.fitness);
-        int colour = ContextCompat.getColor(getApplicationContext(), R.color.fitness);
-        while (j < 4){
-            List<Data> list = null;
+        List<WeekViewEvent> events = new ArrayList<>(); // initialise empty events
+        int colour = ContextCompat.getColor(getApplicationContext(), R.color.fitness); // sets colour as fitness
+        for (int j = 0; j < 4; j++){ // loops through each of the arrays
+            List<Data> list = null; // creates empty list to call later
             switch(j){
-                case 0:
+                case 0: // GENERAL & FITNESS
                     list = fitnessGeneral;
                     break;
-                case 1:
+                case 1: // SOCIAL & FITNESS
                     list = fitnessSocial;
                     break;
-                case 2:
+                case 2: // SOCIAL & NUTRITION
                     colour = ContextCompat.getColor(getApplicationContext(), R.color.nutrition);
                     list = nutritionSocial;
                     break;
-                case 3:
+                case 3: // GENERAL & NUTRITION
                     colour = ContextCompat.getColor(getApplicationContext(), R.color.nutrition);
                     list = nutritionGeneral;
                     break;
             }
-            if (list!=null){
-                for (int i = 0; i < list.size(); i++){
+            if (list!=null){ // only does this if it's not empty
+                for (int i = 0; i < list.size(); i++){ // loops through list
                     Calendar startTime = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
                     startTime.setTime(list.get(i).getCreatedAt());
                     Calendar endTime = (Calendar) startTime.clone();
-                    endTime.add(Calendar.HOUR, 1);
-                    WeekViewEvent event = new WeekViewEvent(1, getEventTitle(startTime), startTime, endTime);
-                    event.setColor(colour);
+                    endTime.add(Calendar.HOUR, 1); // each event lasts 1 hour
+                    WeekViewEvent event = new WeekViewEvent(1, " ", startTime, endTime); // NOTE: Print empty string
+                    event.setColor(colour); // sets the colour
                     events.add(event);
                 }
             }
-            j++;
         }
         return events;
     }
@@ -332,11 +333,6 @@ public class MainActivity extends AppCompatActivity implements
                 return hour > 11 ? (hour - 12) + " PM" : (hour == 0 ? "12 AM" : hour + " AM");
             }
         });
-    }
-
-    private String getEventTitle(Calendar time) {
-        return " ";
-//        return String.format("Event of %02d:%02d %s/%d", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE), time.get(Calendar.MONTH)+1, time.get(Calendar.DAY_OF_MONTH));
     }
 
     @Override
