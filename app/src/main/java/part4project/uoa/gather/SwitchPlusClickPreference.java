@@ -25,6 +25,7 @@ public class SwitchPlusClickPreference extends SwitchPreference {
     public void setSwitchClickListener(SwitchPlusClickListener listener){
         this.listener = listener;
     }
+
     private SwitchPlusClickListener listener = null;
 
     /**
@@ -109,7 +110,6 @@ public class SwitchPlusClickPreference extends SwitchPreference {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("Preference", "Clicked");
                 if (listener!=null) listener.onClick(v);
             }
         });

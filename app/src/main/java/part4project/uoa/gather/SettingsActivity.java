@@ -17,6 +17,8 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -133,21 +135,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             }
         }
-        SwitchPreference googleFitSwitch = (SwitchPreference) getPreferenceManager().findPreference("GoogleFitPreference");
-        googleFitSwitch.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+        SwitchPlusClickPreference gf = (SwitchPlusClickPreference) getPreferenceManager().findPreference("GoogleFitPreference");;
+        SwitchPlusClickPreference.SwitchPlusClickListener listener = new SwitchPlusClickPreference.SwitchPlusClickListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
+            public void onCheckedChanged(Switch buttonView, boolean isChecked) {
                 Log.d("Preference","Google Fit Preference Changed");
-                return false;
             }
-        });
-        googleFitSwitch.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
             @Override
-            public boolean onPreferenceClick(Preference preference) {
+            public void onClick(View view) {
                 Log.d("Preference","Google Fit Preference Clicked");
-                return false;
             }
-        });
+        };
+        gf.setSwitchClickListener(listener);
 
     }
 
