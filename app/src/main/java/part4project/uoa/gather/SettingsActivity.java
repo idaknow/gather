@@ -1,7 +1,6 @@
 package part4project.uoa.gather;
 
 
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -12,17 +11,12 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -136,39 +130,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 FitnessPreferenceFragment.setGrantedScopes(resultFragment);
                 fitbitConnected = true;
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
-
             }
         }
-        SwitchPlusClickPreference gf = (SwitchPlusClickPreference) getPreferenceManager().findPreference("GoogleFitPreference");;
-        SwitchPlusClickPreference.SwitchPlusClickListener listener = new SwitchPlusClickPreference.SwitchPlusClickListener() {
-            @Override
-            public void onCheckedChanged(Switch buttonView, boolean isChecked) {
-                Log.d("Preference","Google Fit Preference Changed");
-                GoogleFitPreferenceFragment fragment = (GoogleFitPreferenceFragment) getFragmentManager().findFragmentById(R.id.GoogleFit);
-                Preference pref = getPreferenceManager().findPreference("google_fit_all");
-                Log.d("Preference","Enabling: " + pref);
-                Log.d("Preference","Frag: " + fragment);
-                android.app.FragmentManager fm = getFragmentManager();
-                fm.beginTransaction().replace(android.R.id.content, new GoogleFitPreferenceFragment()).commit();
-//                Fragment fragment = fm.findFragmentById(R.id.GoogleFit);
-                if (isChecked){
-//                    fragment.connectGoogleFit();
-//                    MainActivity.mGoogleApiClient.reconnect();
-                } else {
-
-                }
-            }
-
-            @Override
-            public void onClick(View view) {
-                Log.d("Preference","Google Fit Preference Clicked");
-                PreferenceScreen mPollPref = getPreferenceScreen();
-                mPollPref.removeAll();
-                getFragmentManager().beginTransaction().replace(android.R.id.content, new GoogleFitPreferenceFragment()).commit();
-            }
-        };
-        gf.setSwitchClickListener(listener);
-
     }
 
     /**
@@ -343,7 +306,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * Methods called by the parent listener
          * This connects the API Client to the Google Play Services
          */
-        public void connectGoogleFit() {
+        private void connectGoogleFit() {
             MainActivity.mGoogleApiClient.reconnect();
             Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
         }
@@ -352,7 +315,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * Methods called by the parent listener
          * This disconnects the API Client to the Google Play Services
          */
-        public void disconnectGoogleFit() {
+        private void disconnectGoogleFit() {
             if (!MainActivity.mGoogleApiClient.isConnected()){
                 Log.d(TAG2, "Google Client API Wasn't connected");
                 MainActivity.mGoogleApiClient.connect();
