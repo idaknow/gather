@@ -8,25 +8,21 @@
         android:title="@string/pref_header_general" />
 
     <header
-        android:key="FacebookPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$FacebookPreferenceFragment"
         android:icon="@drawable/ic_share_black_24dp"
         android:title="@string/pref_header_social_media_app" />
 
     <header
-        android:key="FitbitPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$FitnessPreferenceFragment"
         android:icon="@drawable/ic_directions_run_black_24dp"
         android:title="@string/pref_header_fitness_app" />
 
     <header
-        android:key="GoogleFitPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$GoogleFitPreferenceFragment"
         android:icon="@drawable/ic_local_dining_black_24dp"
         android:title="@string/pref_header_food_app" />
 
     <header
-        android:key="TwitterPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$TwitterPreferenceFragment"
         android:icon="@drawable/ic_share_black_24dp"
         android:title="@string/pref_header_social_media_app_2" />
