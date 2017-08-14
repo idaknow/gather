@@ -360,7 +360,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progress.show();
+//            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
