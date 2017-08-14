@@ -330,6 +330,9 @@ public class MainActivity extends AppCompatActivity implements
 
             @Override
             public String interpretTime(int hour) {
+                if (hour == 12){ // PRINT 12PM not default 0PM
+                    return hour +" PM";
+                }
                 return hour > 11 ? (hour - 12) + " PM" : (hour == 0 ? "12 AM" : hour + " AM");
             }
         });
