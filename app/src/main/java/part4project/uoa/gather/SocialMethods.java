@@ -29,7 +29,7 @@ class SocialMethods {
 
     // These are the keywords to search for in your social media accounts
     private static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active", "Rhythm");
-    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
+    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Revive","Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
 
     /**
      * This returns the Facebook Access Token
@@ -46,14 +46,14 @@ class SocialMethods {
     /**
      * This returns the JSON array from a response JSON Object
      * @param jsonObject : The response JSON Object
-     * @param index : The index of the array within the object
+     * @param name : The index name of the array within the object
      * @return : The JSON Array
      */
-    static JSONArray getArray(JSONObject jsonObject, int index){
+    static JSONArray getArray(JSONObject jsonObject, String name){
         JSONObject object;
         JSONArray array;
         try {
-            object = (JSONObject) jsonObject.get(jsonObject.names().getString(index));
+            object = (JSONObject) jsonObject.get(name);
             array = (JSONArray) object.get(object.names().getString(0));
         } catch (JSONException e){
             Log.d("SOCIAL", e.toString());
@@ -126,7 +126,10 @@ class SocialMethods {
     */
     static boolean checkPermissionsFB(){
         List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
-        return (grantedPermissions.contains("user_posts") && grantedPermissions.contains("user_likes") && grantedPermissions.contains("user_events"));
+        if (grantedPermissions != null){
+            return grantedPermissions.contains("user_posts") || grantedPermissions.contains("user_likes") || grantedPermissions.contains("user_events");
+        }
+        return false;
     }
 
     /**
