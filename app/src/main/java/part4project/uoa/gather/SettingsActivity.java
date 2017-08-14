@@ -119,6 +119,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        addPreferencesFromResource(R.xml.pref_headers);
         data = getIntent().getData();
         Log.i("App uri", String.valueOf(data));
         if (data != null) {
@@ -132,6 +133,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             }
         }
+        SwitchPreference googleFitSwitch = (SwitchPreference) getPreferenceManager().findPreference("GoogleFitPreference");
+        googleFitSwitch.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Log.d("Preference","Google Fit Preference Changed");
+                return false;
+            }
+        });
+        googleFitSwitch.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Log.d("Preference","Google Fit Preference Clicked");
+                return false;
+            }
+        });
 
     }
 
@@ -166,14 +182,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public boolean onIsMultiPane() {
         return isXLargeTablet(this);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onBuildHeaders(List<Header> target) {
-        loadHeadersFromResource(R.xml.pref_headers, target);
-    }
+//
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public void onBuildHeaders(List<Header> target) {
+//        loadHeadersFromResource(R.xml.pref_headers, target);
+//    }
 
     /**
      * This method stops fragment injection in malicious applications.
