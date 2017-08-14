@@ -25,4 +25,12 @@
         <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 
+    <style name="Fitness.Button" parent="ThemeOverlay.AppCompat">
+        <item name="colorAccent">@color/fitness</item>
+    </style>
+
+    <style name="Nutrition.Button" parent="ThemeOverlay.AppCompat">
+        <item name="colorAccent">@color/nutrition</item>
+    </style>
+
 </resources>

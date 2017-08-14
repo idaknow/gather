@@ -1,5 +1,7 @@
 package part4project.uoa.gather;
 
+import android.util.Log;
+
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataReadRequest;
 
@@ -28,6 +30,9 @@ class GeneralMethods {
         for (DataType dt : types) {
             builder.read(dt);
         }
+
+        Log.d("Time", MainActivity.startOfWeek.toString());
+        Log.d("Time", MainActivity.today.toString());
         return builder.setTimeRange(MainActivity.startOfWeek.getTime(), MainActivity.today.getTime(), TimeUnit.MILLISECONDS).build();
     }
 

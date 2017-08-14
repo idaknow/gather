@@ -1,6 +1,7 @@
 package part4project.uoa.gather;
 
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -11,13 +12,17 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -117,9 +122,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        addPreferencesFromResource(R.xml.pref_headers);
         data = getIntent().getData();
         Log.i("App uri", String.valueOf(data));
         if (data != null) {
@@ -133,6 +139,35 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             }
         }
+        SwitchPlusClickPreference gf = (SwitchPlusClickPreference) getPreferenceManager().findPreference("GoogleFitPreference");;
+        SwitchPlusClickPreference.SwitchPlusClickListener listener = new SwitchPlusClickPreference.SwitchPlusClickListener() {
+            @Override
+            public void onCheckedChanged(Switch buttonView, boolean isChecked) {
+                Log.d("Preference","Google Fit Preference Changed");
+                GoogleFitPreferenceFragment fragment = (GoogleFitPreferenceFragment) getFragmentManager().findFragmentById(R.id.GoogleFit);
+                Preference pref = getPreferenceManager().findPreference("google_fit_all");
+                Log.d("Preference","Enabling: " + pref);
+                Log.d("Preference","Frag: " + fragment);
+                android.app.FragmentManager fm = getFragmentManager();
+                fm.beginTransaction().replace(android.R.id.content, new GoogleFitPreferenceFragment()).commit();
+//                Fragment fragment = fm.findFragmentById(R.id.GoogleFit);
+                if (isChecked){
+//                    fragment.connectGoogleFit();
+//                    MainActivity.mGoogleApiClient.reconnect();
+                } else {
+
+                }
+            }
+
+            @Override
+            public void onClick(View view) {
+                Log.d("Preference","Google Fit Preference Clicked");
+                PreferenceScreen mPollPref = getPreferenceScreen();
+                mPollPref.removeAll();
+                getFragmentManager().beginTransaction().replace(android.R.id.content, new GoogleFitPreferenceFragment()).commit();
+            }
+        };
+        gf.setSwitchClickListener(listener);
 
     }
 
@@ -167,20 +202,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public boolean onIsMultiPane() {
         return isXLargeTablet(this);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onBuildHeaders(List<Header> target) {
-        loadHeadersFromResource(R.xml.pref_headers, target);
-    }
+//
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public void onBuildHeaders(List<Header> target) {
+//        loadHeadersFromResource(R.xml.pref_headers, target);
+//    }
 
     /**
      * This method stops fragment injection in malicious applications.
      * Make sure to deny any unknown fragments here.
      */
-    @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
@@ -292,7 +326,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void createParentListener() {
             googleFitParentListener = new Preference.OnPreferenceClickListener() {
-                @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference pref = (SwitchPreference) preference;
@@ -308,10 +341,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         /**
          * Methods called by the parent listener
+         * This connects the API Client to the Google Play Services
+         */
+        public void connectGoogleFit() {
+            MainActivity.mGoogleApiClient.reconnect();
+            Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
+        }
+
+        /**
+         * Methods called by the parent listener
          * This disconnects the API Client to the Google Play Services
          */
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
-        private void disconnectGoogleFit() {
+        public void disconnectGoogleFit() {
             if (!MainActivity.mGoogleApiClient.isConnected()){
                 Log.d(TAG2, "Google Client API Wasn't connected");
                 MainActivity.mGoogleApiClient.connect();
@@ -332,22 +373,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         /**
-         * Methods called by the parent listener
-         * This connects the API Client to the Google Play Services
-         */
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
-        private void connectGoogleFit() {
-            MainActivity.mGoogleApiClient.reconnect();
-            Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
-        }
-
-        /**
          * Creates the Child Listener that is used for each switch preference datatype that is a child
          * It subscribes or unsubscribes the recording API accordingly
          */
         private void createChildListener() {
             eachPreferenceListener = new Preference.OnPreferenceClickListener() {
-                @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
 
@@ -375,7 +405,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This method unsubscribes the Client API to the datatype with the RecordingAPI
          * @param data : The datatype that the user wants to unsubscribe from
          */
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void unsubscribeToDataType(DataType data) {
             Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
@@ -396,7 +425,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * This method subscribes the Client API to the datatype with the RecordingAPI
          * @param data : This is the data type that wants the subscription
          */
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
         private void subscribeToDataType(DataType data) {
             Log.d(TAG2, "Subscribing " + data);
             Fitness.RecordingApi.subscribe(MainActivity.mGoogleApiClient, data)
@@ -474,7 +502,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void createParentListener() {
             fitbitParentListener = new Preference.OnPreferenceClickListener() {
-                @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference pref = (SwitchPreference) preference;
@@ -504,7 +531,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void createChildListener() {
             fitbitPreferenceListener = new Preference.OnPreferenceClickListener() {
-                @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
 
@@ -608,7 +634,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     public static class FacebookPreferenceFragment extends PreferenceFragment {
 
-        @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -766,7 +791,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         // updates switch preferences permissions according to granted/ denied permissions
-        @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         public void updatePermissionSwitchPreferences(){
             for (Object i : grantedFBPermissions){ // loops through all the granted permissions
                 Log.d(TAG, "granted permission " + i.toString()); //TESTING
@@ -905,6 +929,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    //TODO: find non-deprecated getPreferenceManager
+    public boolean isTwitterSwitchEnabled(String name){
+        SwitchPreference permission = (SwitchPreference) getPreferenceManager().findPreference(name);
+        return permission.isChecked();
     }
 
     private static int isFacebookOrTwitter = -1; // changes the code depending on whether the fb fragment or twitter one is open

@@ -1,30 +1,34 @@
-<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- These settings headers are only used on tablets. -->
 
-    <header
+    <part4project.uoa.gather.SwitchPlusClickPreference
         android:fragment="part4project.uoa.gather.SettingsActivity$GeneralPreferenceFragment"
         android:icon="@drawable/ic_info_black_24dp"
         android:title="@string/pref_header_general" />
 
-    <header
+    <SwitchPreference
+        android:key="FacebookPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$FacebookPreferenceFragment"
         android:icon="@drawable/ic_share_black_24dp"
         android:title="@string/pref_header_social_media_app" />
 
-    <header
+    <SwitchPreference
+        android:key="FitbitPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$FitnessPreferenceFragment"
         android:icon="@drawable/ic_directions_run_black_24dp"
         android:title="@string/pref_header_fitness_app" />
 
-    <header
+    <part4project.uoa.gather.SwitchPlusClickPreference
+        android:key="GoogleFitPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$GoogleFitPreferenceFragment"
         android:icon="@drawable/ic_local_dining_black_24dp"
         android:title="@string/pref_header_food_app" />
 
-    <header
+    <SwitchPreference
+        android:key="TwitterPreference"
         android:fragment="part4project.uoa.gather.SettingsActivity$TwitterPreferenceFragment"
         android:icon="@drawable/ic_share_black_24dp"
         android:title="@string/pref_header_social_media_app_2" />
 
-</preference-headers>
+</PreferenceScreen>
