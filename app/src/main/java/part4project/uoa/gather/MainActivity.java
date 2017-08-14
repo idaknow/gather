@@ -1,15 +1,11 @@
 package part4project.uoa.gather;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.app.ProgressDialog;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -20,8 +16,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CalendarView;
-import android.widget.ImageView;
 
 import com.alamkanak.weekview.DateTimeInterpreter;
 import com.alamkanak.weekview.MonthLoader;
@@ -84,7 +78,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import static part4project.uoa.gather.DataCollection.getDiffDate;
 import retrofit2.Call;
 
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
