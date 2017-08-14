@@ -2,7 +2,7 @@
 
     <!-- These settings headers are only used on tablets. -->
 
-    <part4project.uoa.gather.AutoUploadSwitchPreference
+    <part4project.uoa.gather.SwitchPlusClickPreference
         android:fragment="part4project.uoa.gather.SettingsActivity$GeneralPreferenceFragment"
         android:icon="@drawable/ic_info_black_24dp"
         android:title="@string/pref_header_general" />
