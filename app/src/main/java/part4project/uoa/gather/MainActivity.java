@@ -227,8 +227,12 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
-
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
         startOfWeek = cal.getTime();
+
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
 
@@ -357,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//            progress.show();
+            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
@@ -407,7 +411,7 @@ public class MainActivity extends AppCompatActivity implements
 //            getWeeksData();
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-            mWeekView = (WeekView) findViewById(R.id.weekView);
+//            mWeekView = (WeekView) findViewById(R.id.weekView);
             mWeekView.notifyDatasetChanged();
         }
     }
