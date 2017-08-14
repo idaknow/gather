@@ -11,6 +11,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
@@ -145,6 +146,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             @Override
             public void onClick(View view) {
                 Log.d("Preference","Google Fit Preference Clicked");
+                PreferenceScreen mPollPref = getPreferenceScreen();
+                mPollPref.removeAll();
+                getFragmentManager().beginTransaction().replace(android.R.id.content, new GoogleFitPreferenceFragment()).commit();
             }
         };
         gf.setSwitchClickListener(listener);
