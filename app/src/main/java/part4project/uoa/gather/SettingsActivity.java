@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -475,8 +474,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     SwitchPreference pref = (SwitchPreference) preference;
                     if (pref.isChecked()) {
                         try {
-                            browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
-                            startActivity(browserIntent);
+                            fitbitAuthentication();
                         } catch (Exception e) {
                             Log.e("Fitbit", "An error occurred when dealing with the auth url: " + e);
                         }
@@ -494,6 +492,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             };
         }
+
         /*
         The child listener listens for any of the fine-grained preference switches,
         and removes or adds the corresponding permission.
@@ -508,8 +507,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                     SwitchPreference pref = (SwitchPreference) preference;
                     if (pref.isChecked()) {
-                        browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
-                        startActivity(browserIntent);
+                        fitbitAuthentication();
                     } else {
                         grantedfitbitPermissions.remove(scope);
                         Toast.makeText(getActivity(), scope + " permission disabled for Fitbit", Toast.LENGTH_LONG).show();
@@ -517,6 +515,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     return true;
                 }
             };
+        }
+
+        //Method used to open a browser with the authentication url, so that the user can give permission
+        //to the app to access their information.
+        public void fitbitAuthentication(){
+            browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
+            startActivity(browserIntent);
         }
 
         /*

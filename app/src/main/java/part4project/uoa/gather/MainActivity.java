@@ -4,12 +4,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.Intent;
-import android.app.ProgressDialog;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -20,8 +17,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CalendarView;
-import android.widget.ImageView;
 
 import com.alamkanak.weekview.DateTimeInterpreter;
 import com.alamkanak.weekview.MonthLoader;
@@ -86,7 +81,6 @@ import javax.net.ssl.HttpsURLConnection;
 
 import retrofit2.Call;
 
-import static part4project.uoa.gather.DataCollection.getDiffDate;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -933,16 +927,24 @@ public class MainActivity extends AppCompatActivity implements
                 Log.d(TAG, "\nResponse Type : " + responseType);
                 Log.d(TAG, "Response Code : " + responseCode);
 
-                //Read the input received
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
+                if (responseCode == 201) {
 
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
+                    //Read the input received
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(conn.getInputStream()));
+                    String inputLine;
+                    StringBuffer response = new StringBuffer();
+
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                    in.close();
+                } else if (responseCode == 401 ){
+                    //Either take user to authentication page by opening browser?
+                    Log.e(TAG, "access token for fitbit has expired..needs to be requested again");
+                } else {
+                    Log.e(TAG, "an error has occured accessing user information, fitbit");
                 }
-                in.close();
             } else {
                 Log.e(TAG, "fitbit token is null");
             }
