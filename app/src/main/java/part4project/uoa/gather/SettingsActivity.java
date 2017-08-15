@@ -625,7 +625,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 @Override
                 public void onCancel() {
-                    // TODO: Somehow get the SwitchPreference and change it back to what it was before
                     Log.d(TAG, "Login Button Cancel");
                     SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
                     overall_pref.setChecked(!overall_pref.isChecked());
@@ -633,7 +632,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 @Override
                 public void onError(FacebookException exception) {
-                    // TODO: Somehow get the SwitchPreference and change it back to what it was before
                     Log.d(TAG, "Login Button Error");
                     SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
                     overall_pref.setChecked(!overall_pref.isChecked());
