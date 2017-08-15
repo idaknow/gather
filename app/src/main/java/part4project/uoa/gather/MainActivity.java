@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements
                 SimpleDateFormat weekdayNameFormat = new SimpleDateFormat("EEE", Locale.getDefault());
                 String weekday = weekdayNameFormat.format(date.getTime());
                 weekday = String.valueOf(weekday.charAt(0));
-                return weekday.toUpperCase() + date.get(Calendar.DATE);
+                return date.get(Calendar.DATE) + " " + weekday.toUpperCase();
             }
 
             @Override
@@ -390,7 +390,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progress.show();
+//            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
@@ -408,8 +408,7 @@ public class MainActivity extends AppCompatActivity implements
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
-            progress.dismiss();
-//            getWeeksData();
+//            progress.dismiss();
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
 //            mWeekView = (WeekView) findViewById(R.id.weekView);

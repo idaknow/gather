@@ -627,12 +627,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 public void onCancel() {
                     // TODO: Somehow get the SwitchPreference and change it back to what it was before
                     Log.d(TAG, "Login Button Cancel");
+                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+                    overall_pref.setChecked(!overall_pref.isChecked());
                 }
 
                 @Override
                 public void onError(FacebookException exception) {
                     // TODO: Somehow get the SwitchPreference and change it back to what it was before
                     Log.d(TAG, "Login Button Error");
+                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+                    overall_pref.setChecked(!overall_pref.isChecked());
                 }
             });
 
@@ -678,8 +682,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                     callback
                             );
                             req.executeAsync();
-                            Log.d(TAG, "Access Token Permissions access_token is = " + accessToken.getPermissions());
-                            Log.d(TAG, "Access Token Permissions System  is = " + AccessToken.getCurrentAccessToken().getPermissions());
                             // removes from denied & adds to granted - Could change these to be calls to AccessTokenTracker but idk how
                             deniedFBPermissions.add(preference.getKey());
                             grantedFBPermissions.remove(preference.getKey());
@@ -755,6 +757,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         // updates switch preferences permissions according to granted/ denied permissions
         public void updatePermissionSwitchPreferences(){
+            SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+            overall_pref.setChecked(true);
             for (Object i : grantedFBPermissions){ // loops through all the granted permissions
                 Log.d(TAG, "granted permission " + i.toString()); //TESTING
                 SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
