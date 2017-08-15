@@ -752,7 +752,7 @@ public class MainActivity extends AppCompatActivity implements
      * NOTE: has to stay in this activity because it uses mGoogleAPIClient
      * which doesn't work well connecting to in other classes
      */
-    private class GoogleFit{
+    public class GoogleFit{
         /**
          * Builds to google client with the required scopes (permissions)
          */

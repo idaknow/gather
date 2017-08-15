@@ -309,6 +309,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         private void connectGoogleFit() {
             MainActivity.mGoogleApiClient.reconnect();
             Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
+//            MainActivity.GoogleFit gf = new MainActivity().new GoogleFit();
+//            gf.buildAndConnectClient(); // TODO: Check switch pref
+//            gf.subscribe();
         }
 
         /**
