@@ -6,6 +6,7 @@ import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -186,10 +187,18 @@ public class MainActivity extends AppCompatActivity implements
         mWeekView.setEventLongPressListener(this);
         setupDateTimeInterpreter();
         mWeekView.setHourHeight(80);
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+        cal2.setTime(today);
+        if (cal2.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
+            mWeekView.setNumberOfVisibleDays(7);
+        } else {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+            cal.setTime(startOfWeek);
+            mWeekView.goToDate(cal);
+            mWeekView.goToHour(cal2.get(Calendar.HOUR_OF_DAY));
+        }
         Log.d("STATUS", "Created");
     }
-
-
 
     /**
      * Sets up the progress spinning dialog
@@ -318,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements
                 SimpleDateFormat weekdayNameFormat = new SimpleDateFormat("EEE", Locale.getDefault());
                 String weekday = weekdayNameFormat.format(date.getTime());
                 weekday = String.valueOf(weekday.charAt(0));
-                return weekday.toUpperCase();
+                return weekday.toUpperCase() + date.get(Calendar.DATE);
             }
 
             @Override
