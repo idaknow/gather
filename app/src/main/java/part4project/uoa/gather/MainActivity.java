@@ -4,11 +4,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.Intent;
+import android.app.ProgressDialog;
+import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -18,6 +22,10 @@ import android.view.View;
 import android.widget.CalendarView;
 import android.widget.ImageView;
 
+import com.alamkanak.weekview.DateTimeInterpreter;
+import com.alamkanak.weekview.MonthLoader;
+import com.alamkanak.weekview.WeekView;
+import com.alamkanak.weekview.WeekViewEvent;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphRequestBatch;
@@ -62,12 +70,14 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -81,7 +91,11 @@ import static part4project.uoa.gather.SocialMethods.getDate;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.OnConnectionFailedListener,
+        WeekView.EventClickListener,
+        MonthLoader.MonthChangeListener,
+        WeekView.EventLongPressListener,
+        WeekView.EmptyViewLongPressListener {
 
     //Logging Data TAGs
     private static final String TAG = "MainActivity";
@@ -99,6 +113,8 @@ public class MainActivity extends AppCompatActivity implements
 
     boolean[] isFitness = new boolean[7];
     boolean[] isNutrition = new boolean[7];
+
+    WeekView mWeekView;
 
     ProgressDialog progress;
 
@@ -149,7 +165,8 @@ public class MainActivity extends AppCompatActivity implements
             gf.buildAndConnectClient(); // TODO: Check switch pref
             gf.subscribe();
         } else {
-            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
+            mWeekView = (WeekView) findViewById(R.id.weekView);
+            mWeekView.notifyDatasetChanged();
         }
 
         //Get user information from Fitbit by starting the Async Task
@@ -167,7 +184,18 @@ public class MainActivity extends AppCompatActivity implements
                     new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
+
+        // Setup Calendar
+        mWeekView = (WeekView) findViewById(R.id.weekView);
+        mWeekView.setOnEventClickListener(this);
+        mWeekView.setMonthChangeListener(this);
+        mWeekView.setEventLongPressListener(this);
+        setupDateTimeInterpreter();
+        mWeekView.setHourHeight(80);
+        Log.d("STATUS", "Created");
     }
+
+
 
     /**
      * Sets up the progress spinning dialog
@@ -186,61 +214,32 @@ public class MainActivity extends AppCompatActivity implements
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
         cal.setTime(today); // sets todays date
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+        if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
+            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+            if (cal.get(Calendar.WEEK_OF_YEAR) == cal.getFirstDayOfWeek()){ //TODO test
+                cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) - 1);
+                cal.set(Calendar.WEEK_OF_YEAR, cal.getWeeksInWeekYear());
+            }
+            cal.set(Calendar.WEEK_OF_YEAR,cal.get(Calendar.WEEK_OF_YEAR)-1);
+
+        } else {
+            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+        }
+
+        // Set time to be 12 am for start and end date
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
         startOfWeek = cal.getTime();
+
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
 
         Log.d("Date", "Range Start: " + startOfWeek);
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
-
-        setupCalendar();
-    }
-
-    /**
-     * Sets up the calendar view with an onclick listener and sets the min & max dates
-     */
-    private void setupCalendar(){
-        CalendarView simpleCalendarView = (CalendarView) findViewById(R.id.simpleCalendarView); // get the reference of CalendarView
-        simpleCalendarView.setMaxDate(endOfWeek.getTime());
-        simpleCalendarView.setMinDate(startOfWeek.getTime());
-        simpleCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
-            @Override
-            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-                cal.set(year, month, dayOfMonth);
-                Log.d("Calendar", "date clicked = " + cal.getTime());
-                int days = getDiffDate(endOfWeek.getTime(),cal.getTime().getTime(), true);
-                Log.d("Weeks","days diff = " + days);
-                // Sets the array index as true
-                Log.d("Calendar", "is Fitness = " + isFitness[days]);
-                Log.d("Calendar", "is Nutrition = " + isNutrition[days]);
-                showIcons(days);
-            }
-        });
-    }
-
-    /**
-     * This method takes the index of the array to check if there occurred a fitness or nutrition thing on that day
-     * If there did the icon is shown on screen
-     * @param index : The array index, representing the day clicked
-     */
-    public void showIcons(int index){
-
-        ImageView fitnessIcon = (ImageView) findViewById(R.id.fitness_icon);
-        ImageView nutritionIcon = (ImageView) findViewById(R.id.nutrition_icon);
-
-        if (isFitness[index]){
-            fitnessIcon.setVisibility(View.VISIBLE);
-        } else {
-            fitnessIcon.setVisibility(View.INVISIBLE);
-        }
-        if (isNutrition[index]){
-            nutritionIcon.setVisibility(View.VISIBLE);
-        } else {
-            nutritionIcon.setVisibility(View.INVISIBLE);
-        }
     }
 
     /**
@@ -269,6 +268,90 @@ public class MainActivity extends AppCompatActivity implements
         return startOfWeek.before(parsed) && endOfWeek.after(parsed);
     }
 
+    @Override
+    public List<WeekViewEvent> onMonthChange(int newYear, int newMonth) {
+        return displayEvents();
+    }
+
+    /**
+     * This loops through the lists of fitness and social data and adds them accordingly to the calendar
+     * @return : The list of WeekViewEvents which are added to the calendar
+     */
+    private List<WeekViewEvent> displayEvents(){
+        List<WeekViewEvent> events = new ArrayList<>(); // initialise empty events
+        int colour = ContextCompat.getColor(getApplicationContext(), R.color.fitness); // sets colour as fitness
+        for (int j = 0; j < 4; j++){ // loops through each of the arrays
+            List<Data> list = null; // creates empty list to call later
+            switch(j){
+                case 0: // GENERAL & FITNESS
+                    list = fitnessGeneral;
+                    break;
+                case 1: // SOCIAL & FITNESS
+                    list = fitnessSocial;
+                    break;
+                case 2: // SOCIAL & NUTRITION
+                    colour = ContextCompat.getColor(getApplicationContext(), R.color.nutrition);
+                    list = nutritionSocial;
+                    break;
+                case 3: // GENERAL & NUTRITION
+                    colour = ContextCompat.getColor(getApplicationContext(), R.color.nutrition);
+                    list = nutritionGeneral;
+                    break;
+            }
+            if (list!=null){ // only does this if it's not empty
+                for (int i = 0; i < list.size(); i++){ // loops through list
+                    Calendar startTime = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+                    startTime.setTime(list.get(i).getCreatedAt());
+                    Calendar endTime = (Calendar) startTime.clone();
+                    endTime.add(Calendar.HOUR, 1); // each event lasts 1 hour
+                    WeekViewEvent event = new WeekViewEvent(1, " ", startTime, endTime); // NOTE: Print empty string
+                    event.setColor(colour); // sets the colour
+                    events.add(event);
+                }
+            }
+        }
+        return events;
+    }
+
+    /**
+     * Set up a date time interpreter which will show short date values when in week view and long
+     * date values otherwise.
+     */
+    private void setupDateTimeInterpreter() {
+        mWeekView.setDateTimeInterpreter(new DateTimeInterpreter() {
+            @Override
+            public String interpretDate(Calendar date) {
+                SimpleDateFormat weekdayNameFormat = new SimpleDateFormat("EEE", Locale.getDefault());
+                String weekday = weekdayNameFormat.format(date.getTime());
+                weekday = String.valueOf(weekday.charAt(0));
+                return weekday.toUpperCase();
+            }
+
+            @Override
+            public String interpretTime(int hour) {
+                if (hour == 12){ // PRINT 12PM not default 0PM
+                    return hour +" PM";
+                }
+                return hour > 11 ? (hour - 12) + " PM" : (hour == 0 ? "12 AM" : hour + " AM");
+            }
+        });
+    }
+
+    @Override
+    public void onEmptyViewLongPress(Calendar time) {
+
+    }
+
+    @Override
+    public void onEventClick(WeekViewEvent event, RectF eventRect) {
+
+    }
+
+    @Override
+    public void onEventLongPress(WeekViewEvent event, RectF eventRect) {
+
+    }
+
     /**
      * This tasks executes getting data from facebook & twitter
      */
@@ -276,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progress.show();
+//            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
@@ -326,7 +409,8 @@ public class MainActivity extends AppCompatActivity implements
 //            getWeeksData();
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-            showIcons(getDiffDate(endOfWeek.getTime(),today.getTime(),true));
+//            mWeekView = (WeekView) findViewById(R.id.weekView);
+            mWeekView.notifyDatasetChanged();
         }
     }
 
@@ -349,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void facebookSummary(){
-            if(SocialMethods.checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
+            if (SocialMethods.checkPermissionsFB()){ // gets the Denied and Granted permissions according to the access token
                 AccessToken facebookAccessToken = SocialMethods.getFBToken();
 
                 //Callback method sent with request
@@ -375,21 +459,38 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
+        /**
+         * This method loops through the information in the response JSON Object
+         * Calls loopThroughResponse method on each jsonArray: Posts, likes and events data
+         * @param jsonObject : The JSON response object
+         */
         private void transformFacebookPostsEventsLikes(JSONObject jsonObject){
-            JSONArray postsArray = SocialMethods.getArray(jsonObject, 0);
-            if (postsArray != null) {
-                loopThroughResponse(postsArray, "message", "created_time", DataCollectionType.FPOST);
-            }
-            JSONArray likesArray = SocialMethods.getArray(jsonObject, 1);
-            if (likesArray != null) {
-                loopThroughResponse(likesArray, "name", "created_time", DataCollectionType.FLIKE);
-            }
-            JSONArray eventsArray = SocialMethods.getArray(jsonObject, 2);
-            if (likesArray != null) {
-                loopThroughResponse(eventsArray, "name", "start_time", DataCollectionType.FEVENT);
+            String[] array = {"posts", "likes", "events"}; // array of permissions
+            for (int index = 0; index < array.length; index++){
+                JSONArray jsonArray = SocialMethods.getArray(jsonObject, array[index]); // gets the data object
+                if (jsonArray != null){
+                    switch(index){
+                        case 0:
+                            loopThroughResponse(jsonArray, "message", "created_time", DataCollectionType.FPOST);
+                            break;
+                        case 1:
+                            loopThroughResponse(jsonArray, "name", "created_time", DataCollectionType.FLIKE);
+                            break;
+                        case 2:
+                            loopThroughResponse(jsonArray, "name", "start_time", DataCollectionType.FEVENT);
+                            break;
+                    }
+                }
             }
         }
 
+        /**
+         * This method loops through the response JSON data array for each permission
+         * @param array: This is the JSON response array
+         * @param dataType: The string name of the data type provided
+         * @param timeName: The time variable name - dependent on JSONarray provided
+         * @param dct: Data Collection Type - which type to store if passes requirement
+         */
         private void loopThroughResponse(JSONArray array, String dataType, String timeName, DataCollectionType dct){
             try {
                 for (int j = 0; j < array.length(); j++) { // loops through each element in the array
@@ -417,12 +518,35 @@ public class MainActivity extends AppCompatActivity implements
             } //TODO add error response
         }
 
+        /**
+         * Uses the twitterAPIClient to get statusees and favourites
+         */
         private void twitterSummary(){
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
-                displayFavouritedTweets(twitterApiClient);
-                displayStatusTweets(twitterApiClient);
+//                if (isTwitterEnabled(true)){
+                    displayFavouritedTweets(twitterApiClient);
+//                }
+//                if (isTwitterEnabled(false)){
+                    displayStatusTweets(twitterApiClient);
+//                }
             }
+        }
+
+        /**
+         * This checks the favourite or status switch preference for twitter is enabled
+         * @return true if enabled, false if disabled
+         */
+        private boolean isTwitterEnabled(boolean isFavEnabled){
+            //TODO
+//            SettingsActivity SA = new SettingsActivity();
+            String name = "statuses";
+            if (isFavEnabled){
+                name = "favourites";
+            }
+
+
+            return true;
         }
 
         /**
@@ -733,13 +857,6 @@ public class MainActivity extends AppCompatActivity implements
 
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "HistoryAPI onConnected");
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //TODO: used when the user resumes after accepting/ denying permissions
     }
 
     @Override
