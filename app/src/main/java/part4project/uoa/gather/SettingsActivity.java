@@ -422,15 +422,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     //Fitbit variables
     private static final String TAG3 = "Fitbit"; // log Tag
-    private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition","fitbit_heartrate");
-    private static List<String> SCOPES = Arrays.asList("activity", "nutrition", "heartrate");
+    private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition","fitbit_heartrate"); //Names of the preferences
+    private static List<String> SCOPES = Arrays.asList("activity", "nutrition", "heartrate"); //Scopes that can be requested from Fitbit
     private static Preference.OnPreferenceClickListener fitbitPreferenceListener;
     private static Preference.OnPreferenceClickListener fitbitParentListener;
     private static Intent browserIntent; //Intent used to open the authentication page
     private static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=604800";
-    public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>();
+    public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>(); //Array containing the permissions the user has granted
     private static String encoded = "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3";
-    public static String browserResponseFragment;
+    public static String browserResponseFragment; //String response from the browser authentication intent
 
     /**
      * This fragment shows data and sync preferences only. It is used when the
@@ -444,6 +444,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_fitness);
             setHasOptionsMenu(true);
             PreferenceManager prefManager = getPreferenceManager();
+            //If the fragment is being opened for the first time after the user has authenticated then
+            //set the correct scopes and their appropriate switch preferences
             if (browserResponseFragment != null){
                 setGrantedScopes(prefManager);
             }
@@ -466,6 +468,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         /**
          * Creates the Parent Listener to be added as an on Click Listener
          * This will authorise or unauthorise the app from accessing the users information.
+         * It is the master switch, so when set to false, all permissions are set to false, when set
+         * to true, it will attempt to get all scopes granted.
          */
         private void createParentListener() {
             fitbitParentListener = new Preference.OnPreferenceClickListener() {
@@ -517,8 +521,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             };
         }
 
-        //Method used to open a browser with the authentication url, so that the user can give permission
-        //to the app to access their information.
+        /*
+        Method used to open a browser with the authentication url, so that the user can give permission
+        to the app to access their information.
+         */
         public void fitbitAuthentication(){
             browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
             startActivity(browserIntent);

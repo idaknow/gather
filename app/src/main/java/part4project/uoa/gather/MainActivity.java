@@ -908,8 +908,16 @@ public class MainActivity extends AppCompatActivity implements
 
             Log.d(TAG, "fitbit retrieval");
 
-            //set up the connection with the Authorisation header containing the previously obtained
+            //set up the connection with the Authorisation header containing the user
             //access token
+            /*
+            Set up the HTTPS connection to pull data
+            The authorisation header needs to be set to contain the user access_token
+            If an access token doesn't exist because the user hasn't granted permissions yet, then
+            display an notification of this?
+            If the access token has expired, either open the browser for the user to reauthenticate,
+            or uncheck the switch preference and state the permission needs to be given again.
+             */
             String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
             URL url = new URL(dataRequestUrl);
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
@@ -917,6 +925,7 @@ public class MainActivity extends AppCompatActivity implements
             conn.setConnectTimeout(15000);//this is in milliseconds
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
+
             String access_token = fitbitPreferences.getString("access_token", null);
             if (access_token != null) {
                 conn.addRequestProperty("Authorization", "Bearer " + access_token);
@@ -927,6 +936,8 @@ public class MainActivity extends AppCompatActivity implements
                 Log.d(TAG, "\nResponse Type : " + responseType);
                 Log.d(TAG, "Response Code : " + responseCode);
 
+                //Check to make sure that the connection has been made successfully before trying to
+                //read data.
                 if (responseCode == 201) {
 
                     //Read the input received
@@ -939,16 +950,17 @@ public class MainActivity extends AppCompatActivity implements
                         response.append(inputLine);
                     }
                     in.close();
-                } else if (responseCode == 401 ){
+                } else if (responseCode == 401 ){ //401 is returned if the token has expired.
                     //Either take user to authentication page by opening browser?
                     Log.e(TAG, "access token for fitbit has expired..needs to be requested again");
-                } else {
+                } else { //Any other errors with the connection
                     Log.e(TAG, "an error has occured accessing user information, fitbit");
                 }
-            } else {
+            } else { //If the user hasn't given authentication yet then display a message notifying them
                 Log.e(TAG, "fitbit token is null");
             }
 
+            //Read the JSON response and process the results...
 //            JSONObject jsonResponse = JSONObject.parse(response.toString());
 //            Log.d(TAG, "first response: " + response);
 //            Log.d(TAG, response.getJSON);
