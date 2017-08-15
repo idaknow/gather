@@ -57,8 +57,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import static part4project.uoa.gather.MainActivity.fitbitContext;
-import static part4project.uoa.gather.MainActivity.fitbitPreferences;
+import static part4project.uoa.gather.MainActivity.mainPreferences;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -536,8 +535,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private static void setToken(String uriFragment){
             String temp = uriFragment.split("&")[0];
-            fitbitPreferences = fitbitContext.getSharedPreferences("myprefs", MODE_PRIVATE);
-            fitbitPreferences.edit().putString("access_token", temp.substring(13)).commit();
+            mainPreferences.edit().putString("access_token", temp.substring(13)).commit();
             Log.d(TAG3, "Token: " + temp.substring(13));
         }
 
@@ -560,7 +558,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 revokeCon.disconnect();
 
                 //Remove from MainActivity's SharedPreferences
-                MainActivity.fitbitPreferences.edit().remove("access_token");
+                MainActivity.mainPreferences.edit().remove("access_token");
 
 
             } catch (Exception e) {

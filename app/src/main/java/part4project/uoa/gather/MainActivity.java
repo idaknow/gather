@@ -1,9 +1,9 @@
 package part4project.uoa.gather;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -121,18 +121,30 @@ public class MainActivity extends AppCompatActivity implements
     public static Date endOfWeek;
     public static Date today;
 
-    //Get SharedPreferences for Fitbit to store access token
-    public static SharedPreferences fitbitPreferences = null;
-    public static Context fitbitContext;
-
+    //Get SharedPreferences for Fitbit to store access token and to store first_time flag
+    public static SharedPreferences mainPreferences = null;
+    final String PREFS_NAME = "MainPreferencesFile";
+    public List<ApplicationInfo> installedPackages;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mainPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        //Save the context so it can be accessed statically
-        fitbitContext = this;
+        //Check whether the app is being started for the first time after installation.
+        if (mainPreferences.getBoolean("my_first_time", true)) {
+            //the app is being launched for first time, get installed packages
+            Log.d("Comments", "First time");
+
+            installedPackages = getPackageManager().getInstalledApplications(0);
+            for (ApplicationInfo appInfo : installedPackages){
+                Log.d(TAG, "application: " + appInfo.toString());
+            }
+
+            // record the fact that the app has been started at least once
+            mainPreferences.edit().putBoolean("my_first_time", false).commit();
+        }
 
         // TWITTER Initialised
         String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
@@ -926,7 +938,7 @@ public class MainActivity extends AppCompatActivity implements
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
 
-            String access_token = fitbitPreferences.getString("access_token", null);
+            String access_token = mainPreferences.getString("access_token", null);
             if (access_token != null) {
                 conn.addRequestProperty("Authorization", "Bearer " + access_token);
 
