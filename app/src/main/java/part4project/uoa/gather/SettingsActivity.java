@@ -435,8 +435,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static List<String> SCOPES = Arrays.asList("activity", "nutrition", "heartrate"); //Scopes that can be requested from Fitbit
     private static Preference.OnPreferenceClickListener fitbitPreferenceListener;
     private static Preference.OnPreferenceClickListener fitbitParentListener;
-    private static Intent browserIntent; //Intent used to open the authentication page
-    private static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=604800";
+    public static Intent browserIntent; //Intent used to open the authentication page
+    public static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=31536000";
     public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>(); //Array containing the permissions the user has granted
     private static String encoded = "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3";
     public static String browserResponseFragment; //String response from the browser authentication intent
@@ -487,7 +487,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     SwitchPreference pref = (SwitchPreference) preference;
                     if (pref.isChecked()) {
                         try {
-                            fitbitAuthentication();
+                            requestToken();
                         } catch (Exception e) {
                             Log.e("Fitbit", "An error occurred when dealing with the auth url: " + e);
                         }
@@ -496,6 +496,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         for (int i = 0; i < PREFS.size(); i++) {
                             SwitchPreference pref2 = (SwitchPreference) getPreferenceManager().findPreference(PREFS.get(i));
                             pref2.setEnabled(false);
+                        }
+                        for (int i = 0; i < PREFS.size(); i++) {
+                            SwitchPreference pref2 = (SwitchPreference) getPreferenceManager().findPreference(PREFS.get(i));
                             pref2.setChecked(false);
                         }
                         Toast.makeText(getActivity(), "Permission disabled for access to Fitbit", Toast.LENGTH_LONG).show();
@@ -520,7 +523,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                     SwitchPreference pref = (SwitchPreference) preference;
                     if (pref.isChecked()) {
-                        fitbitAuthentication();
+                        requestToken();
                     } else {
                         grantedfitbitPermissions.remove(scope);
                         Toast.makeText(getActivity(), scope + " permission disabled for Fitbit", Toast.LENGTH_LONG).show();
@@ -534,7 +537,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         Method used to open a browser with the authentication url, so that the user can give permission
         to the app to access their information.
          */
-        public void fitbitAuthentication(){
+        public void requestToken(){
             browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fitbitAuthLink));
             startActivity(browserIntent);
         }
