@@ -200,6 +200,12 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("STATUS", "Created");
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //TODO: used when the user resumes after accepting/ denying permissions
+    }
+
     /**
      * Sets up the progress spinning dialog
      */

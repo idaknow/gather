@@ -135,6 +135,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        //TODO: used when the user resumes after accepting/ denying permissions
+//    }
+
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
      */
