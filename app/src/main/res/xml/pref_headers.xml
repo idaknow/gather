@@ -3,11 +3,6 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="part4project.uoa.gather.SettingsActivity$GeneralPreferenceFragment"
-        android:icon="@drawable/ic_info_black_24dp"
-        android:title="@string/pref_header_general" />
-
-    <header
         android:fragment="part4project.uoa.gather.SettingsActivity$FacebookPreferenceFragment"
         android:icon="@drawable/ic_share_black_24dp"
         android:title="@string/pref_header_social_media_app" />
