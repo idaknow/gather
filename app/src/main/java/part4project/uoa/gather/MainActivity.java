@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -965,6 +966,8 @@ public class MainActivity extends AppCompatActivity implements
                 } else if (responseCode == 401 ){ //401 is returned if the token has expired.
                     //Either take user to authentication page by opening browser?
                     Log.e(TAG, "access token for fitbit has expired..needs to be requested again");
+                    SettingsActivity.browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.fitbitAuthLink));
+                    startActivity(SettingsActivity.browserIntent);
                 } else { //Any other errors with the connection
                     Log.e(TAG, "an error has occured accessing user information, fitbit");
                 }
