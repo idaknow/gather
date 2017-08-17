@@ -863,14 +863,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                     SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
                     SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean(TWITTERPREFERENCES.get(0), switchpref.isChecked());
-                    editor.putBoolean(TWITTERPREFERENCES.get(1), switchpref.isChecked());
-                    editor.apply();
-
-                    SwitchPreference fav = (SwitchPreference) getPreferenceManager().findPreference(TWITTERPREFERENCES.get(0));
-                    fav.setChecked(switchpref.isChecked());
-                    SwitchPreference status = (SwitchPreference) getPreferenceManager().findPreference(TWITTERPREFERENCES.get(1));
-                    status.setChecked(switchpref.isChecked());
+                    for (String i : TWITTERPREFERENCES){
+                        editor.putBoolean(i, switchpref.isChecked());
+                        editor.apply();
+                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i);
+                        childSwitch.setChecked(switchpref.isChecked());
+                    }
 
                     if (switchpref.isChecked()){
                         if (session == null){
