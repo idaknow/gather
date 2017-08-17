@@ -861,20 +861,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference switchpref = (SwitchPreference) preference;
 
-                    SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    for (String i : TWITTERPREFERENCES){
-                        editor.putBoolean(i, switchpref.isChecked());
-                        editor.apply();
-                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i);
-                        childSwitch.setChecked(switchpref.isChecked());
+                    // open shared preference editor to set the children switches to the same as the parent switch
+                    for (String i : TWITTERPREFERENCES){ // loop through the child preferences
+                        setVariable(i, switchpref.isChecked()); // set the variable in child preferences
+                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i); // get the child switch pref
+                        childSwitch.setChecked(switchpref.isChecked()); // sets the child preference to the same boolean as the parent
                     }
 
-                    if (switchpref.isChecked()){
-                        if (session == null){
+                    if (switchpref.isChecked()){ // login
+                        if (session == null){ // if previously logged out - error checking
                             twitterLogin.performClick();
                         }
-                    } else {
+                    } else { // logout
                         session = null;
                         TwitterCore.getInstance().getSessionManager().clearActiveSession();
                     }
@@ -886,7 +884,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         /**
          * This adds the onclick listeners to each child switch preference
-         * TODO: REFLECT THE ENABLED/DISABLED SWITCHES IN THE MAIN SUMMARY PAGE SOMEHOW
+         * Changes the variable boolean in shared preferences
          */
         private void createChildPreferences(){
             // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
@@ -898,14 +896,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
 
-                        SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
-
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putBoolean(preference.getKey(), switchPreference.isChecked());
-                        editor.apply();
-
-                        Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
-                        Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
+                        setVariable(preference.getKey(),switchPreference.isChecked());
 
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
                             // Make callback function sent in graph request
@@ -917,6 +908,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     }
                 });
             }
+        }
+
+        private void setVariable(String preference, boolean status){
+            SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // get the shared preferences
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean(preference, status); // set the boolean of the variable to the switch pref's value
+            editor.apply();
+
+            Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
+            Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
         }
 
         /**
@@ -939,8 +940,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     Log.d(TAG4, "Failed callback from Twitter");
                     Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
                     // TODO: CHANGE SWITCH PREFERENCE BACK, this code doesn't work for some reason. Might need to remove listener and then add it again
-//                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
-//                    switchPref.setChecked(false);
+                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
+                    switchPref.setChecked(false);
+                    for (String i : TWITTERPREFERENCES){ // loop through the child preferences
+                        setVariable(i, false); // set the variable in child preferences
+                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i); // get the child switch pref
+                        childSwitch.setChecked(false); // sets the child preference to the same boolean as the parent
+                    }
+
                 }
             });
         }
