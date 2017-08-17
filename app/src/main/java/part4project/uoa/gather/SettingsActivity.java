@@ -910,6 +910,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
         }
 
+        /**
+         * This class sets the shared preference variable specified as input to the specified boolean
+         * @param preference : The variable namee
+         * @param status : The new status to set the variable as
+         */
         private void setVariable(String preference, boolean status){
             SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // get the shared preferences
             SharedPreferences.Editor editor = prefs.edit();
@@ -938,8 +943,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 public void failure(TwitterException exception) {
                     Toast.makeText(getActivity(), "Twitter Login Failed",Toast.LENGTH_SHORT).show();
                     Log.d(TAG4, "Failed callback from Twitter");
-                    Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
-                    // TODO: CHANGE SWITCH PREFERENCE BACK, this code doesn't work for some reason. Might need to remove listener and then add it again
+                    Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO add this check somehow
                     SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
                     switchPref.setChecked(false);
                     for (String i : TWITTERPREFERENCES){ // loop through the child preferences

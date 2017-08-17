@@ -533,15 +533,15 @@ public class MainActivity extends AppCompatActivity implements
         private void twitterSummary(){
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
-                SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+                SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // shared preferences
 
                 Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
                 Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
 
-                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){
+                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){ // checks if the user gave permission to favourites
                     displayFavouritedTweets(twitterApiClient);
                 }
-                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false)){
+                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false)){ // checks if the user gave permission to statuses
                     displayStatusTweets(twitterApiClient);;
                 }
             }
