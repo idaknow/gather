@@ -163,35 +163,11 @@ public class MainActivity extends AppCompatActivity implements
         //Get user information from Fitbit by starting the Async Task
         new FitbitSummaryTask().execute();
 
-        // SOCIAL
-//        AccessToken fbToken = SettingsActivity.accessToken;
-//        if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
-//            fbToken = AccessToken.getCurrentAccessToken();
-//        }
-        if (session == null) {
-            session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        }
-//        if (fbToken != null) {
-            new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//        }
+        // SOCIAL TASK
+        new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         // Setup Calendar
-        mWeekView = (WeekView) findViewById(R.id.weekView);
-        mWeekView.setOnEventClickListener(this);
-        mWeekView.setMonthChangeListener(this);
-        mWeekView.setEventLongPressListener(this);
-        setupDateTimeInterpreter();
-        mWeekView.setHourHeight(80);
-        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-        cal2.setTime(today);
-        if (cal2.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
-            mWeekView.setNumberOfVisibleDays(7);
-        } else {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-            cal.setTime(startOfWeek);
-            mWeekView.goToDate(cal);
-            mWeekView.goToHour(cal2.get(Calendar.HOUR_OF_DAY));
-        }
+        setupCalendar();
         Log.d("STATUS", "Created");
     }
 
@@ -244,6 +220,29 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Range Start: " + startOfWeek);
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
+    }
+
+    /**
+     * This class sets up the UI calendar to show a certain number of dates
+     * and to move to the specific time
+     */
+    private void setupCalendar(){
+        mWeekView = (WeekView) findViewById(R.id.weekView);
+        mWeekView.setOnEventClickListener(this);
+        mWeekView.setMonthChangeListener(this);
+        mWeekView.setEventLongPressListener(this);
+        setupDateTimeInterpreter();
+        mWeekView.setHourHeight(80);
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+        cal2.setTime(today);
+        if (cal2.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
+            mWeekView.setNumberOfVisibleDays(7);
+        } else {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+            cal.setTime(startOfWeek);
+            mWeekView.goToDate(cal);
+            mWeekView.goToHour(cal2.get(Calendar.HOUR_OF_DAY));
+        }
     }
 
     /**
@@ -433,6 +432,10 @@ public class MainActivity extends AppCompatActivity implements
                 if (!isNutrition) {
                     transformFacebookFitness();
                 }
+            }
+
+            if (session == null) {
+                session = TwitterCore.getInstance().getSessionManager().getActiveSession();
             }
 
             if (session != null) {
