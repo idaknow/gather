@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements
             gf.subscribe();
         } else {
             mWeekView = (WeekView) findViewById(R.id.weekView);
-
+            updateCalendarWithEvents();
         }
 
         //Get user information from Fitbit by starting the Async Task
