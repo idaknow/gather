@@ -412,6 +412,10 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * This re-initialises the weeks data into boolean functions and notifies the calendar of event changes
+     * this is called to update the UI Calendar
+     */
     public void updateCalendarWithEvents(){
         isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
         isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
