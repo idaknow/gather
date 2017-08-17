@@ -3,6 +3,7 @@ package part4project.uoa.gather;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -656,14 +657,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 @Override
                 public void onCancel() {
-                    // TODO: Somehow get the SwitchPreference and change it back to what it was before
                     Log.d(TAG, "Login Button Cancel");
+                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+                    overall_pref.setChecked(!overall_pref.isChecked());
                 }
 
                 @Override
                 public void onError(FacebookException exception) {
-                    // TODO: Somehow get the SwitchPreference and change it back to what it was before
                     Log.d(TAG, "Login Button Error");
+                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+                    overall_pref.setChecked(!overall_pref.isChecked());
                 }
             });
 
@@ -709,8 +712,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                     callback
                             );
                             req.executeAsync();
-                            Log.d(TAG, "Access Token Permissions access_token is = " + accessToken.getPermissions());
-                            Log.d(TAG, "Access Token Permissions System  is = " + AccessToken.getCurrentAccessToken().getPermissions());
                             // removes from denied & adds to granted - Could change these to be calls to AccessTokenTracker but idk how
                             deniedFBPermissions.add(preference.getKey());
                             grantedFBPermissions.remove(preference.getKey());
@@ -786,6 +787,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         // updates switch preferences permissions according to granted/ denied permissions
         public void updatePermissionSwitchPreferences(){
+            SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+            overall_pref.setChecked(true);
             for (Object i : grantedFBPermissions){ // loops through all the granted permissions
                 Log.d(TAG, "granted permission " + i.toString()); //TESTING
                 SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
@@ -816,7 +819,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     //TWITTER VARIABLES
-    private static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
+    public static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
     protected static TwitterLoginButton twitterLogin; // the component that isn't visible but is used to perform clicks
     private static TwitterSession session; // the twitter session variable
     private static final String TAG4 = "Twitter"; // for logging
@@ -834,6 +837,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
             createParentPreference(); // this calls the login/ logout methods initalised ^
 
+            createChildPreferences();
         }
 
         /**
@@ -847,11 +851,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference switchpref = (SwitchPreference) preference;
-                    if (switchpref.isChecked()){
-                        if (session == null){
+
+                    // open shared preference editor to set the children switches to the same as the parent switch
+                    for (String i : TWITTERPREFERENCES){ // loop through the child preferences
+                        setVariable(i, switchpref.isChecked()); // set the variable in child preferences
+                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i); // get the child switch pref
+                        childSwitch.setChecked(switchpref.isChecked()); // sets the child preference to the same boolean as the parent
+                    }
+
+                    if (switchpref.isChecked()){ // login
+                        if (session == null){ // if previously logged out - error checking
                             twitterLogin.performClick();
                         }
-                    } else {
+                    } else { // logout
                         session = null;
                         TwitterCore.getInstance().getSessionManager().clearActiveSession();
                     }
@@ -863,7 +875,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         /**
          * This adds the onclick listeners to each child switch preference
-         * TODO: REFLECT THE ENABLED/DISABLED SWITCHES IN THE MAIN SUMMARY PAGE SOMEHOW
+         * Changes the variable boolean in shared preferences
          */
         private void createChildPreferences(){
             // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
@@ -875,6 +887,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
 
+                        setVariable(preference.getKey(),switchPreference.isChecked());
+
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
                             // Make callback function sent in graph request
                             Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
@@ -885,6 +899,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     }
                 });
             }
+        }
+
+        /**
+         * This class sets the shared preference variable specified as input to the specified boolean
+         * @param preference : The variable namee
+         * @param status : The new status to set the variable as
+         */
+        private void setVariable(String preference, boolean status){
+            SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // get the shared preferences
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean(preference, status); // set the boolean of the variable to the switch pref's value
+            editor.apply();
+
+            Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
+            Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
         }
 
         /**
@@ -905,10 +934,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 public void failure(TwitterException exception) {
                     Toast.makeText(getActivity(), "Twitter Login Failed",Toast.LENGTH_SHORT).show();
                     Log.d(TAG4, "Failed callback from Twitter");
-                    Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO Scan for
-                    // TODO: CHANGE SWITCH PREFERENCE BACK, this code doesn't work for some reason. Might need to remove listener and then add it again
-//                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
-//                    switchPref.setChecked(false);
+                    Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO add this check somehow
+                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
+                    switchPref.setChecked(false);
+                    for (String i : TWITTERPREFERENCES){ // loop through the child preferences
+                        setVariable(i, false); // set the variable in child preferences
+                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i); // get the child switch pref
+                        childSwitch.setChecked(false); // sets the child preference to the same boolean as the parent
+                    }
+
                 }
             });
         }
@@ -923,12 +957,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
-    }
-
-    //TODO: find non-deprecated getPreferenceManager
-    public boolean isTwitterSwitchEnabled(String name){
-        SwitchPreference permission = (SwitchPreference) getPreferenceManager().findPreference(name);
-        return permission.isChecked();
     }
 
     private static int isFacebookOrTwitter = -1; // changes the code depending on whether the fb fragment or twitter one is open
