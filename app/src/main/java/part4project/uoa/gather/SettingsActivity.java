@@ -136,12 +136,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        //TODO: used when the user resumes after accepting/ denying permissions
-//    }
-
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
      */
@@ -317,9 +311,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         private void connectGoogleFit() {
             MainActivity.mGoogleApiClient.reconnect();
             Toast.makeText(getActivity(), "Enabled permissions for GoogleFit ", Toast.LENGTH_LONG).show();
-//            MainActivity.GoogleFit gf = new MainActivity().new GoogleFit();
-//            gf.buildAndConnectClient(); // TODO: Check switch pref
-//            gf.subscribe();
         }
 
         /**
@@ -966,12 +957,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
-    }
-
-    //TODO: find non-deprecated getPreferenceManager
-    public boolean isTwitterSwitchEnabled(String name){
-        SwitchPreference permission = (SwitchPreference) getPreferenceManager().findPreference(name);
-        return permission.isChecked();
     }
 
     private static int isFacebookOrTwitter = -1; // changes the code depending on whether the fb fragment or twitter one is open

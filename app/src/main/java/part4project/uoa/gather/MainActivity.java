@@ -548,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements
                     displayFavouritedTweets(twitterApiClient);
                 }
                 if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false)){ // checks if the user gave permission to statuses
-                    displayStatusTweets(twitterApiClient);;
+                    displayStatusTweets(twitterApiClient);
                 }
             }
         }
@@ -756,7 +756,7 @@ public class MainActivity extends AppCompatActivity implements
      * NOTE: has to stay in this activity because it uses mGoogleAPIClient
      * which doesn't work well connecting to in other classes
      */
-    public class GoogleFit{
+    private class GoogleFit{
         /**
          * Builds to google client with the required scopes (permissions)
          */
