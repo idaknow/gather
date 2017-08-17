@@ -157,24 +157,23 @@ public class MainActivity extends AppCompatActivity implements
             gf.subscribe();
         } else {
             mWeekView = (WeekView) findViewById(R.id.weekView);
-            mWeekView.notifyDatasetChanged();
+
         }
 
         //Get user information from Fitbit by starting the Async Task
         new FitbitSummaryTask().execute();
 
         // SOCIAL
-        AccessToken fbToken = SettingsActivity.accessToken;
-        if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
-            fbToken = AccessToken.getCurrentAccessToken();
-        }
-
-        if (session == null){
+//        AccessToken fbToken = SettingsActivity.accessToken;
+//        if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
+//            fbToken = AccessToken.getCurrentAccessToken();
+//        }
+        if (session == null) {
             session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-            if (fbToken != null && session != null) {
-                    new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            }
         }
+//        if (fbToken != null) {
+            new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//        }
 
         // Setup Calendar
         mWeekView = (WeekView) findViewById(R.id.weekView);
@@ -410,10 +409,14 @@ public class MainActivity extends AppCompatActivity implements
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
 //            progress.dismiss();
-            isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-            isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-            mWeekView.notifyDatasetChanged();
+            updateCalendarWithEvents();
         }
+    }
+
+    public void updateCalendarWithEvents(){
+        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
+        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
+        mWeekView.notifyDatasetChanged();
     }
 
     /**
@@ -423,14 +426,17 @@ public class MainActivity extends AppCompatActivity implements
 
         private boolean isNutrition = false;
 
-        private void displaySocial(boolean isNutrition){
+        private void displaySocial(boolean isNutrition) {
             this.isNutrition = isNutrition;
             if (SocialMethods.getFBToken() != null) {
                 facebookSummary();
+                if (!isNutrition) {
+                    transformFacebookFitness();
+                }
             }
-            twitterSummary();
-            if (!isNutrition){
-                transformFacebookFitness();
+
+            if (session != null) {
+                twitterSummary();
             }
         }
 
@@ -582,6 +588,7 @@ public class MainActivity extends AppCompatActivity implements
                             }
                         }
                     }
+                    updateCalendarWithEvents();
                 }
 
                 public void failure(TwitterException exception) {
@@ -608,6 +615,7 @@ public class MainActivity extends AppCompatActivity implements
                         Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
                         getFacebookFitnessActions(response.getJSONObject()); // uses the response data to count the amount of fitness actions
                     }
+                    updateCalendarWithEvents();
                 }
             };
             // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
@@ -733,23 +741,6 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 }
             }
-        }
-    }
-
-    class TwitterPreferences {
-
-        String prefName = "MainPreferences";
-
-        TwitterPreferences(){}
-
-        boolean getStatus(){
-            SharedPreferences prefs = getSharedPreferences(prefName, Context.MODE_PRIVATE);
-            return prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false);
-        }
-
-        boolean getFavourites(){
-            SharedPreferences prefs = getSharedPreferences(prefName, Context.MODE_PRIVATE);
-            return prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false);
         }
     }
 
