@@ -110,12 +110,9 @@ public class MainActivity extends AppCompatActivity implements
     boolean[] isFitness = new boolean[7];
     boolean[] isNutrition = new boolean[7];
 
-    WeekView mWeekView;
-
-    ProgressDialog progress;
-
-    // TWITTER
-    TwitterSession session;
+    WeekView mWeekView; // Calendar
+    ProgressDialog progress; // loading
+    TwitterSession session; // Twitter Session
 
     // Week Date
     public static Date startOfWeek;
@@ -125,8 +122,6 @@ public class MainActivity extends AppCompatActivity implements
     //Get SharedPreferences for Fitbit to store access token
     public static SharedPreferences fitbitPreferences = null;
     public static Context fitbitContext;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -401,7 +396,6 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
-            // TODO
             nutritionGeneral = new LinkedList<>();
             fitnessGeneral = new LinkedList<>();
             General generalNutritionClass = new General();
@@ -418,7 +412,6 @@ public class MainActivity extends AppCompatActivity implements
 //            progress.dismiss();
             isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
             isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-//            mWeekView = (WeekView) findViewById(R.id.weekView);
             mWeekView.notifyDatasetChanged();
         }
     }
