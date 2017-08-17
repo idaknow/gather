@@ -860,6 +860,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference switchpref = (SwitchPreference) preference;
+
+                    SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean(TWITTERPREFERENCES.get(0), switchpref.isChecked());
+                    editor.putBoolean(TWITTERPREFERENCES.get(1), switchpref.isChecked());
+                    editor.apply();
+
+                    SwitchPreference fav = (SwitchPreference) getPreferenceManager().findPreference(TWITTERPREFERENCES.get(0));
+                    fav.setChecked(switchpref.isChecked());
+                    SwitchPreference status = (SwitchPreference) getPreferenceManager().findPreference(TWITTERPREFERENCES.get(1));
+                    status.setChecked(switchpref.isChecked());
+
                     if (switchpref.isChecked()){
                         if (session == null){
                             twitterLogin.performClick();
@@ -888,9 +900,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
 
-                        SharedPreferences.Editor editor = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE).edit();
+                        SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+
+                        SharedPreferences.Editor editor = prefs.edit();
                         editor.putBoolean(preference.getKey(), switchPreference.isChecked());
                         editor.apply();
+
+                        Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
+                        Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
 
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
                             // Make callback function sent in graph request

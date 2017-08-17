@@ -534,6 +534,10 @@ public class MainActivity extends AppCompatActivity implements
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
                 SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+
+                Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
+                Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
+
                 if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){
                     displayFavouritedTweets(twitterApiClient);
                 }
