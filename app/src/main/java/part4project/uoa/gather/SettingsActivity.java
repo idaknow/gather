@@ -3,6 +3,7 @@ package part4project.uoa.gather;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -827,7 +828,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     //TWITTER VARIABLES
-    private static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
+    public static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
     protected static TwitterLoginButton twitterLogin; // the component that isn't visible but is used to perform clicks
     private static TwitterSession session; // the twitter session variable
     private static final String TAG4 = "Twitter"; // for logging
@@ -845,6 +846,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
             createParentPreference(); // this calls the login/ logout methods initalised ^
 
+            createChildPreferences();
         }
 
         /**
@@ -885,6 +887,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     public boolean onPreferenceClick(Preference preference) {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+
+                        SharedPreferences.Editor editor = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE).edit();
+                        editor.putBoolean(preference.getKey(), switchPreference.isChecked());
+                        editor.apply();
 
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
                             // Make callback function sent in graph request

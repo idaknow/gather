@@ -533,29 +533,14 @@ public class MainActivity extends AppCompatActivity implements
         private void twitterSummary(){
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
-//                if (isTwitterEnabled(true)){
+                SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE);
+                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){
                     displayFavouritedTweets(twitterApiClient);
-//                }
-//                if (isTwitterEnabled(false)){
-                    displayStatusTweets(twitterApiClient);
-//                }
+                }
+                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false)){
+                    displayStatusTweets(twitterApiClient);;
+                }
             }
-        }
-
-        /**
-         * This checks the favourite or status switch preference for twitter is enabled
-         * @return true if enabled, false if disabled
-         */
-        private boolean isTwitterEnabled(boolean isFavEnabled){
-            //TODO
-//            SettingsActivity SA = new SettingsActivity();
-            String name = "statuses";
-            if (isFavEnabled){
-                name = "favourites";
-            }
-
-
-            return true;
         }
 
         /**
@@ -751,6 +736,23 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 }
             }
+        }
+    }
+
+    class TwitterPreferences {
+
+        String prefName = "MainPreferences";
+
+        TwitterPreferences(){}
+
+        boolean getStatus(){
+            SharedPreferences prefs = getSharedPreferences(prefName, Context.MODE_PRIVATE);
+            return prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false);
+        }
+
+        boolean getFavourites(){
+            SharedPreferences prefs = getSharedPreferences(prefName, Context.MODE_PRIVATE);
+            return prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false);
         }
     }
 
