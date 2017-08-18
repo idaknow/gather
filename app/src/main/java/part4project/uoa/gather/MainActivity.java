@@ -1,6 +1,7 @@
 package part4project.uoa.gather;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -136,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements
 
             installedPackages = getPackageManager().getInstalledApplications(0);
             for (ApplicationInfo appInfo : installedPackages){
-                Log.d(TAG, "application: " + appInfo.name);
+                Log.d(TAG, "app name: " + appInfo.loadLabel(getPackageManager()));
             }
 
             // record the fact that the app has been started at least once
