@@ -136,15 +136,17 @@ public class MainActivity extends AppCompatActivity implements
         //Check whether the app is being started for the first time after installation.
         if (mainPreferences.getBoolean("my_first_time", true)) {
             //the app is being launched for first time, get installed packages
-            Log.d("Comments", "First time");
+            Log.d("Startup", "First time");
 
             installedPackages = getPackageManager().getInstalledApplications(0);
             for (ApplicationInfo appInfo : installedPackages){
-                Log.d(TAG, "application: " + appInfo.toString());
+                Log.d(TAG, "application: " + appInfo.name);
             }
 
             // record the fact that the app has been started at least once
             mainPreferences.edit().putBoolean("my_first_time", false).commit();
+        } else {
+            Log.d("Startup", "Not the first time");
         }
 
         // TWITTER Initialised
