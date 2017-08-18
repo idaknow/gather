@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements
     public static SharedPreferences mainPreferences = null;
     final String PREFS_NAME = "MainPreferencesFile";
     public List<ApplicationInfo> installedPackages;
+    public List<String> installedApps;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,14 +138,29 @@ public class MainActivity extends AppCompatActivity implements
 
             installedPackages = getPackageManager().getInstalledApplications(0);
             for (ApplicationInfo appInfo : installedPackages){
-                Log.d(TAG, "app name: " + appInfo.loadLabel(getPackageManager()));
+                String appName = (String)appInfo.loadLabel(getPackageManager());
+                Log.d(TAG, "app name: " + appName);
+
+                switch (appName){
+                    case "Fitbit" : installedApps.add("Fitbit");
+                    case "Twitter": installedApps.add("Twitter");
+                    case "Facebook": installedApps.add("Facebook");
+                    case "Google Fit": installedApps.add("GoogleFit");
+                }
             }
+
+            
 
             // record the fact that the app has been started at least once
             mainPreferences.edit().putBoolean("my_first_time", false).commit();
         } else {
             Log.d("Startup", "Not the first time");
         }
+
+        installedPackages = getPackageManager().getInstalledApplications(0);
+            for (ApplicationInfo appInfo : installedPackages){
+                Log.d(TAG, "app name: " + appInfo.loadLabel(getPackageManager()));
+            }
 
         // TWITTER Initialised
         String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
