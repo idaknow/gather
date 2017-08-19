@@ -486,10 +486,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         grantedfitbitPermissions.clear();
                         for (int i = 0; i < PREFS.size(); i++) {
                             SwitchPreference pref2 = (SwitchPreference) getPreferenceManager().findPreference(PREFS.get(i));
-                            pref2.setEnabled(false);
-                        }
-                        for (int i = 0; i < PREFS.size(); i++) {
-                            SwitchPreference pref2 = (SwitchPreference) getPreferenceManager().findPreference(PREFS.get(i));
                             pref2.setChecked(false);
                         }
                         Toast.makeText(getActivity(), "Permission disabled for access to Fitbit", Toast.LENGTH_LONG).show();
@@ -589,7 +585,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         Log.d(TAG3, "pref name: " + prefName);
                         //Set the appropriate preferences to enabled
                         SwitchPreference switchPreference = (SwitchPreference) prefManager.findPreference(prefName);
-                        switchPreference.setEnabled(true);
                         switchPreference.setChecked(true);
                     }
                 }
@@ -826,16 +821,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_social_media_2);
-            setHasOptionsMenu(true);
+            if (MainActivity.twitterInstalled) {
+                super.onCreate(savedInstanceState);
+                addPreferencesFromResource(R.xml.pref_social_media_2);
+                setHasOptionsMenu(true);
 
-            isFacebookOrTwitter = 1; // used by onActivityResult
+                isFacebookOrTwitter = 1; // used by onActivityResult
 
-            createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
-            createParentPreference(); // this calls the login/ logout methods initalised ^
+                createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
+                createParentPreference(); // this calls the login/ logout methods initalised ^
 
-            createChildPreferences();
+                createChildPreferences();
+            }
         }
 
         /**

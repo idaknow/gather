@@ -124,53 +124,32 @@ public class MainActivity extends AppCompatActivity implements
     public static SharedPreferences mainPreferences = null;
     final String PREFS_NAME = "MainPreferencesFile";
     public List<ApplicationInfo> installedPackages;
-    public List<String> installedApps;
+    public static boolean twitterInstalled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mainPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-
-        //Check whether the app is being started for the first time after installation.
-        if (mainPreferences.getBoolean("my_first_time", true)) {
-            //the app is being launched for first time, get installed packages
-            Log.d("Startup", "First time");
-
-            installedPackages = getPackageManager().getInstalledApplications(0);
-            for (ApplicationInfo appInfo : installedPackages){
-                String appName = (String)appInfo.loadLabel(getPackageManager());
-                Log.d(TAG, "app name: " + appName);
-
-                switch (appName){
-                    case "Fitbit" : installedApps.add("Fitbit");
-                    case "Twitter": installedApps.add("Twitter");
-                    case "Facebook": installedApps.add("Facebook");
-                    case "Google Fit": installedApps.add("GoogleFit");
-                }
+        installedPackages = getPackageManager().getInstalledApplications(0);
+        for (ApplicationInfo appInfo : installedPackages){
+            String appName = (String)appInfo.loadLabel(getPackageManager());
+            Log.d(TAG, "app name: " + appName);
+            if (appName.equals("Twitter")){
+                twitterInstalled = true;
             }
-
-            
-
-            // record the fact that the app has been started at least once
-            mainPreferences.edit().putBoolean("my_first_time", false).commit();
-        } else {
-            Log.d("Startup", "Not the first time");
         }
 
-        installedPackages = getPackageManager().getInstalledApplications(0);
-            for (ApplicationInfo appInfo : installedPackages){
-                Log.d(TAG, "app name: " + appInfo.loadLabel(getPackageManager()));
-            }
-
-        // TWITTER Initialised
-        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
-        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
-        TwitterConfig config = new TwitterConfig.Builder(this)
-                .logger(new DefaultLogger(Log.DEBUG))
-                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
-                .debug(true)
-                .build();
-        Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+        if (twitterInstalled){
+            // TWITTER Initialised
+            String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
+            String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
+            TwitterConfig config = new TwitterConfig.Builder(this)
+                    .logger(new DefaultLogger(Log.DEBUG))
+                    .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
+                    .debug(true)
+                    .build();
+            Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+        }
 
         // Content Initialised
         setContentView(R.layout.activity_main);
@@ -470,12 +449,14 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
 
-            if (session == null) {
-                session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-            }
+            if (twitterInstalled) {
+                if (session == null) {
+                    session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                }
 
-            if (session != null) {
-                twitterSummary();
+                if (session != null) {
+                    twitterSummary();
+                }
             }
         }
 
