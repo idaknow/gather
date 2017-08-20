@@ -133,6 +133,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
             }
         }
+
     }
 
     /**
@@ -172,7 +173,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @Override
     public void onBuildHeaders(List<Header> target) {
-        loadHeadersFromResource(R.xml.pref_headers, target);
+        if (MainActivity.twitterInstalled){
+            loadHeadersFromResource(R.xml.pref_headers, target);
+        } else {
+            loadHeadersFromResource(R.xml.pref_no_twitter, target);
+        }
     }
 
     /**
@@ -180,13 +185,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * Make sure to deny any unknown fragments here.
      */
     protected boolean isValidFragment(String fragmentName) {
-        return PreferenceFragment.class.getName().equals(fragmentName)
-                || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-                || FitnessPreferenceFragment.class.getName().equals(fragmentName)
-                || GoogleFitPreferenceFragment.class.getName().equals(fragmentName)
-                || FacebookPreferenceFragment.class.getName().equals(fragmentName)
-                || TwitterPreferenceFragment.class.getName().equals(fragmentName)
-                ;
+            return PreferenceFragment.class.getName().equals(fragmentName)
+                    || GeneralPreferenceFragment.class.getName().equals(fragmentName)
+                    || FitnessPreferenceFragment.class.getName().equals(fragmentName)
+                    || GoogleFitPreferenceFragment.class.getName().equals(fragmentName)
+                    || FacebookPreferenceFragment.class.getName().equals(fragmentName)
+                    || TwitterPreferenceFragment.class.getName().equals(fragmentName)
+                    ;
     }
 
     /**
