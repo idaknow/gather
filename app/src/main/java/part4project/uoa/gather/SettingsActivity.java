@@ -959,6 +959,143 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
+    public static class BlankTwitterPreferenceFragment extends PreferenceFragment {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            if (MainActivity.twitterInstalled) {
+                super.onCreate(savedInstanceState);
+                addPreferencesFromResource(R.xml.pref_social_media_2);
+                setHasOptionsMenu(true);
+
+                isFacebookOrTwitter = 1; // used by onActivityResult
+
+                //createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
+                //createParentPreference(); // this calls the login/ logout methods initalised ^
+
+                //createChildPreferences();
+            }
+        }
+
+        /**
+         * This creates the parent switch preference on click listener
+         * This calls the appropriate login or logout methods accordingly
+         */
+        private void createParentPreference(){
+            Preference pref = getPreferenceManager().findPreference("social_media_2_all");
+            pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    SwitchPreference switchpref = (SwitchPreference) preference;
+
+                    // open shared preference editor to set the children switches to the same as the parent switch
+                    for (String i : TWITTERPREFERENCES){ // loop through the child preferences
+                        setVariable(i, switchpref.isChecked()); // set the variable in child preferences
+                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i); // get the child switch pref
+                        childSwitch.setChecked(switchpref.isChecked()); // sets the child preference to the same boolean as the parent
+                    }
+
+                    if (switchpref.isChecked()){ // login
+                        if (session == null){ // if previously logged out - error checking
+                            twitterLogin.performClick();
+                        }
+                    } else { // logout
+                        session = null;
+                        TwitterCore.getInstance().getSessionManager().clearActiveSession();
+                    }
+
+                    return true;
+                }
+            });
+        }
+
+        /**
+         * This adds the onclick listeners to each child switch preference
+         * Changes the variable boolean in shared preferences
+         */
+        private void createChildPreferences(){
+            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
+            for (String i : TWITTERPREFERENCES){
+                Preference permission = getPreferenceManager().findPreference(i);
+                permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
+                        SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
+
+                        setVariable(preference.getKey(),switchPreference.isChecked());
+
+                        if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
+                            // Make callback function sent in graph request
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
+                        } else { // asks for the permission when it's enabled again
+                            Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Twitter", Toast.LENGTH_SHORT).show();
+                        }
+                        return true;
+                    }
+                });
+            }
+        }
+
+        /**
+         * This class sets the shared preference variable specified as input to the specified boolean
+         * @param preference : The variable namee
+         * @param status : The new status to set the variable as
+         */
+        private void setVariable(String preference, boolean status){
+            SharedPreferences prefs = getActivity().getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // get the shared preferences
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean(preference, status); // set the boolean of the variable to the switch pref's value
+            editor.apply();
+
+            Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
+            Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
+        }
+
+        /**
+         * This creates the twitter button, that calls login and authorisation
+         */
+        private void createTwitterLoginButton(){
+            twitterLogin = new TwitterLoginButton(getActivity());
+            twitterLogin.setCallback(new Callback<TwitterSession>() {
+                @Override
+                public void success(Result<TwitterSession> result) {
+                    // The result provides a TwitterSession for making API calls
+                    Log.d(TAG4, "Successfull callback from Twitter");
+                    session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                    Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void failure(TwitterException exception) {
+                    Toast.makeText(getActivity(), "Twitter Login Failed",Toast.LENGTH_SHORT).show();
+                    Log.d(TAG4, "Failed callback from Twitter");
+                    Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO add this check somehow
+                    SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
+                    switchPref.setChecked(false);
+                    for (String i : TWITTERPREFERENCES){ // loop through the child preferences
+                        setVariable(i, false); // set the variable in child preferences
+                        SwitchPreference childSwitch = (SwitchPreference) getPreferenceManager().findPreference(i); // get the child switch pref
+                        childSwitch.setChecked(false); // sets the child preference to the same boolean as the parent
+                    }
+
+                }
+            });
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
     private static int isFacebookOrTwitter = -1; // changes the code depending on whether the fb fragment or twitter one is open
 
     @Override
