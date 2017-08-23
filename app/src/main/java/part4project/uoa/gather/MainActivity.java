@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -119,26 +120,36 @@ public class MainActivity extends AppCompatActivity implements
     public static Date endOfWeek;
     public static Date today;
 
-    //Get SharedPreferences for Fitbit to store access token
-    public static SharedPreferences fitbitPreferences = null;
-    public static Context fitbitContext;
+    //Get SharedPreferences for Fitbit to store access token and to store first_time flag
+    public static SharedPreferences mainPreferences = null;
+    final String PREFS_NAME = "MainPreferencesFile";
+    public List<ApplicationInfo> installedPackages;
+    public static boolean twitterInstalled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mainPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        installedPackages = getPackageManager().getInstalledApplications(0);
+        for (ApplicationInfo appInfo : installedPackages){
+            String appName = (String)appInfo.loadLabel(getPackageManager());
+            Log.d(TAG, "app name: " + appName);
+            if (appName.equals("Twitter")){
+                twitterInstalled = true;
+            }
+        }
 
-        //Save the context so it can be accessed statically
-        fitbitContext = this;
-
-        // TWITTER Initialised
-        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
-        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
-        TwitterConfig config = new TwitterConfig.Builder(this)
-                .logger(new DefaultLogger(Log.DEBUG))
-                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
-                .debug(true)
-                .build();
-        Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+        if (twitterInstalled){
+            // TWITTER Initialised
+            String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
+            String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
+            TwitterConfig config = new TwitterConfig.Builder(this)
+                    .logger(new DefaultLogger(Log.DEBUG))
+                    .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
+                    .debug(true)
+                    .build();
+            Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+        }
 
         // Content Initialised
         setContentView(R.layout.activity_main);
@@ -438,12 +449,14 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
 
-            if (session == null) {
-                session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-            }
+            if (twitterInstalled) {
+                if (session == null) {
+                    session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                }
 
-            if (session != null) {
-                twitterSummary();
+                if (session != null) {
+                    twitterSummary();
+                }
             }
         }
 
@@ -929,7 +942,7 @@ public class MainActivity extends AppCompatActivity implements
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
 
-            String access_token = fitbitPreferences.getString("access_token", null);
+            String access_token = mainPreferences.getString("access_token", null);
             if (access_token != null) {
                 conn.addRequestProperty("Authorization", "Bearer " + access_token);
 
