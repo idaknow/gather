@@ -121,6 +121,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        setTheme(R.style.MySwitch);
 
         data = getIntent().getData();
         Log.i("App uri", String.valueOf(data));
@@ -186,39 +187,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     protected boolean isValidFragment(String fragmentName) {
             return PreferenceFragment.class.getName().equals(fragmentName)
-                    || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                     || FitnessPreferenceFragment.class.getName().equals(fragmentName)
                     || GoogleFitPreferenceFragment.class.getName().equals(fragmentName)
                     || FacebookPreferenceFragment.class.getName().equals(fragmentName)
                     || TwitterPreferenceFragment.class.getName().equals(fragmentName)
                     || BlankTwitterPreferenceFragment.class.getName().equals(fragmentName)
                     ;
-    }
-
-    /**
-     * This fragment shows general preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
-            setHasOptionsMenu(true);
-
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
     }
 
     //GOOGLEFIT Initialised variables

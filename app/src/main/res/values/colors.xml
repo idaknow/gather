@@ -6,6 +6,7 @@
     <color name="colorSwitchThumbNormal">#E1574C</color>
     <color name="fitness">#4cb4e1</color>
     <color name="nutrition">#4ce179</color>
+    <color name="lightcolour">#FAE5E4</color>
 </resources>
 
 <!--<resources>-->
