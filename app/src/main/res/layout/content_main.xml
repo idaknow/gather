@@ -18,10 +18,10 @@
         android:layout_marginBottom="16dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:background="@drawable/com_facebook_auth_dialog_background"
+        android:background="@color/nutrition"
         android:elevation="@dimen/cardview_default_elevation"
         android:onClick="intentNutrition"
-        android:tint="@color/colorAccent"
+        android:tint="@color/cardview_light_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.974"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -70,17 +70,18 @@
         style="@style/Widget.AppCompat.ImageButton"
         android:layout_width="58dp"
         android:layout_height="64dp"
-        android:background="@drawable/com_facebook_auth_dialog_background"
-        android:onClick="intentFitness"
-        android:tint="@color/colorAccent"
-        app:srcCompat="@drawable/ic_directions_run_black_24dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="16dp"
         android:layout_marginLeft="8dp"
-        app:layout_constraintLeft_toLeftOf="parent"
         android:layout_marginRight="8dp"
+        android:background="@color/fitness"
+        android:elevation="@dimen/cardview_default_elevation"
+        android:onClick="intentFitness"
+        android:tint="@color/cardview_light_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.025"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintHorizontal_bias="0.025" />
+        app:srcCompat="@drawable/ic_directions_run_black_24dp" />
 
 </android.support.constraint.ConstraintLayout>
 

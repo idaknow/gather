@@ -3,8 +3,8 @@
     <color name="colorPrimary">#E1574C</color>
     <color name="colorPrimaryDark">#E1574C</color>
     <color name="colorAccent">#e1574c</color>
-    <color name="fitness">#009688</color>
-    <color name="nutrition">#8BC34A</color>
+    <color name="fitness">#4cb4e1</color>
+    <color name="nutrition">#4ce179</color>
 </resources>
 
 <!--<resources>-->
