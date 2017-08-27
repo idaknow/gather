@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Gather</string>
+    <string name="app_name"></string>
 
     <!-- Strings related to Settings -->
     <string name="action_settings">Settings</string>
