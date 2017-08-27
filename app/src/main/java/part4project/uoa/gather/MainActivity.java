@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 
 import com.alamkanak.weekview.DateTimeInterpreter;
 import com.alamkanak.weekview.MonthLoader;
@@ -155,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false); // removes the title, so only the image logo is displayed
         Log.d(TAG, "Creating main page");
 
         setupDates();
@@ -180,6 +182,8 @@ public class MainActivity extends AppCompatActivity implements
         // Setup Calendar
         setupCalendar();
         Log.d("STATUS", "Created");
+
+
     }
 
     @Override
