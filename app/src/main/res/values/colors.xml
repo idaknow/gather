@@ -2,7 +2,8 @@
 <resources>
     <color name="colorPrimary">#E1574C</color>
     <color name="colorPrimaryDark">#E1574C</color>
-    <color name="colorAccent">#e1574c</color>
+    <color name="colorAccent">#4ce179</color>
+    <color name="colorSwitchThumbNormal">#E1574C</color>
     <color name="fitness">#4cb4e1</color>
     <color name="nutrition">#4ce179</color>
 </resources>
