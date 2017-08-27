@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#E1574C</color>
-    <color name="colorPrimaryDark">#E1574C</color>
-    <color name="colorAccent">#E1574C</color>
+    <color name="colorPrimaryDark">#f6aca7</color>
+    <color name="colorAccent">#e1574c</color>
     <color name="fitness">#009688</color>
     <color name="nutrition">#8BC34A</color>
 </resources>

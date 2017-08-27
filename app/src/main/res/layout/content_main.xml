@@ -10,22 +10,23 @@
     tools:context="part4project.uoa.gather.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <Button
-        android:id="@+id/nutrition_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="3dp"
+    <ImageButton
+        android:id="@+id/nutrition_Button"
+        style="@style/Widget.AppCompat.ImageButton"
+        android:layout_width="58dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp"
+        android:background="@drawable/com_facebook_auth_dialog_background"
+        android:elevation="@dimen/cardview_default_elevation"
         android:onClick="intentNutrition"
-        android:text="Nutrition"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:theme="@style/Nutrition.Button"
+        android:tint="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.974"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.982"
-        android:layout_marginEnd="8dp" />
+        app:srcCompat="@drawable/ic_local_dining_black_24dp" />
 
     <TextView
         android:id="@+id/welcome_message"
@@ -39,23 +40,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/fitness_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="3dp"
-        android:layout_marginLeft="7dp"
-        android:layout_marginTop="8dp"
-        android:onClick="intentFitness"
-        android:text="Fitness"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:theme="@style/Fitness.Button"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.982"
-        android:layout_marginStart="7dp" />
 
     <com.alamkanak.weekview.WeekView
         android:id="@+id/weekView"
@@ -80,6 +64,23 @@
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="8dp"
         app:layout_constraintVertical_bias="0.496" />
+
+    <ImageButton
+        android:id="@+id/fitness_button"
+        style="@style/Widget.AppCompat.ImageButton"
+        android:layout_width="58dp"
+        android:layout_height="64dp"
+        android:background="@drawable/com_facebook_auth_dialog_background"
+        android:onClick="intentFitness"
+        android:tint="@color/colorAccent"
+        app:srcCompat="@drawable/ic_directions_run_black_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintHorizontal_bias="0.025" />
 
 </android.support.constraint.ConstraintLayout>
 
