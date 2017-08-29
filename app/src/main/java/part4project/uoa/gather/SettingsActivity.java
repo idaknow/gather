@@ -121,7 +121,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-        setTheme(R.style.MySwitch);
+//        setTheme(R.style.MySwitch);
 
         data = getIntent().getData();
         Log.i("App uri", String.valueOf(data));
@@ -212,6 +212,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
 
             MainActivity.mGoogleApiClient.connect();
             fixChildPreferences(); // set child preferences according to the API Client's subscriptions
@@ -423,6 +424,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_fitness);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
             PreferenceManager prefManager = getPreferenceManager();
             //If the fragment is being opened for the first time after the user has authenticated then
             //set the correct scopes and their appropriate switch preferences
@@ -607,6 +609,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_social_media);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
 
             isFacebookOrTwitter = 0; // so onActivityResult does the correct code
 
@@ -805,6 +808,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 super.onCreate(savedInstanceState);
                 addPreferencesFromResource(R.xml.pref_social_media_2);
                 setHasOptionsMenu(true);
+                getActivity().setTheme(R.style.MySwitch);
 
                 isFacebookOrTwitter = 1; // used by onActivityResult
 
@@ -941,6 +945,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_social_media_2);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
             Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);
             toast.show();
             createParentPreference();

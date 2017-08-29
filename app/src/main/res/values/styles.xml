@@ -9,7 +9,7 @@
         <item name="android:windowAnimationStyle">@style/CustomActivityAnimation</item>
     </style>
 
-    <style name="MySwitch" parent="SettingsFragmentStyle">
+    <style name="MySwitch" parent="AppTheme">
         <!-- active thumb & track color (30% transparency) -->
         <item name="colorControlActivated">@color/nutrition</item>
 
@@ -18,11 +18,9 @@
 
         <!-- inactive track color (30% transparency) -->
         <item name="android:colorForeground">@color/colorPrimary</item>
-    </style>
 
-    <style name="SettingsFragmentStyle" parent="AppTheme">
-        <item name="android:textColorSecondary">@color/colorPrimaryDark</item>
-        <item name="android:textColor">@color/colorPrimaryDark</item>
+        <!--<item name="android:background">@color/lightcolour</item>-->
+
     </style>
 
     <style name="AppTheme.NoActionBar">
