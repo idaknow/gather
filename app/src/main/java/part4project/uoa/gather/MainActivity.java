@@ -258,6 +258,10 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
             cal.setTime(startOfWeek);
+            int hour = cal2.get(Calendar.HOUR_OF_DAY) - 5;
+            if (hour > 0) {
+                cal2.set(Calendar.HOUR_OF_DAY,hour);
+            }
             mWeekView.goToDate(cal);
             mWeekView.goToHour(cal2.get(Calendar.HOUR_OF_DAY));
         }
