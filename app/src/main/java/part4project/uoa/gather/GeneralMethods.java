@@ -5,7 +5,11 @@ import android.util.Log;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataReadRequest;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -14,6 +18,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 class GeneralMethods {
+
+    private static final SimpleDateFormat fitbitDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
+
 
     /**
      * This method builds a Data Read Request used by GoogleFit
@@ -34,6 +41,17 @@ class GeneralMethods {
         Log.d("Time", MainActivity.startOfWeek.toString());
         Log.d("Time", MainActivity.today.toString());
         return builder.setTimeRange(MainActivity.startOfWeek.getTime(), MainActivity.today.getTime(), TimeUnit.MILLISECONDS).build();
+    }
+
+    static Date generalGetDate(String time){
+        Date parsed;
+        try {
+            parsed = fitbitDateFormat.parse(time);
+
+        } catch(ParseException pe) {
+            throw new IllegalArgumentException(pe);
+        }
+        return parsed;
     }
 
 }

@@ -82,6 +82,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import retrofit2.Call;
 
+import static part4project.uoa.gather.GeneralMethods.generalGetDate;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -394,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements
             progress.show();
         }
 
-        protected Void doInBackground(Void... params) { // called on a seperate thread
+        protected Void doInBackground(Void... params) { // called on a separate thread
             // TODO
             nutritionGeneral = new LinkedList<>();
             fitnessGeneral = new LinkedList<>();
@@ -500,9 +501,12 @@ public class MainActivity extends AppCompatActivity implements
                 for (int j = 0; j < array.length(); j++) { // loops through each element in the array
                     JSONObject obj = (JSONObject) array.get(j);
                     Object value = obj.get(dataType); //gets the parameter according to the data type
+                    Log.d(TAG,"Brit value " + value);
                     Object time = obj.get(timeName);
+                    Log.d(TAG,"Brit data type " + dct);
 
                     Date parsed = getDate(time.toString(), true);
+                    Log.d(TAG,"Brit parsed date " + parsed);
                     if (isDateInWeek(parsed)) {
                         Log.d(TAG,"True for string " + value.toString());
                         if (doesStringContainKeyword(value.toString(), isNutrition)){
@@ -906,9 +910,6 @@ public class MainActivity extends AppCompatActivity implements
 
     public void retrieveFitbitData() {
         try {
-
-            Log.d(TAG, "fitbit retrieval");
-
             //set up the connection with the Authorisation header containing the user
             //access token
             /*
@@ -919,7 +920,8 @@ public class MainActivity extends AppCompatActivity implements
             If the access token has expired, either open the browser for the user to reauthenticate,
             or uncheck the switch preference and state the permission needs to be given again.
              */
-            String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
+            String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate=2017-08-27&" +
+                    "sort=asc&limit=20&offset=0";
             URL url = new URL(dataRequestUrl);
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             conn.setReadTimeout(10000);//this is in milliseconds
@@ -929,17 +931,16 @@ public class MainActivity extends AppCompatActivity implements
 
             String access_token = fitbitPreferences.getString("access_token", null);
             if (access_token != null) {
+
                 conn.addRequestProperty("Authorization", "Bearer " + access_token);
 
                 //Send the request
                 int responseCode = conn.getResponseCode();
-                String responseType = conn.getContentType();
-                Log.d(TAG, "\nResponse Type : " + responseType);
-                Log.d(TAG, "Response Code : " + responseCode);
+                //String responseType = conn.getContentType();
 
                 //Check to make sure that the connection has been made successfully before trying to
                 //read data.
-                if (responseCode == 201) {
+                if (responseCode == 200) {
 
                     //Read the input received
                     BufferedReader in = new BufferedReader(
@@ -951,28 +952,39 @@ public class MainActivity extends AppCompatActivity implements
                         response.append(inputLine);
                     }
                     in.close();
-                } else if (responseCode == 401 ){ //401 is returned if the token has expired.
+
+//                    //Read the JSON response and process the results...
+                    JSONObject jsonResponse = new JSONObject(response.toString());
+                    JSONArray activities = jsonResponse.getJSONArray("activities");
+                    for (int i = 0; i < activities.length(); i++){
+                        JSONObject activity = activities.getJSONObject(i);
+                        String activityStartTime = activity.getString("originalStartTime");
+                        Log.d(TAG, "fitbit start time: " + activityStartTime);
+                        String activityDate = activity.getString("originalStartTime").substring(8,10);
+                        Log.d(TAG, "fitbit date: " + activityDate);
+                        Date startDate = generalGetDate(activity.getString("originalStartTime"));
+                        if (isDateInWeek(startDate)){
+                            Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
+                            fitnessGeneral.add(data);
+                        }
+                    }
+
+                } else if (responseCode == 401 ){
+                    //401 is returned if the token has expired.
                     //Either take user to authentication page by opening browser?
                     Log.e(TAG, "access token for fitbit has expired..needs to be requested again");
                     SettingsActivity.browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.fitbitAuthLink));
                     startActivity(SettingsActivity.browserIntent);
-                } else { //Any other errors with the connection
-                    Log.e(TAG, "an error has occured accessing user information, fitbit");
+                } else {
+                    //Any other errors with the connection
+                    Log.e(TAG, "Fitbit: an error has occurred accessing user information");
                 }
-            } else { //If the user hasn't given authentication yet then display a message notifying them
-                Log.e(TAG, "fitbit token is null");
+            } else {
+                //If the user hasn't given authentication yet then display a message notifying them
+                Log.e(TAG, "Fitbit token is null");
             }
-
-            //Read the JSON response and process the results...
-//            JSONObject jsonResponse = JSONObject.parse(response.toString());
-//            Log.d(TAG, "first response: " + response);
-//            Log.d(TAG, response.getJSON);
-//            JSONObject goalSteps = response.getJSONObject('goals');
-//            Log.d(TAG, "steps " + goalSteps);
-
-
         } catch (Exception e) {
-            Log.d("Fitbit", e.toString());
+            Log.d("Fitbit error: ", e.toString());
         }
 
     }
