@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -111,40 +112,45 @@ public class MainActivity extends AppCompatActivity implements
     boolean[] isFitness = new boolean[7];
     boolean[] isNutrition = new boolean[7];
 
-    WeekView mWeekView;
-
-    ProgressDialog progress;
-
-    // TWITTER
-    TwitterSession session;
+    WeekView mWeekView; // Calendar
+    ProgressDialog progress; // loading
+    TwitterSession session; // Twitter Session
 
     // Week Date
     public static Date startOfWeek;
     public static Date endOfWeek;
     public static Date today;
 
-    //Get SharedPreferences for Fitbit to store access token
-    public static SharedPreferences fitbitPreferences = null;
-    public static Context fitbitContext;
-
-
+    //Get SharedPreferences for Fitbit to store access token and to store first_time flag
+    public static SharedPreferences mainPreferences = null;
+    final String PREFS_NAME = "MainPreferencesFile";
+    public List<ApplicationInfo> installedPackages;
+    public static boolean twitterInstalled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mainPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        installedPackages = getPackageManager().getInstalledApplications(0);
+        for (ApplicationInfo appInfo : installedPackages){
+            String appName = (String)appInfo.loadLabel(getPackageManager());
+            Log.d(TAG, "app name: " + appName);
+            if (appName.equals("Twitter")){
+                twitterInstalled = true;
+            }
+        }
 
-        //Save the context so it can be accessed statically
-        fitbitContext = this;
-
-        // TWITTER Initialised
-        String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
-        String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
-        TwitterConfig config = new TwitterConfig.Builder(this)
-                .logger(new DefaultLogger(Log.DEBUG))
-                .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
-                .debug(true)
-                .build();
-        Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+        if (twitterInstalled){
+            // TWITTER Initialised
+            String CONSUMERKEY = getString(R.string.com_twitter_sdk_android_CONSUMER_KEY);
+            String CONSUMERSECRET = getString(R.string.com_twitter_sdk_android_CONSUMER_SECRET);
+            TwitterConfig config = new TwitterConfig.Builder(this)
+                    .logger(new DefaultLogger(Log.DEBUG))
+                    .twitterAuthConfig(new TwitterAuthConfig(CONSUMERKEY, CONSUMERSECRET))
+                    .debug(true)
+                    .build();
+            Twitter.initialize(config); // this initialises Twitter. Must be done before a getInstance() call as done in the method below.
+        }
 
         // Content Initialised
         setContentView(R.layout.activity_main);
@@ -163,43 +169,24 @@ public class MainActivity extends AppCompatActivity implements
             gf.subscribe();
         } else {
             mWeekView = (WeekView) findViewById(R.id.weekView);
-            mWeekView.notifyDatasetChanged();
+            updateCalendarWithEvents();
         }
 
         //Get user information from Fitbit by starting the Async Task
         new FitbitSummaryTask().execute();
 
-        // SOCIAL
-        AccessToken fbToken = SettingsActivity.accessToken;
-        if (fbToken == null){ // If SettingsActivity hasn't been created yet, get the token
-            fbToken = AccessToken.getCurrentAccessToken();
-        }
-
-        if (session == null){
-            session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-            if (fbToken != null && session != null) {
-                    new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            }
-        }
+        // SOCIAL TASK
+        new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         // Setup Calendar
-        mWeekView = (WeekView) findViewById(R.id.weekView);
-        mWeekView.setOnEventClickListener(this);
-        mWeekView.setMonthChangeListener(this);
-        mWeekView.setEventLongPressListener(this);
-        setupDateTimeInterpreter();
-        mWeekView.setHourHeight(80);
-        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-        cal2.setTime(today);
-        if (cal2.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
-            mWeekView.setNumberOfVisibleDays(7);
-        } else {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
-            cal.setTime(startOfWeek);
-            mWeekView.goToDate(cal);
-            mWeekView.goToHour(cal2.get(Calendar.HOUR_OF_DAY));
-        }
+        setupCalendar();
         Log.d("STATUS", "Created");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //TODO: used when the user resumes after accepting/ denying permissions
     }
 
     /**
@@ -245,6 +232,29 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("Date", "Range Start: " + startOfWeek);
         Log.d("Date", "Range End: " + endOfWeek);
         Log.d("Date", "Today " + today);
+    }
+
+    /**
+     * This class sets up the UI calendar to show a certain number of dates
+     * and to move to the specific time
+     */
+    private void setupCalendar(){
+        mWeekView = (WeekView) findViewById(R.id.weekView);
+        mWeekView.setOnEventClickListener(this);
+        mWeekView.setMonthChangeListener(this);
+        mWeekView.setEventLongPressListener(this);
+        setupDateTimeInterpreter();
+        mWeekView.setHourHeight(80);
+        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+        cal2.setTime(today);
+        if (cal2.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
+            mWeekView.setNumberOfVisibleDays(7);
+        } else {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+            cal.setTime(startOfWeek);
+            mWeekView.goToDate(cal);
+            mWeekView.goToHour(cal2.get(Calendar.HOUR_OF_DAY));
+        }
     }
 
     /**
@@ -329,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements
                 SimpleDateFormat weekdayNameFormat = new SimpleDateFormat("EEE", Locale.getDefault());
                 String weekday = weekdayNameFormat.format(date.getTime());
                 weekday = String.valueOf(weekday.charAt(0));
-                return weekday.toUpperCase() + date.get(Calendar.DATE);
+                return date.get(Calendar.DATE) + " " + weekday.toUpperCase();
             }
 
             @Override
@@ -392,11 +402,10 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progress.show();
+//            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a separate thread
-            // TODO
             nutritionGeneral = new LinkedList<>();
             fitnessGeneral = new LinkedList<>();
             General generalNutritionClass = new General();
@@ -410,13 +419,19 @@ public class MainActivity extends AppCompatActivity implements
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
-            progress.dismiss();
-//            getWeeksData();
-            isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-            isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
-//            mWeekView = (WeekView) findViewById(R.id.weekView);
-            mWeekView.notifyDatasetChanged();
+//            progress.dismiss();
+            updateCalendarWithEvents();
         }
+    }
+
+    /**
+     * This re-initialises the weeks data into boolean functions and notifies the calendar of event changes
+     * this is called to update the UI Calendar
+     */
+    public void updateCalendarWithEvents(){
+        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
+        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
+        mWeekView.notifyDatasetChanged();
     }
 
     /**
@@ -426,14 +441,23 @@ public class MainActivity extends AppCompatActivity implements
 
         private boolean isNutrition = false;
 
-        private void displaySocial(boolean isNutrition){
+        private void displaySocial(boolean isNutrition) {
             this.isNutrition = isNutrition;
             if (SocialMethods.getFBToken() != null) {
                 facebookSummary();
+                if (!isNutrition) {
+                    transformFacebookFitness();
+                }
             }
-            twitterSummary();
-            if (!isNutrition){
-                transformFacebookFitness();
+
+            if (twitterInstalled) {
+                if (session == null) {
+                    session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+                }
+
+                if (session != null) {
+                    twitterSummary();
+                }
             }
         }
 
@@ -532,29 +556,18 @@ public class MainActivity extends AppCompatActivity implements
         private void twitterSummary(){
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
-//                if (isTwitterEnabled(true)){
+                SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // shared preferences
+
+                Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
+                Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
+
+                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){ // checks if the user gave permission to favourites
                     displayFavouritedTweets(twitterApiClient);
-//                }
-//                if (isTwitterEnabled(false)){
+                }
+                if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false)){ // checks if the user gave permission to statuses
                     displayStatusTweets(twitterApiClient);
-//                }
+                }
             }
-        }
-
-        /**
-         * This checks the favourite or status switch preference for twitter is enabled
-         * @return true if enabled, false if disabled
-         */
-        private boolean isTwitterEnabled(boolean isFavEnabled){
-            //TODO
-//            SettingsActivity SA = new SettingsActivity();
-            String name = "statuses";
-            if (isFavEnabled){
-                name = "favourites";
-            }
-
-
-            return true;
         }
 
         /**
@@ -599,6 +612,7 @@ public class MainActivity extends AppCompatActivity implements
                             }
                         }
                     }
+                    updateCalendarWithEvents();
                 }
 
                 public void failure(TwitterException exception) {
@@ -625,6 +639,7 @@ public class MainActivity extends AppCompatActivity implements
                         Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
                         getFacebookFitnessActions(response.getJSONObject()); // uses the response data to count the amount of fitness actions
                     }
+                    updateCalendarWithEvents();
                 }
             };
             // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
@@ -929,7 +944,7 @@ public class MainActivity extends AppCompatActivity implements
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
 
-            String access_token = fitbitPreferences.getString("access_token", null);
+            String access_token = mainPreferences.getString("access_token", null);
             if (access_token != null) {
 
                 conn.addRequestProperty("Authorization", "Bearer " + access_token);
