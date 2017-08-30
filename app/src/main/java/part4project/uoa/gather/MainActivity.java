@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements
     public static Date today;
 
     //Get SharedPreferences for Fitbit to store access token and to store first_time flag
-    public static SharedPreferences mainPreferences = null;
+    public static SharedPreferences mainPreferences;
     final String PREFS_NAME = "MainPreferencesFile";
     public List<ApplicationInfo> installedPackages;
     public static boolean twitterInstalled = false;
@@ -525,12 +525,9 @@ public class MainActivity extends AppCompatActivity implements
                 for (int j = 0; j < array.length(); j++) { // loops through each element in the array
                     JSONObject obj = (JSONObject) array.get(j);
                     Object value = obj.get(dataType); //gets the parameter according to the data type
-                    Log.d(TAG,"Brit value " + value);
                     Object time = obj.get(timeName);
-                    Log.d(TAG,"Brit data type " + dct);
 
                     Date parsed = getDate(time.toString(), true);
-                    Log.d(TAG,"Brit parsed date " + parsed);
                     if (isDateInWeek(parsed)) {
                         Log.d(TAG,"True for string " + value.toString());
                         if (doesStringContainKeyword(value.toString(), isNutrition)){
@@ -971,14 +968,14 @@ public class MainActivity extends AppCompatActivity implements
 //                    //Read the JSON response and process the results...
                     JSONObject jsonResponse = new JSONObject(response.toString());
                     JSONArray activities = jsonResponse.getJSONArray("activities");
+                    Log.d(TAG, "activity length: " + activities.length());
                     for (int i = 0; i < activities.length(); i++){
                         JSONObject activity = activities.getJSONObject(i);
                         String activityStartTime = activity.getString("originalStartTime");
                         Log.d(TAG, "fitbit start time: " + activityStartTime);
-                        String activityDate = activity.getString("originalStartTime").substring(8,10);
-                        Log.d(TAG, "fitbit date: " + activityDate);
                         Date startDate = generalGetDate(activity.getString("originalStartTime"));
                         if (isDateInWeek(startDate)){
+                            Log.d(TAG, "date in week: " + isDateInWeek(startDate));
                             Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
                             fitnessGeneral.add(data);
                         }
