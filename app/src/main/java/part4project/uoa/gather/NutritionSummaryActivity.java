@@ -4,34 +4,46 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.ToggleButton;
-
+import android.widget.Spinner;
 
 import java.util.List;
 
 
 public class NutritionSummaryActivity extends AppCompatActivity {
 
-    //Logging Data tags
-//    private static final String TAG = "Nutrition";
+    private static final String[] items = new String[]{"General","Social"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nutrition_summary);
-        // Set toggle on click listener
-        ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButton);
-        toggle.setOnClickListener(new View.OnClickListener() {
+
+        Spinner dropdown = (Spinner)findViewById(R.id.spinner);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, items);
+        dropdown.setAdapter(adapter);
+        dropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v) {
-                setListViewContent(((ToggleButton) v).isChecked());
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (position) {
+                    case 0:
+                        setListViewContent(false);
+                        break;
+                    case 1:
+                        setListViewContent(true);
+                        break;
+                }
             }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
-        // Initially displays the information for the default value
-        setListViewContent(toggle.isChecked());
+
     }
+
+
 
     /**
      * This is used when the back button is clicked
