@@ -8,13 +8,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Scanner;
 
 /**
  * Created by Ida on 1/08/2017.
@@ -28,8 +33,20 @@ class SocialMethods {
     private static final SimpleDateFormat facebookDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
 
     // These are the keywords to search for in your social media accounts
-    private static final List<String> FITNESSKEYWORDS = Arrays.asList("Fitness","dance","run", "active", "Rhythm");
-    private static final List<String> NUTRITIONKEYWORDS = Arrays.asList("Nutrition","Vegetables", "Revive","Vegetarian", "Tasty", "Food", "bean", "Coffee", "water");
+    private static List<String> FITNESSKEYWORDS = null;
+    private static List<String> NUTRITIONKEYWORDS = null;
+
+    static void setFitnessKeywords(List<String> list){
+        FITNESSKEYWORDS = list;
+    }
+
+    static void setNutritionKeywords(List<String> list){
+        NUTRITIONKEYWORDS = list;
+    }
+
+    static boolean isKeywordsNull(){
+        return (FITNESSKEYWORDS == null || NUTRITIONKEYWORDS == null);
+    }
 
     /**
      * This returns the Facebook Access Token
