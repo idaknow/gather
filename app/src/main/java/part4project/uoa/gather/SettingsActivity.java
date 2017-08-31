@@ -121,7 +121,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-//        setTheme(R.style.MySwitch);
 
         data = getIntent().getData();
         Log.i("App uri", String.valueOf(data));
@@ -134,7 +133,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
             }
         }
-
     }
 
     /**

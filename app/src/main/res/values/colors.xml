@@ -8,12 +8,3 @@
     <color name="nutrition">#4ce179</color>
     <color name="lightcolour">#FAE5E4</color>
 </resources>
-
-<!--<resources>-->
-<!--<color name="colorPrimary">#3F51B5</color>-->
-<!--<color name="colorPrimaryDark">#f6aca7</color>-->
-<!--<color name="colorPrimaryDark">#303F9F</color>--> <!-- This is the header. -->
-<!--<color name="colorAccent">#FF4081</color>-->
-<!--<color name="fitness">#009688</color>-->
-<!--<color name="nutrition">#8BC34A</color>-->
-<!--</resources>-->
