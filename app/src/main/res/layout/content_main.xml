@@ -13,12 +13,12 @@
     <ImageButton
         android:id="@+id/nutrition_Button"
         style="@style/Widget.AppCompat.ImageButton"
-        android:layout_width="58dp"
-        android:layout_height="64dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_marginBottom="16dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:background="@color/nutrition"
+        android:background="@drawable/round_button_nutrition"
         android:elevation="@dimen/cardview_default_elevation"
         android:onClick="intentNutrition"
         android:tint="@color/cardview_light_background"
@@ -26,7 +26,8 @@
         app:layout_constraintHorizontal_bias="0.974"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:srcCompat="@drawable/ic_local_dining_black_24dp" />
+        app:srcCompat="@drawable/ic_local_dining_black_24dp">
+    </ImageButton>
 
     <TextView
         android:id="@+id/welcome_message"
@@ -68,12 +69,12 @@
     <ImageButton
         android:id="@+id/fitness_button"
         style="@style/Widget.AppCompat.ImageButton"
-        android:layout_width="58dp"
-        android:layout_height="64dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_marginBottom="16dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:background="@color/fitness"
+        android:background="@drawable/round_button_fitness"
         android:elevation="@dimen/cardview_default_elevation"
         android:onClick="intentFitness"
         android:tint="@color/cardview_light_background"
