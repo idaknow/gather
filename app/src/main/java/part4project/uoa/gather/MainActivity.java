@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -155,6 +156,10 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setDisplayShowTitleEnabled(false); // removes the title, so only the image logo is displayed
+        }
         Log.d(TAG, "Creating main page");
 
         setupDates();
@@ -180,6 +185,8 @@ public class MainActivity extends AppCompatActivity implements
         // Setup Calendar
         setupCalendar();
         Log.d("STATUS", "Created");
+
+
     }
 
     @Override
@@ -251,6 +258,10 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
             cal.setTime(startOfWeek);
+            int hour = cal2.get(Calendar.HOUR_OF_DAY) - 5;
+            if (hour > 0) {
+                cal2.set(Calendar.HOUR_OF_DAY,hour);
+            }
             mWeekView.goToDate(cal);
             mWeekView.goToHour(cal2.get(Calendar.HOUR_OF_DAY));
         }
