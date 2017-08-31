@@ -85,7 +85,3 @@
         app:srcCompat="@drawable/ic_directions_run_black_24dp" />
 
 </android.support.constraint.ConstraintLayout>
-
-    <!--todayBackgroundColor"#1848adff"-->
-<!--dayBackgroundColor = "#05000000"-->
-    <!--app:headerRowBackgroundColor="#ffefefef"-->
