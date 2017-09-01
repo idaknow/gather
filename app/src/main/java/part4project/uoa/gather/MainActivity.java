@@ -66,6 +66,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.DateFormat;
@@ -130,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setKeywords();
         mainPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         installedPackages = getPackageManager().getInstalledApplications(0);
         for (ApplicationInfo appInfo : installedPackages){
@@ -187,6 +189,31 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("STATUS", "Created");
 
 
+    }
+
+    /**
+     * Loops through the fitness and nutrition CSV files to retrieve their data and put it in the lists
+     */
+    private void setKeywords(){
+        Log.d("KEYWORDS","Setting up keywords");
+        if (SocialMethods.isKeywordsNull()){
+            List<Integer> keywordsIndexList = Arrays.asList(R.raw.fitness,R.raw.nutrition);
+            for (int i = 0; i < keywordsIndexList.size(); i++){
+                Log.d("KEYWORDS", "index = " + i);
+
+                InputStream inputStream = getResources().openRawResource(keywordsIndexList.get(i));
+                CSVFile csvFile = new CSVFile(inputStream);
+                List keywordsList = csvFile.read();
+                Log.d("KEYWORDS","list = " + keywordsList.toString());
+                if (i == 0){
+                    SocialMethods.setFitnessKeywords(keywordsList);
+                    Log.d("KEYWORDS", "set fitness");
+                } else {
+                    SocialMethods.setNutritionKeywords(keywordsList);
+                    Log.d("KEYWORDS", "set nutrition");
+                }
+            }
+        }
     }
 
     @Override
