@@ -124,13 +124,14 @@ class SocialMethods {
      * @return True or False depending on whether a keyword is found within the given social activity
      */
     static boolean doesStringContainKeyword(String value, boolean isNutrition){
+        value = value.toLowerCase(); // look at lowercase
         List<String> list = FITNESSKEYWORDS;
         if (isNutrition){
             list = NUTRITIONKEYWORDS;
         }
 
         for (String string : list) { // loops through target keywords
-            if (value.contains(string)) { // checks if the target string is contained within the current object string
+            if (value.contains(string.toLowerCase())) { // checks if the target string is contained within the current object string
                 return true;
             }
         }

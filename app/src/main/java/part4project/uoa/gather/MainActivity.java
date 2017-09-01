@@ -196,17 +196,21 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void setKeywords(){
         Log.d("KEYWORDS","Setting up keywords");
-        if (!SocialMethods.isKeywordsNull()){
+        if (SocialMethods.isKeywordsNull()){
             List<Integer> keywordsIndexList = Arrays.asList(R.raw.fitness,R.raw.nutrition);
-            for (int i : keywordsIndexList){
-                InputStream inputStream = getResources().openRawResource(i);
+            for (int i = 0; i < keywordsIndexList.size(); i++){
+                Log.d("KEYWORDS", "index = " + i);
+
+                InputStream inputStream = getResources().openRawResource(keywordsIndexList.get(i));
                 CSVFile csvFile = new CSVFile(inputStream);
                 List keywordsList = csvFile.read();
                 Log.d("KEYWORDS","list = " + keywordsList.toString());
-                if (keywordsList.indexOf(i) == 0){
+                if (i == 0){
                     SocialMethods.setFitnessKeywords(keywordsList);
+                    Log.d("KEYWORDS", "set fitness");
                 } else {
                     SocialMethods.setNutritionKeywords(keywordsList);
+                    Log.d("KEYWORDS", "set nutrition");
                 }
             }
         }
