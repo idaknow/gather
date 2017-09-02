@@ -579,7 +579,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private static void setGrantedScopes(PreferenceManager prefManager) {
             try {
-                Log.d(TAG3, "set granted scopes");
                 String temp = browserResponseFragment.split("&")[2];
                 String scopeFragment = temp.substring(6);
                 String[] scopes = scopeFragment.split("\\+");
@@ -588,7 +587,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     for (String scope : scopes) {
                         grantedfitbitPermissions.add(scope);
                         String prefName = "fitbit_" + scope;
-                        Log.d(TAG3, "pref name: " + prefName);
                         //Set the appropriate preferences to enabled
                         SwitchPreference switchPreference = (SwitchPreference) prefManager.findPreference(prefName);
                         switchPreference.setChecked(true);

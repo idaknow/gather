@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         //Get user information from Fitbit by starting the Async Task
-        new FitbitSummaryTask().execute();
+//        new FitbitSummaryTask().execute();
 
         // SOCIAL TASK
         new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -712,6 +712,7 @@ public class MainActivity extends AppCompatActivity implements
         private void displayGeneral(boolean isNutrition){
             this.isNutrition = isNutrition;
             displayLastWeeksData();
+            retrieveFitbitData();
         }
 
         private void displayLastWeeksData(){
@@ -912,13 +913,13 @@ public class MainActivity extends AppCompatActivity implements
 
 //FITBIT
 
-    private class FitbitSummaryTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            Log.d(TAG, "fitbit async");
-            retrieveFitbitData();
-            return null;
-        }
-    }
+//    private class FitbitSummaryTask extends AsyncTask<Void, Void, Void> {
+//        protected Void doInBackground(Void... params) {
+//            Log.d(TAG, "fitbit async");
+//            retrieveFitbitData();
+//            return null;
+//        }
+//    }
 
     public void retrieveFitbitData() {
         try {
@@ -974,6 +975,7 @@ public class MainActivity extends AppCompatActivity implements
                         String activityStartTime = activity.getString("originalStartTime");
                         Log.d(TAG, "fitbit start time: " + activityStartTime);
                         Date startDate = generalGetDate(activity.getString("originalStartTime"));
+                        Log.d(TAG, "fitbit start date: " + startDate);
                         if (isDateInWeek(startDate)){
                             Log.d(TAG, "date in week: " + isDateInWeek(startDate));
                             Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
@@ -998,7 +1000,5 @@ public class MainActivity extends AppCompatActivity implements
         } catch (Exception e) {
             Log.d("Fitbit error: ", e.toString());
         }
-
     }
-
 }
