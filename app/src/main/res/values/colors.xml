@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="fitness">#009688</color>
-    <color name="nutrition">#8BC34A</color>
+    <color name="colorPrimary">#e1574c</color>
+    <color name="colorPrimaryDark">#E1574C</color>
+    <color name="colorAccent">#4ce179</color>
+    <color name="colorSwitchThumbNormal">#E1574C</color>
+    <color name="fitness">#4cb4e1</color>
+    <color name="nutrition">#4ce179</color>
+    <color name="lightcolour">#FAE5E4</color>
 </resources>

@@ -133,7 +133,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
             }
         }
-
     }
 
     /**
@@ -186,39 +185,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     protected boolean isValidFragment(String fragmentName) {
             return PreferenceFragment.class.getName().equals(fragmentName)
-                    || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                     || FitnessPreferenceFragment.class.getName().equals(fragmentName)
                     || GoogleFitPreferenceFragment.class.getName().equals(fragmentName)
                     || FacebookPreferenceFragment.class.getName().equals(fragmentName)
                     || TwitterPreferenceFragment.class.getName().equals(fragmentName)
                     || BlankTwitterPreferenceFragment.class.getName().equals(fragmentName)
                     ;
-    }
-
-    /**
-     * This fragment shows general preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
-            setHasOptionsMenu(true);
-
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                getActivity().overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
     }
 
     //GOOGLEFIT Initialised variables
@@ -238,6 +210,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_google_fit);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
 
             MainActivity.mGoogleApiClient.connect();
             fixChildPreferences(); // set child preferences according to the API Client's subscriptions
@@ -449,6 +422,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_fitness);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
             PreferenceManager prefManager = getPreferenceManager();
             //If the fragment is being opened for the first time after the user has authenticated then
             //set the correct scopes and their appropriate switch preferences
@@ -631,6 +605,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_social_media);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
 
             isFacebookOrTwitter = 0; // so onActivityResult does the correct code
 
@@ -829,6 +804,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 super.onCreate(savedInstanceState);
                 addPreferencesFromResource(R.xml.pref_social_media_2);
                 setHasOptionsMenu(true);
+                getActivity().setTheme(R.style.MySwitch);
 
                 isFacebookOrTwitter = 1; // used by onActivityResult
 
@@ -965,6 +941,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_social_media_2);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.MySwitch);
             Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);
             toast.show();
             createParentPreference();

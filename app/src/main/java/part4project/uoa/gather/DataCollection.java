@@ -101,7 +101,16 @@ class DataCollection {
                 int month = cal.get(Calendar.MONTH);
                 listToPrint.add(day + "/" + month + " | " + list.get(i).getType().toString() + list.get(i).getValue());
             }
+
+            if (listToPrint.size() == 0){
+                String dataType = "general";
+                if (isSocial){
+                    dataType = "social";
+                }
+                listToPrint.add("There is nothing to show, as you have not done any "+dataType+" activity this week.");
+            }
         }
+
         return listToPrint;
     }
 

@@ -17,7 +17,7 @@
     <string name="fitness_app_activity">Activity</string>
 
     <!-- Social Media settings -->
-    <string name="pref_header_social_media_app">Facebook App</string>
+    <string name="pref_header_social_media_app">Facebook</string>
     <string name="social_media_app_name">Facebook</string>
     <string name="social_media_app_events">Events</string>
     <string name="social_media_app_likes">Likes</string>
@@ -64,9 +64,13 @@
     <string name="com.twitter.sdk.android.CONSUMER_SECRET">IWrC84e25OFeC87ULFaaZK7tq8DeQTF6QB1ZGwz38lQGfZDNIa</string>
 
     <!-- Social Media 2 settings -->
-    <string name="pref_header_social_media_app_2">Twitter App</string>
+    <string name="pref_header_social_media_app_2">Twitter</string>
     <string name="social_media_app_2_name">Twitter</string>
     <string name="social_media_app_2_favourites">Favourites</string>
     <string name="social_media_app_2_statuses">Statuses</string>
 
+    <!--Button Strings-->
+    <string name="back_button">Back</string>
+    <string name="toggle_off_general">General</string>
+    <string name="toggle_on_social">Social</string>
 </resources>
