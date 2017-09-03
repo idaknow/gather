@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 class GeneralMethods {
 
     private static final SimpleDateFormat fitbitDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
-
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
     /**
      * This method builds a Data Read Request used by GoogleFit
@@ -47,6 +47,17 @@ class GeneralMethods {
         Date parsed;
         try {
             parsed = fitbitDateFormat.parse(time);
+
+        } catch(ParseException pe) {
+            throw new IllegalArgumentException(pe);
+        }
+        return parsed;
+    }
+
+    static Date generalGetDateOnly(String time){
+        Date parsed;
+        try {
+            parsed = dateFormat.parse(time);
 
         } catch(ParseException pe) {
             throw new IllegalArgumentException(pe);
