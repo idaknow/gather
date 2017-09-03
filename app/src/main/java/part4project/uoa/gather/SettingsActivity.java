@@ -599,6 +599,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness");
     public static List<String> grantedFBPermissions = new LinkedList<>();
     public static List<String> deniedFBPermissions  = new LinkedList<>();
+    private static String changing_switch = null;
 
     public static class FacebookPreferenceFragment extends PreferenceFragment {
 
@@ -632,15 +633,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void onCancel() {
                     Log.d(TAG, "Login Button Cancel");
-                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+                    if (changing_switch == null){
+                        changing_switch = "social_media_all";
+                    }
+                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference(changing_switch);
                     overall_pref.setChecked(!overall_pref.isChecked());
+                    changing_switch = null;
                 }
 
                 @Override
                 public void onError(FacebookException exception) {
                     Log.d(TAG, "Login Button Error");
-                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
+                    if (changing_switch == null){
+                        changing_switch = "social_media_all";
+                    }
+                    SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference(changing_switch);
                     overall_pref.setChecked(!overall_pref.isChecked());
+                    changing_switch = null;
                 }
             });
 
@@ -650,6 +659,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                             @Override
                             public boolean onPreferenceClick(Preference preference) {
+                                changing_switch = preference.getKey();
                                 facebookLogin.setReadPermissions(PERMISSIONS);
                                 facebookLogin.performClick();
                                 return true;
@@ -663,6 +673,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.d(TAG, "Preference clicker for preference " + preference.getKey());
+                        changing_switch = preference.getKey();
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
 
                         if (!switchPreference.isChecked()) { // if it's changed to not checked, the permission must be revoked
