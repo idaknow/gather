@@ -5,8 +5,10 @@ import android.util.Log;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataReadRequest;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -20,7 +22,8 @@ import java.util.concurrent.TimeUnit;
 class GeneralMethods {
 
     private static final SimpleDateFormat fitbitDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+    private static final DateFormat originalFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH);
+    private static final DateFormat targetFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
     /**
      * This method builds a Data Read Request used by GoogleFit
@@ -54,15 +57,29 @@ class GeneralMethods {
         return parsed;
     }
 
-    static Date generalGetDateOnly(String time){
-        Date parsed;
+    static String generalGetDateOnly(String formattedDate){
+        String newDate;
         try {
-            parsed = dateFormat.parse(time);
+            Date date = originalFormat.parse(formattedDate);
+            newDate = targetFormat.format(date);
 
         } catch(ParseException pe) {
             throw new IllegalArgumentException(pe);
         }
-        return parsed;
+        return newDate;
     }
 
+    static String plusOneDay(String original){
+        String newDate = "";
+
+        Calendar c = Calendar.getInstance();
+        try {
+            c.setTime(targetFormat.parse(original));
+            c.add(Calendar.DATE, 1);
+            newDate = targetFormat.format(c.getTime());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return newDate;
+    }
 }

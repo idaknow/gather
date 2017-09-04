@@ -66,6 +66,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -87,6 +88,7 @@ import retrofit2.Call;
 
 import static part4project.uoa.gather.GeneralMethods.generalGetDate;
 import static part4project.uoa.gather.GeneralMethods.generalGetDateOnly;
+import static part4project.uoa.gather.GeneralMethods.plusOneDay;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -752,7 +754,11 @@ public class MainActivity extends AppCompatActivity implements
                 updateCalendarWithEvents();
             }
 
-            retrieveFitbitData();
+            if (isNutrition){
+
+            } else {
+                retrieveFitbitData();
+            }
         }
 
     }
@@ -953,7 +959,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void retrieveFitbitData() {
-        try {
             //set up the connection with the Authorisation header containing the user
             //access token
             /*
@@ -964,77 +969,89 @@ public class MainActivity extends AppCompatActivity implements
             If the access token has expired, either open the browser for the user to reauthenticate,
             or uncheck the switch preference and state the permission needs to be given again.
              */
-            Log.d(TAG, "Start date/time: " + startOfWeek.toString());
-            Log.d(TAG, "Start date only: " + generalGetDateOnly(startOfWeek.toString()));
-            Log.d(TAG, "today date/time: " + today);
+            List<String> daysToAdd = new ArrayList<>();
+            //Get todays date as a string and in the format yyyy-mm-dd.
+            String todaysDate = DateFormat.getDateInstance().format(today);
+            String today = generalGetDateOnly(todaysDate);
+            //Get the date of the start of the week as a string and in the correct format.
+            String formattedDate = DateFormat.getDateInstance().format(startOfWeek);
+            String currentDate = generalGetDateOnly(formattedDate);
+            //Add the start of the week date to the array
+            daysToAdd.add(currentDate);
+            //Loop through and add each date to the array up until today's date
+            while (!currentDate.equals(today)){
+                currentDate = plusOneDay(currentDate);
+                daysToAdd.add(currentDate);
+            }
 
+            for (String date : daysToAdd){
+                String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate="
+                        + date + "&sort=asc&limit=20&offset=0";
+                URL url = null;
+                try {
+                    url = new URL(dataRequestUrl);
+                    HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                    conn.setReadTimeout(10000);//this is in milliseconds
+                    conn.setConnectTimeout(15000);//this is in milliseconds
+                    conn.setRequestMethod("GET");
+                    conn.setDoInput(true);
 
-            String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate=2017-08-27&" +
-                    "sort=asc&limit=20&offset=0";
-            URL url = new URL(dataRequestUrl);
-            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            conn.setReadTimeout(10000);//this is in milliseconds
-            conn.setConnectTimeout(15000);//this is in milliseconds
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
+                    String access_token = mainPreferences.getString("access_token", null);
+                    if (access_token != null) {
 
-            String access_token = mainPreferences.getString("access_token", null);
-            if (access_token != null) {
+                        conn.addRequestProperty("Authorization", "Bearer " + access_token);
 
-                conn.addRequestProperty("Authorization", "Bearer " + access_token);
+                        //Send the request
+                        int responseCode = conn.getResponseCode();
 
-                //Send the request
-                int responseCode = conn.getResponseCode();
-//                String responseType = conn.getContentType();
+                        //Check to make sure that the connection has been made successfully before trying to
+                        //read data.
+                        if (responseCode == 200) {
 
-                //Check to make sure that the connection has been made successfully before trying to
-                //read data.
-                if (responseCode == 200) {
+                            //Read the input received
+                            BufferedReader in = new BufferedReader(
+                                    new InputStreamReader(conn.getInputStream()));
+                            String inputLine;
+                            StringBuffer response = new StringBuffer();
 
-                    //Read the input received
-                    BufferedReader in = new BufferedReader(
-                            new InputStreamReader(conn.getInputStream()));
-                    String inputLine;
-                    StringBuffer response = new StringBuffer();
-
-                    while ((inputLine = in.readLine()) != null) {
-                        response.append(inputLine);
-                    }
-                    in.close();
+                            while ((inputLine = in.readLine()) != null) {
+                                response.append(inputLine);
+                            }
+                            in.close();
 
 //                    //Read the JSON response and process the results...
-                    JSONObject jsonResponse = new JSONObject(response.toString());
-                    JSONArray activities = jsonResponse.getJSONArray("activities");
-                    Log.d(TAG, "activity length: " + activities.length());
-                    for (int i = 0; i < activities.length(); i++){
-                        JSONObject activity = activities.getJSONObject(i);
-                        String activityStartTime = activity.getString("originalStartTime");
-//                        Log.d(TAG, "fitbit start time: " + activityStartTime);
-                        Date startDate = generalGetDate(activity.getString("originalStartTime"));
-//                        Log.d(TAG, "fitbit start date: " + startDate);
-                        if (isDateInWeek(startDate)){
-                            Log.d(TAG, "date in week: " + isDateInWeek(startDate));
-                            Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
-                            fitnessGeneral.add(data);
+                            JSONObject jsonResponse = new JSONObject(response.toString());
+                            JSONArray activities = jsonResponse.getJSONArray("activities");
+                            Log.d(TAG, "activity length: " + activities.length());
+                            for (int i = 0; i < activities.length(); i++){
+                                JSONObject activity = activities.getJSONObject(i);
+                                Date startDate = generalGetDate(activity.getString("originalStartTime"));
+                                if (isDateInWeek(startDate)){
+                                    Log.d(TAG, "date in week: " + isDateInWeek(startDate));
+                                    Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
+                                    fitnessGeneral.add(data);
+                                }
+                            }
+                        } else if (responseCode == 401 ){
+                            //401 is returned if the token has expired.
+                            //Either take user to authentication page by opening browser?
+                            SettingsActivity.browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.fitbitAuthLink));
+                            startActivity(SettingsActivity.browserIntent);
+                        } else {
+                            //Any other errors with the connection
+                            Log.e(TAG, "Fitbit: an error has occurred accessing user information");
                         }
+                    } else {
+                        //If the user hasn't given authentication yet then display a message notifying them
+                        Log.e(TAG, "Fitbit token is null");
                     }
 
-                } else if (responseCode == 401 ){
-                    //401 is returned if the token has expired.
-                    //Either take user to authentication page by opening browser?
-                    Log.e(TAG, "access token for fitbit has expired..needs to be requested again");
-                    SettingsActivity.browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.fitbitAuthLink));
-                    startActivity(SettingsActivity.browserIntent);
-                } else {
-                    //Any other errors with the connection
-                    Log.e(TAG, "Fitbit: an error has occurred accessing user information");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } else {
-                //If the user hasn't given authentication yet then display a message notifying them
-                Log.e(TAG, "Fitbit token is null");
+
             }
-        } catch (Exception e) {
-            Log.d("Fitbit error: ", e.toString());
-        }
     }
 }
