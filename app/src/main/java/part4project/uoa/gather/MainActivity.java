@@ -87,8 +87,7 @@ import javax.net.ssl.HttpsURLConnection;
 import retrofit2.Call;
 
 import static part4project.uoa.gather.GeneralMethods.generalGetDate;
-import static part4project.uoa.gather.GeneralMethods.generalGetDateOnly;
-import static part4project.uoa.gather.GeneralMethods.plusOneDay;
+import static part4project.uoa.gather.GeneralMethods.getWeekDates;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -754,10 +753,15 @@ public class MainActivity extends AppCompatActivity implements
                 updateCalendarWithEvents();
             }
 
-            if (isNutrition){
+            String accessToken = mainPreferences.getString("access_token", null);
+            if (accessToken != null) {
+                if (isNutrition) {
 
+                } else {
+                    retrieveFitbitData();
+                }
             } else {
-                retrieveFitbitData();
+
             }
         }
 
@@ -970,24 +974,12 @@ public class MainActivity extends AppCompatActivity implements
             or uncheck the switch preference and state the permission needs to be given again.
              */
             List<String> daysToAdd = new ArrayList<>();
-            //Get todays date as a string and in the format yyyy-mm-dd.
-            String todaysDate = DateFormat.getDateInstance().format(today);
-            String today = generalGetDateOnly(todaysDate);
-            //Get the date of the start of the week as a string and in the correct format.
-            String formattedDate = DateFormat.getDateInstance().format(startOfWeek);
-            String currentDate = generalGetDateOnly(formattedDate);
-            //Add the start of the week date to the array
-            daysToAdd.add(currentDate);
-            //Loop through and add each date to the array up until today's date
-            while (!currentDate.equals(today)){
-                currentDate = plusOneDay(currentDate);
-                daysToAdd.add(currentDate);
-            }
+            daysToAdd = getWeekDates();
 
             for (String date : daysToAdd){
                 String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate="
                         + date + "&sort=asc&limit=20&offset=0";
-                URL url = null;
+                URL url;
                 try {
                     url = new URL(dataRequestUrl);
                     HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
