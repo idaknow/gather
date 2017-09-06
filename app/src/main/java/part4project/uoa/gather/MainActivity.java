@@ -113,9 +113,6 @@ public class MainActivity extends AppCompatActivity implements
     public static final List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
 
-    boolean[] isFitness = new boolean[7];
-    boolean[] isNutrition = new boolean[7];
-
     WeekView mWeekView; // Calendar
     ProgressDialog progress; // loading
     TwitterSession session; // Twitter Session
@@ -437,11 +434,11 @@ public class MainActivity extends AppCompatActivity implements
         protected Void doInBackground(Void... params) { // called on a separate thread
             nutritionGeneral = new LinkedList<>();
             fitnessGeneral = new LinkedList<>();
-//            addGeneralData();
             General generalNutritionClass = new General();
             generalNutritionClass.displayGeneral(true);
             General generalFitnessClass = new General();
             generalFitnessClass.displayGeneral(false);
+            addGeneralData();
             return null;
         }
 
@@ -450,17 +447,14 @@ public class MainActivity extends AppCompatActivity implements
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
 //            progress.dismiss();
-            updateCalendarWithEvents();
+//            updateCalendarWithEvents();
         }
     }
 
     /**
-     * This re-initialises the weeks data into boolean functions and notifies the calendar of event changes
-     * this is called to update the UI Calendar
+     * This notifies the calendar of event changes, to update the UI Calendar
      */
     public void updateCalendarWithEvents(){
-        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
         mWeekView.notifyDatasetChanged();
     }
 
