@@ -438,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements
             generalNutritionClass.displayGeneral(true);
             General generalFitnessClass = new General();
             generalFitnessClass.displayGeneral(false);
+            addGeneralData();
             return null;
         }
 
@@ -461,12 +462,10 @@ public class MainActivity extends AppCompatActivity implements
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         cal.setTime(startOfWeek);
         cal.set(Calendar.HOUR_OF_DAY,16);
-        // Date createdAt, DataCollectionType type, String value
         Data G_CALORIES_1 = new Data(cal.getTime(), DataCollectionType.GCALORIES,"1,230.03");
         nutritionGeneral.add(G_CALORIES_1);
 
         cal.set(Calendar.HOUR_OF_DAY, 14);
-//        cal.set(Calendar.MINUTE,27);
         Data F_ACTIVITY_1 = new Data(cal.getTime(), DataCollectionType.ACTIVITY,"Run");
         fitnessGeneral.add(F_ACTIVITY_1);
 
@@ -478,7 +477,6 @@ public class MainActivity extends AppCompatActivity implements
         cal.set(Calendar.HOUR_OF_DAY, 21);
         Data F_ACTIVITY_2 = new Data(cal.getTime(), DataCollectionType.ACTIVITY,"Swim");
         fitnessGeneral.add(F_ACTIVITY_2);
-
     }
 
     public void addSocialData(){
