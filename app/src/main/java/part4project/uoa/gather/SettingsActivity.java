@@ -128,7 +128,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             String host = data.getHost();
             if (host.equals("fitbit")){
                 String resultFragment = String.valueOf(data.getFragment());
-                FitnessPreferenceFragment.setToken(resultFragment);
+                FitbitPreferenceFragment.setToken(resultFragment);
                 browserResponseFragment = resultFragment;
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
             }
@@ -185,7 +185,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     protected boolean isValidFragment(String fragmentName) {
             return PreferenceFragment.class.getName().equals(fragmentName)
-                    || FitnessPreferenceFragment.class.getName().equals(fragmentName)
+                    || FitbitPreferenceFragment.class.getName().equals(fragmentName)
                     || GoogleFitPreferenceFragment.class.getName().equals(fragmentName)
                     || FacebookPreferenceFragment.class.getName().equals(fragmentName)
                     || TwitterPreferenceFragment.class.getName().equals(fragmentName)
@@ -415,12 +415,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows data and sync preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
-    public static class FitnessPreferenceFragment extends PreferenceFragment {
+    public static class FitbitPreferenceFragment extends PreferenceFragment {
 
         @Override
         public void onCreate(final Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_fitness);
+            addPreferencesFromResource(R.xml.pref_fitbit);
             setHasOptionsMenu(true);
             getActivity().setTheme(R.style.MySwitch);
             PreferenceManager prefManager = getPreferenceManager();
@@ -604,7 +604,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_social_media);
+            addPreferencesFromResource(R.xml.pref_facebook);
             setHasOptionsMenu(true);
             getActivity().setTheme(R.style.MySwitch);
 
@@ -813,7 +813,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             if (MainActivity.twitterInstalled) {
                 super.onCreate(savedInstanceState);
-                addPreferencesFromResource(R.xml.pref_social_media_2);
+                addPreferencesFromResource(R.xml.pref_twitter);
                 setHasOptionsMenu(true);
                 getActivity().setTheme(R.style.MySwitch);
 
@@ -950,7 +950,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_social_media_2);
+            addPreferencesFromResource(R.xml.pref_twitter);
             setHasOptionsMenu(true);
             getActivity().setTheme(R.style.MySwitch);
             Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);

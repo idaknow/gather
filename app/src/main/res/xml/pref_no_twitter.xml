@@ -8,7 +8,7 @@
         android:title="@string/pref_header_social_media_app" />
 
     <header
-        android:fragment="part4project.uoa.gather.SettingsActivity$FitnessPreferenceFragment"
+        android:fragment="part4project.uoa.gather.SettingsActivity$FitbitPreferenceFragment"
         android:icon="@drawable/fitbit_24"
         android:title="@string/pref_header_fitness_app"
         />
