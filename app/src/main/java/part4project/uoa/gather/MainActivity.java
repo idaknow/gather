@@ -70,7 +70,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -899,30 +898,41 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void showDataSet(DataSet dataSet) {
-            Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-            DateFormat dateFormat = DateFormat.getDateInstance();
-            DateFormat timeFormat = DateFormat.getTimeInstance();
-
             for (DataPoint dp : dataSet.getDataPoints()) {
-                Log.d(TAG, "Data point:");
-                Log.d(TAG, "\tType: " + dp.getDataType().getName());
-
-                Log.d(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-                Log.d(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-
                 Date parsed = new Date(dp.getStartTime(TimeUnit.MILLISECONDS));
-                Log.d(TAG, "Parsed data : " + parsed);
 
-                for(Field field : dp.getDataType().getFields()) {
-                    Log.d(TAG, "\tField: " + field.getName() +
-                            " Value: " + dp.getValue(field));
+                for(Field field : dp.getDataType().getFields())
                     if (isDateInWeek(parsed)) {
-                        if (field.getName().equals("calories")) {
-                            Data data = new Data(parsed, DataCollectionType.GCALORIES, dp.getValue(field).toString());
-                            nutritionGeneral.add(data);
+                        DataCollectionType dataCollectionType = null;
+                        boolean isNutrition = true;
+                        switch (field.getName()) {
+                            case "calories":  // calories expended
+                                dataCollectionType = DataCollectionType.GCALORIES;
+                                break;
+                            case "field_volume":  // hydration
+                                dataCollectionType = DataCollectionType.GHYDRATION;
+                                break;
+                            case "activity":  // activity, (also inc. duration)
+                                dataCollectionType = DataCollectionType.GACTIVITY;
+                                isNutrition = false;
+                                break;
+                            case "food_item":  // nutrition summary
+                                dataCollectionType = DataCollectionType.GNUTRITION;
+                                break;
+                            case "steps":  // step count
+                                dataCollectionType = DataCollectionType.GSTEPS;
+                                isNutrition = false;
+                                break;
+                        }
+                        if (dataCollectionType != null) {
+                            Data data = new Data(parsed, dataCollectionType, dp.getValue(field).toString());
+                            if (isNutrition) {
+                                nutritionGeneral.add(data);
+                            } else {
+                                fitnessGeneral.add(data);
+                            }
                         }
                     }
-                }
             }
         }
 
@@ -1026,7 +1036,7 @@ public class MainActivity extends AppCompatActivity implements
             If the access token has expired, either open the browser for the user to reauthenticate,
             or uncheck the switch preference and state the permission needs to be given again.
              */
-            List<String> daysToAdd = new ArrayList<>();
+            List<String> daysToAdd;
             daysToAdd = getWeekDates();
 
             for (String date : daysToAdd){
@@ -1091,12 +1101,9 @@ public class MainActivity extends AppCompatActivity implements
                         Log.e(TAG, "Fitbit token is null");
                     }
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
+                } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
-
             }
     }
 }
