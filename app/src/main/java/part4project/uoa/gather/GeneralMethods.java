@@ -1,7 +1,5 @@
 package part4project.uoa.gather;
 
-import android.util.Log;
-
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataReadRequest;
 
@@ -53,9 +51,6 @@ class GeneralMethods {
         for (DataType dt : types) {
             builder.read(dt);
         }
-
-        Log.d("Time", startOfWeek.toString());
-        Log.d("Time", today.toString());
         return builder.setTimeRange(startOfWeek.getTime(), today.getTime(), TimeUnit.MILLISECONDS).build();
     }
 
@@ -117,10 +112,8 @@ class GeneralMethods {
                 //Read the input received
                 BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 String inputLine;
-                Log.d("general", "reader input: " + in.readLine());
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
-                    Log.d("fitbit", "general method: " + response);
                 }
                 in.close();
             } else if (responseCode == 401){
@@ -135,7 +128,6 @@ class GeneralMethods {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Log.d("fitbit", "general method return: " + response);
         return response;
     }
 
@@ -159,8 +151,6 @@ class GeneralMethods {
             currentDate = plusOneDay(currentDate);
             daysToAdd.add(currentDate);
         }
-
         return daysToAdd;
     }
-
 }

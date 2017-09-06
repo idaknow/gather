@@ -99,9 +99,6 @@ public class MainActivity extends AppCompatActivity implements
         WeekView.EventLongPressListener,
         WeekView.EmptyViewLongPressListener {
 
-    //Logging Data TAGs
-    private static final String TAG = "MainActivity";
-
     // Data lists
     public static List<Data> nutritionSocial = new LinkedList<>();
     public static List<Data> nutritionGeneral = new LinkedList<>();
@@ -139,7 +136,6 @@ public class MainActivity extends AppCompatActivity implements
         installedPackages = getPackageManager().getInstalledApplications(0);
         for (ApplicationInfo appInfo : installedPackages){
             String appName = (String)appInfo.loadLabel(getPackageManager());
-            Log.d(TAG, "app name: " + appName);
             if (appName.equals("Twitter")){
                 twitterInstalled = true;
             }
@@ -165,7 +161,6 @@ public class MainActivity extends AppCompatActivity implements
         if (actionbar != null) {
             actionbar.setDisplayShowTitleEnabled(false); // removes the title, so only the image logo is displayed
         }
-        Log.d(TAG, "Creating main page");
 
         setupDates();
         setupProgressDialog();
@@ -178,31 +173,22 @@ public class MainActivity extends AppCompatActivity implements
 
         // Setup Calendar
         setupCalendar();
-        Log.d("STATUS", "Created");
-
-
     }
 
     /**
      * Loops through the fitness and nutrition CSV files to retrieve their data and put it in the lists
      */
     private void setKeywords(){
-        Log.d("KEYWORDS","Setting up keywords");
         if (SocialMethods.isKeywordsNull()){
             List<Integer> keywordsIndexList = Arrays.asList(R.raw.fitness,R.raw.nutrition);
             for (int i = 0; i < keywordsIndexList.size(); i++){
-                Log.d("KEYWORDS", "index = " + i);
-
                 InputStream inputStream = getResources().openRawResource(keywordsIndexList.get(i));
                 CSVFile csvFile = new CSVFile(inputStream);
                 List keywordsList = csvFile.read();
-                Log.d("KEYWORDS","list = " + keywordsList.toString());
                 if (i == 0){
                     SocialMethods.setFitnessKeywords(keywordsList);
-                    Log.d("KEYWORDS", "set fitness");
                 } else {
                     SocialMethods.setNutritionKeywords(keywordsList);
-                    Log.d("KEYWORDS", "set nutrition");
                 }
             }
         }
@@ -253,10 +239,6 @@ public class MainActivity extends AppCompatActivity implements
 
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
-
-        Log.d("Date", "Range Start: " + startOfWeek);
-        Log.d("Date", "Range End: " + endOfWeek);
-        Log.d("Date", "Today " + today);
     }
 
     /**
@@ -403,7 +385,6 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
@@ -431,7 +412,6 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//            progress.show();
         }
 
         protected Void doInBackground(Void... params) { // called on a separate thread
@@ -447,8 +427,6 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            Log.d(TAG, "post execute");
-//            progress.dismiss();
             updateCalendarWithEvents();
         }
     }
@@ -558,9 +536,7 @@ public class MainActivity extends AppCompatActivity implements
 
                     Date parsed = getDate(time.toString(), true);
                     if (isDateInWeek(parsed)) {
-                        Log.d(TAG,"True for string " + value.toString());
                         if (doesStringContainKeyword(value.toString(), isNutrition)){
-                            Log.d(TAG, "Added string: " + dct.toString() + value);
                             Data data = new Data(parsed, dct, value.toString());
                             if (isNutrition){
                                 nutritionSocial.add(data);
@@ -572,7 +548,6 @@ public class MainActivity extends AppCompatActivity implements
 
                 }
             } catch (JSONException e){
-                Log.d(TAG,"Error: JSON Exception");
             } //TODO add error response
         }
 
@@ -583,9 +558,6 @@ public class MainActivity extends AppCompatActivity implements
             TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
             if (twitterApiClient != null){
                 SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // shared preferences
-
-                Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
-                Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
 
                 if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){ // checks if the user gave permission to favourites
                     displayFavouritedTweets(twitterApiClient);
@@ -626,9 +598,7 @@ public class MainActivity extends AppCompatActivity implements
                     for (int i = 0; i < data.size(); i++){
                         Date parsed = getDate(data.get(i).createdAt, false);
                         if (isDateInWeek(parsed)) {
-                            Log.d(TAG,"True for string " + data.get(i).toString());
                             if (doesStringContainKeyword(data.get(i).text, isNutrition)){
-                                Log.d(TAG, "Added Tweet: " + data.get(i));
                                 Data tweetData = new Data(parsed, DataCollectionType.TWEET, data.get(i).text);
                                 if (isNutrition){
                                     nutritionSocial.add(tweetData);
@@ -643,7 +613,6 @@ public class MainActivity extends AppCompatActivity implements
 
                 public void failure(TwitterException exception) {
                     //TODO: Add an error
-                    Log.d(TAG, "Didn't get the results");
                 }
             };
         }
@@ -660,9 +629,7 @@ public class MainActivity extends AppCompatActivity implements
             GraphRequest.Callback callback = new GraphRequest.Callback() {
                 @Override
                 public void onCompleted(GraphResponse response) {
-                    Log.d(TAG, "Successful completion of asynch call"); // TESTING
                     if (response != null && response.getJSONObject() != null){
-                        Log.d(TAG, "output : " + response.getJSONObject().toString()); // TESTING
                         getFacebookFitnessActions(response.getJSONObject()); // uses the response data to count the amount of fitness actions
                     }
                     updateCalendarWithEvents();
@@ -697,7 +664,6 @@ public class MainActivity extends AppCompatActivity implements
                 @Override
                 public void onBatchCompleted(GraphRequestBatch graphRequests) {
                     // Application code for when the batch finishes
-                    Log.d(TAG,"Graph Batch Executed"); // TESTING
                 }
             });
             batch.executeAsync();
@@ -711,10 +677,8 @@ public class MainActivity extends AppCompatActivity implements
             try {
                 JSONArray array = SocialMethods.getFitnessArray(jsonObject);
                 if (array != null && array.length() != 0) { // increment count if data object is not empty, depending on length of it
-                    Log.d(TAG, "fitness object = " + array.toString());
                     for (int i = 0; i < array.length(); i++){
                         JSONObject obj = array.getJSONObject(i);
-                        Log.d(TAG, "Fitness OBJ: " + obj.getString("end_time"));
                         String time = obj.getString("start_time");
                         Date parsed = getDate(time, true);
 
@@ -722,14 +686,11 @@ public class MainActivity extends AppCompatActivity implements
                             Data data = new Data(parsed, DataCollectionType.FFITNESS, obj.getString("type"));
                             fitnessSocial.add(data);
                         } else {
-                            Log.d(TAG, "Fitness data "+ obj.getString("type") + " isn't within the week" );
                         }
                     }
                 } else {
-                    Log.d(TAG, "fitness object is null");
                 }
             } catch (JSONException e) {
-                Log.d(TAG, "Error: JSON Exception");
             } //TODO: Error handling
         }
     }
@@ -740,11 +701,9 @@ public class MainActivity extends AppCompatActivity implements
 
         private void displayGeneral(boolean isNutrition){
             this.isNutrition = isNutrition;
-            Log.d(TAG, "display general method");
 
             // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
             if (mGoogleApiClient == null){
-                Log.d(TAG,"Google client is null");
                 GoogleFit gf = new GoogleFit();
                 gf.buildAndConnectClient(isNutrition); // TODO: Check switch pref
                 gf.subscribe();
@@ -789,7 +748,6 @@ public class MainActivity extends AppCompatActivity implements
                             new GoogleApiClient.ConnectionCallbacks() {
                                 @Override
                                 public void onConnected(Bundle bundle) {
-                                    Log.d(TAG, "Connected!!!");
                                     subscribe(); // double check
                                     displayLastWeeksData(isNutrition);
                                 }
@@ -799,9 +757,7 @@ public class MainActivity extends AppCompatActivity implements
                                     // If your connection to the sensor gets lost at some point,
                                     // you'll be able to determine the reason and react to it here.
                                     if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-                                        Log.d(TAG, "Connection lost.  Cause: Network Lost.");
                                     } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-                                        Log.d(TAG, "Connection lost.  Reason: Service Disconnected");
                                     }
                                 }
                             }
@@ -810,8 +766,7 @@ public class MainActivity extends AppCompatActivity implements
                     .enableAutoManage(MainActivity.this, 0, new GoogleApiClient.OnConnectionFailedListener() {
                         @Override
                         public void onConnectionFailed(@NonNull ConnectionResult result) {
-                            Log.i(TAG, "Google Play services connection failed. Cause: " +
-                                    result.toString());
+                                    result.toString();
                             Snackbar.make(
                                     MainActivity.this.findViewById(R.id.main_activity_view),
                                     "Exception while connecting to Google Play services: " +
@@ -829,7 +784,6 @@ public class MainActivity extends AppCompatActivity implements
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
 
             if (dataReadResult.getBuckets().size() > 0) { // Used for aggregated data
-                Log.d(TAG, "Number of buckets: " + dataReadResult.getBuckets().size());
                 for (Bucket bucket : dataReadResult.getBuckets()) {
                     List<DataSet> dataSets = bucket.getDataSets();
                     for (DataSet dataSet : dataSets) {
@@ -837,8 +791,6 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 }
             } else if (dataReadResult.getDataSets().size() > 0) { //Used for non-aggregated data
-                Log.d(TAG, "Number of returned DataSets: " + dataReadResult.getDataSets().size());
-
                 for (DataSet dataSet : dataReadResult.getDataSets()) {
                     showDataSet(dataSet);
                 }
@@ -846,23 +798,13 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void showDataSet(DataSet dataSet) {
-            Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
             DateFormat dateFormat = DateFormat.getDateInstance();
             DateFormat timeFormat = DateFormat.getTimeInstance();
 
             for (DataPoint dp : dataSet.getDataPoints()) {
-                Log.d(TAG, "Data point:");
-                Log.d(TAG, "\tType: " + dp.getDataType().getName());
-
-                Log.d(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-                Log.d(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-
                 Date parsed = new Date(dp.getStartTime(TimeUnit.MILLISECONDS));
-                Log.d(TAG, "Parsed data : " + parsed);
 
                 for(Field field : dp.getDataType().getFields()) {
-                    Log.d(TAG, "\tField: " + field.getName() +
-                            " Value: " + dp.getValue(field));
                     if (isDateInWeek(parsed)) {
                         if (field.getName().equals("calories")) {
                             Data data = new Data(parsed, DataCollectionType.GCALORIES, dp.getValue(field).toString());
@@ -888,12 +830,9 @@ public class MainActivity extends AppCompatActivity implements
                             public void onResult(@NonNull Status status) {
                                 if (status.isSuccess()) {
                                     if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                        Log.d(TAG, "Existing subscription for activity detected.");
                                     } else {
-                                        Log.d(TAG, "Successfully subscribed!");
                                     }
                                 } else {
-                                    Log.d(TAG, "There was a problem subscribing. " + status);
                                 }
                             }
                         });
@@ -919,16 +858,13 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.d(TAG, "HistoryAPI onConnectionSuspended");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "HistoryAPI onConnectionFailed");
     }
 
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "HistoryAPI onConnected");
     }
 
     @Override
@@ -963,8 +899,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void retrieveFitbitData() {
-            //set up the connection with the Authorisation header containing the user
-            //access token
             /*
             Set up the HTTPS connection to pull data
             The authorisation header needs to be set to contain the user access_token
@@ -973,8 +907,7 @@ public class MainActivity extends AppCompatActivity implements
             If the access token has expired, either open the browser for the user to reauthenticate,
             or uncheck the switch preference and state the permission needs to be given again.
              */
-            List<String> daysToAdd = new ArrayList<>();
-            daysToAdd = getWeekDates();
+            List<String> daysToAdd = getWeekDates();
 
             for (String date : daysToAdd){
                 String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate="
@@ -1011,15 +944,13 @@ public class MainActivity extends AppCompatActivity implements
                             }
                             in.close();
 
-//                    //Read the JSON response and process the results...
+//                          //Read the JSON response and process the results...
                             JSONObject jsonResponse = new JSONObject(response.toString());
                             JSONArray activities = jsonResponse.getJSONArray("activities");
-                            Log.d(TAG, "activity length: " + activities.length());
                             for (int i = 0; i < activities.length(); i++){
                                 JSONObject activity = activities.getJSONObject(i);
                                 Date startDate = generalGetDate(activity.getString("originalStartTime"));
                                 if (isDateInWeek(startDate)){
-                                    Log.d(TAG, "date in week: " + isDateInWeek(startDate));
                                     Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
                                     fitnessGeneral.add(data);
                                 }
@@ -1031,11 +962,9 @@ public class MainActivity extends AppCompatActivity implements
                             startActivity(SettingsActivity.browserIntent);
                         } else {
                             //Any other errors with the connection
-                            Log.e(TAG, "Fitbit: an error has occurred accessing user information");
                         }
                     } else {
                         //If the user hasn't given authentication yet then display a message notifying them
-                        Log.e(TAG, "Fitbit token is null");
                     }
 
                 } catch (IOException e) {

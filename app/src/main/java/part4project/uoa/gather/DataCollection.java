@@ -1,7 +1,5 @@
 package part4project.uoa.gather;
 
-import android.util.Log;
-
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,13 +36,11 @@ class DataCollection {
      */
     private static boolean[] loopThroughList(List<Data> list, boolean[] array){
         if (list != null) { // Checks isn't empty/ uninitialised
-            Log.d("Weeks","Nutrition general" + list.size());
             for (int i = 0; i < list.size(); i++){ // loops through each index
                 // Gets the difference in days (to get the index)
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
                 cal.setTime(list.get(i).getCreatedAt());
                 int days = getDiffDate(MainActivity.endOfWeek.getTime(), cal.getTime().getTime(), false);
-                Log.d("Weeks","days diff = " + days);
                 // Sets the array index as true
                 array[days] = true;
             }

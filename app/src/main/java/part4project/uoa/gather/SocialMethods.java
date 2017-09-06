@@ -1,25 +1,17 @@
 package part4project.uoa.gather;
 
-import android.util.Log;
-
 import com.facebook.AccessToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Scanner;
 
 /**
  * Created by Ida on 1/08/2017.
@@ -73,7 +65,6 @@ class SocialMethods {
             object = (JSONObject) jsonObject.get(name);
             array = (JSONArray) object.get(object.names().getString(0));
         } catch (JSONException e){
-            Log.d("SOCIAL", e.toString());
             return null;
         }
         return array;
@@ -90,7 +81,6 @@ class SocialMethods {
         try {
             array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
         } catch (JSONException e){
-            Log.d("SOCIAL", e.toString());
             return null;
         }
         return array;
@@ -175,4 +165,3 @@ class SocialMethods {
         return list;
     }
 }
-

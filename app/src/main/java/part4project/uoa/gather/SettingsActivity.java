@@ -123,7 +123,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         setupActionBar();
 
         data = getIntent().getData();
-        Log.i("App uri", String.valueOf(data));
         if (data != null) {
             String host = data.getHost();
             if (host.equals("fitbit")){
@@ -194,7 +193,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     //GOOGLEFIT Initialised variables
-    private static final String TAG2 = "GoogleFit"; // log Tag
     private static List<DataType> DATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY, DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     private static List<String> PREFNAMES = Arrays.asList("calories", "hydration", "nutrition", "activity", "step");
     private static Preference.OnPreferenceClickListener eachPreferenceListener;
@@ -252,10 +250,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             }
 
                             if (subscriptionContains){
-                                Log.d(TAG2, "Active subscription for data type: " + prefname);
                                 pref.setChecked(true);
                             } else {
-                                Log.d(TAG2, "Non-active subscription for data type: " + prefname);
                                 pref.setChecked(false);
                             }
                         }
@@ -297,7 +293,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void disconnectGoogleFit() {
             if (!MainActivity.mGoogleApiClient.isConnected()){
-                Log.d(TAG2, "Google Client API Wasn't connected");
                 MainActivity.mGoogleApiClient.connect();
             }
 
@@ -354,10 +349,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         @Override
                         public void onResult(@NonNull Status status) {
                             if (status.isSuccess()) {
-                                Log.i(TAG2, "Successfully unsubscribed for data type");
                             } else {
                                 // Subscription not removed
-                                Log.i(TAG2, "Failed to unsubscribe for data type");
                             }
                         }
                     });
@@ -369,19 +362,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * @param data : This is the data type that wants the subscription
          */
         private void subscribeToDataType(DataType data) {
-            Log.d(TAG2, "Subscribing " + data);
             Fitness.RecordingApi.subscribe(MainActivity.mGoogleApiClient, data)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
                             if (status.isSuccess()) {
                                 if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                    Log.d(TAG2, "Existing subscription for activity detected.");
                                 } else {
-                                    Log.d(TAG2, "Successfully subscribed!");
                                 }
                             } else {
-                                Log.d(TAG2, "There was a problem subscribing. " + status);
                             }
                         }
                     });
@@ -400,7 +389,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     //Fitbit variables
-    private static final String TAG3 = "Fitbit"; // log Tag
     private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition","fitbit_heartrate"); //Names of the preferences
     private static List<String> SCOPES = Arrays.asList("activity", "nutrition", "heartrate"); //Scopes that can be requested from Fitbit
     private static Preference.OnPreferenceClickListener fitbitPreferenceListener;
@@ -460,7 +448,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         try {
                             requestToken();
                         } catch (Exception e) {
-                            Log.e("Fitbit", "An error occurred when dealing with the auth url: " + e);
                         }
                     } else {
                         grantedfitbitPermissions.clear();
@@ -516,7 +503,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         private static void setToken(String uriFragment){
             String temp = uriFragment.split("&")[0];
             mainPreferences.edit().putString("access_token", temp.substring(13)).commit();
-            Log.d(TAG3, "Token: " + temp.substring(13));
         }
 
         /*
@@ -542,7 +528,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 
             } catch (Exception e) {
-                Log.d("Fitbit", e.toString());
             }
 
         }
@@ -592,7 +577,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     private static AccessTokenTracker accessTokenTracker;
     public static AccessToken accessToken;
     private static ProfileTracker profileTracker;
-    private static final String TAG = "Facebook"; // log Tag
     private static final List<String> PERMISSIONS = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness", "public_profile");
     private static final List<String> PREFERENCES = Arrays.asList("user_posts", "user_likes", "user_events", "user_actions.fitness");
     public static List<String> grantedFBPermissions = new LinkedList<>();
@@ -630,7 +614,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 @Override
                 public void onCancel() {
-                    Log.d(TAG, "Login Button Cancel");
                     if (changing_switch == null){
                         changing_switch = "social_media_all";
                     }
@@ -641,7 +624,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 @Override
                 public void onError(FacebookException exception) {
-                    Log.d(TAG, "Login Button Error");
                     if (changing_switch == null){
                         changing_switch = "social_media_all";
                     }
@@ -670,7 +652,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
                         changing_switch = preference.getKey();
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
 
@@ -679,11 +660,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             GraphRequest.Callback callback = new GraphRequest.Callback() {
                                 @Override
                                 public void onCompleted(GraphResponse response) {
-                                    Log.d(TAG, "Successful completion of asynch call ");
                                     if (response.getError()== null && response.getJSONObject() != null){ // checks not cancelled or an error
                                         accessToken = AccessToken.getCurrentAccessToken();
                                     } else { //TODO: Handle Errors & Test
-                                        Log.d(TAG, "response request " + response.getRequest());
                                     }
                                 }
                             };
@@ -698,13 +677,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             // removes from denied & adds to granted - Could change these to be calls to AccessTokenTracker but idk how
                             deniedFBPermissions.add(preference.getKey());
                             grantedFBPermissions.remove(preference.getKey());
-                            Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
                             Toast.makeText(getActivity(), "Changed permission " + switchPreference.getKey() + " for Facebook", Toast.LENGTH_SHORT).show();
                         } else { // asks for the permission when it's enabled again
                             LoginManager.getInstance().logInWithReadPermissions(
                                     getActivity(),
                                     Collections.singletonList(preference.getKey()));
-                            Log.d(TAG, "List Permissions are = " + grantedFBPermissions.toString());
                             Toast.makeText(getActivity(), "Changed permission " + preference.getKey() + " for Facebook", Toast.LENGTH_SHORT).show();
                         }
                         return true;
@@ -773,23 +750,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             SwitchPreference overall_pref = (SwitchPreference) getPreferenceManager().findPreference("social_media_all");
             overall_pref.setChecked(true);
             for (Object i : grantedFBPermissions){ // loops through all the granted permissions
-                Log.d(TAG, "granted permission " + i.toString()); //TESTING
                 SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                 if (granted_preference != null){
-                    Log.d(TAG, "granted preference = "+granted_preference.toString()); //TESTING
                     granted_preference.setChecked(true); // enables the switch preference
                 } else { // ERROR: permission granted doesn't exist as a switch preference
-                    Log.d(TAG, "ERROR: Null granted permission " + i.toString());
                 }
             }
             for (Object i : deniedFBPermissions){ // loops through all the denied permissions, disabling them accordingly
-                Log.d(TAG, "denied permission " + i.toString());
                 SwitchPreference denied_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                 if (denied_preference != null){
-                    Log.d(TAG, "denied_preference = "+denied_preference.toString());
                     denied_preference.setChecked(false);
                 } else { // ERROR: permission denied doesn't exist as a switch preference
-                    Log.d(TAG, "ERROR: Null denied permission " + i.toString());
                 }
             }
         }
@@ -805,7 +776,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static List<String> TWITTERPREFERENCES = Arrays.asList("favourites", "statuses"); // the names of the child switch preferences
     protected static TwitterLoginButton twitterLogin; // the component that isn't visible but is used to perform clicks
     private static TwitterSession session; // the twitter session variable
-    private static final String TAG4 = "Twitter"; // for logging
 
     public static class TwitterPreferenceFragment extends PreferenceFragment {
 
@@ -870,7 +840,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 permission.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Log.d(TAG, "Preference clicker for preference " + preference.getKey());
                         SwitchPreference switchPreference = (SwitchPreference) preference; // gets the preference
 
                         setVariable(preference.getKey(),switchPreference.isChecked());
@@ -897,9 +866,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean(preference, status); // set the boolean of the variable to the switch pref's value
             editor.apply();
-
-            Log.d("Twitter","Fav " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false));
-            Log.d("Twitter","Status " +prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false));
         }
 
         /**
@@ -911,7 +877,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void success(Result<TwitterSession> result) {
                     // The result provides a TwitterSession for making API calls
-                    Log.d(TAG4, "Successfull callback from Twitter");
                     session = TwitterCore.getInstance().getSessionManager().getActiveSession();
                     Toast.makeText(getActivity(), "Changed permissions for Twitter",Toast.LENGTH_LONG).show();
                 }
@@ -919,8 +884,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public void failure(TwitterException exception) {
                     Toast.makeText(getActivity(), "Twitter Login Failed",Toast.LENGTH_SHORT).show();
-                    Log.d(TAG4, "Failed callback from Twitter");
-                    Log.d(TAG4, "Check you have the Twitter app actually downloaded!"); //TODO add this check somehow
                     SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference("social_media_2_all");
                     switchPref.setChecked(false);
                     for (String i : TWITTERPREFERENCES){ // loop through the child preferences
@@ -969,7 +932,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference switchpref = (SwitchPreference) preference;
-
                     Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);
                     toast.show();
                     switchpref.setEnabled(false);
