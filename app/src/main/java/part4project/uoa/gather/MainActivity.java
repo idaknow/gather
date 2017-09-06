@@ -439,7 +439,6 @@ public class MainActivity extends AppCompatActivity implements
             generalNutritionClass.displayGeneral(true);
             General generalFitnessClass = new General();
             generalFitnessClass.displayGeneral(false);
-            addGeneralData();
             return null;
         }
 
