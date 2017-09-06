@@ -41,7 +41,7 @@ enum DataCollectionType {
             return "You interacted with tweet: ";
         }
     },
-    // GoogleFit Calories
+    // Google Fit Calories
     GCALORIES{
         @Override
         public String toString() {

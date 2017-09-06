@@ -437,6 +437,7 @@ public class MainActivity extends AppCompatActivity implements
         protected Void doInBackground(Void... params) { // called on a separate thread
             nutritionGeneral = new LinkedList<>();
             fitnessGeneral = new LinkedList<>();
+//            addGeneralData();
             General generalNutritionClass = new General();
             generalNutritionClass.displayGeneral(true);
             General generalFitnessClass = new General();
@@ -461,6 +462,27 @@ public class MainActivity extends AppCompatActivity implements
         isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
         isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
         mWeekView.notifyDatasetChanged();
+    }
+
+    public void addGeneralData(){
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+        cal.setTime(startOfWeek);
+        cal.set(Calendar.HOUR_OF_DAY,16);
+        // Date createdAt, DataCollectionType type, String value
+        Data G_CALORIES_1 = new Data(cal.getTime(), DataCollectionType.GCALORIES,"1,230.03");
+        nutritionGeneral.add(G_CALORIES_1);
+
+        cal.set(Calendar.HOUR_OF_DAY, 14);
+        Data F_ACTIVITY_1 = new Data(cal.getTime(), DataCollectionType.ACTIVITY,"Run");
+        nutritionGeneral.add(F_ACTIVITY_1);
+
+
+
+        cal.set(2018,9,7,19,27);
+        Data G_CALORIES_2 = new Data(cal.getTime(), DataCollectionType.GCALORIES,"200.79");
+        nutritionGeneral.add(G_CALORIES_2);
+
+//        cal.setTime()
     }
 
     /**
