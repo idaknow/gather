@@ -447,7 +447,7 @@ public class MainActivity extends AppCompatActivity implements
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
 //            progress.dismiss();
-//            updateCalendarWithEvents();
+            updateCalendarWithEvents();
         }
     }
 
@@ -467,16 +467,19 @@ public class MainActivity extends AppCompatActivity implements
         nutritionGeneral.add(G_CALORIES_1);
 
         cal.set(Calendar.HOUR_OF_DAY, 14);
+//        cal.set(Calendar.MINUTE,27);
         Data F_ACTIVITY_1 = new Data(cal.getTime(), DataCollectionType.ACTIVITY,"Run");
-        nutritionGeneral.add(F_ACTIVITY_1);
+        fitnessGeneral.add(F_ACTIVITY_1);
 
-
-
-        cal.set(2018,9,7,19,27);
+        cal.set(Calendar.DAY_OF_MONTH,5);
+        cal.set(Calendar.HOUR_OF_DAY, 20);
         Data G_CALORIES_2 = new Data(cal.getTime(), DataCollectionType.GCALORIES,"200.79");
         nutritionGeneral.add(G_CALORIES_2);
 
-//        cal.setTime()
+        cal.set(Calendar.HOUR_OF_DAY, 21);
+        Data F_ACTIVITY_2 = new Data(cal.getTime(), DataCollectionType.ACTIVITY,"Swim");
+        fitnessGeneral.add(F_ACTIVITY_2);
+
     }
 
     /**
