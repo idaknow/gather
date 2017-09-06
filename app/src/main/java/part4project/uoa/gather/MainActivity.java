@@ -849,39 +849,33 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void showDataSet(DataSet dataSet) {
-            Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-            DateFormat dateFormat = DateFormat.getDateInstance();
-            DateFormat timeFormat = DateFormat.getTimeInstance();
-
             for (DataPoint dp : dataSet.getDataPoints()) {
-                Log.d(TAG, "Data point:");
-                Log.d(TAG, "\tType: " + dp.getDataType().getName());
-
-                Log.d(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-                Log.d(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)) + " " + timeFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-
                 Date parsed = new Date(dp.getStartTime(TimeUnit.MILLISECONDS));
-                Log.d(TAG, "Parsed data : " + parsed);
 
                 for(Field field : dp.getDataType().getFields()) {
-                    Log.d(TAG, "\tField: " + field.getName() +
-                            " Value: " + dp.getValue(field));
                     if (isDateInWeek(parsed)) {
-                        DataCollectionType d = null;
+                        DataCollectionType dataCollectionType = null;
+                        boolean isNutrition = true;
                         if (field.getName().equals("calories")) { // calories expended
-                            d = DataCollectionType.GCALORIES;
+                            dataCollectionType = DataCollectionType.GCALORIES;
                         } else if (field.getName().equals("field_volume")){ // hydration
-                            d = DataCollectionType.GHYDRATION;
+                            dataCollectionType = DataCollectionType.GHYDRATION;
                         } else if (field.getName().equals("activity")){ // activity, (also inc. duration)
-                            d = DataCollectionType.GACTIVITY;
+                            dataCollectionType = DataCollectionType.GACTIVITY;
+                            isNutrition = false;
                         } else if (field.getName().equals("food_item")){ // nutrition summary
-                            d = DataCollectionType.GNUTRITION;
+                            dataCollectionType = DataCollectionType.GNUTRITION;
                         } else if (field.getName().equals("steps")){ // step count
-                            d = DataCollectionType.GSTEPS;
+                            dataCollectionType = DataCollectionType.GSTEPS;
+                            isNutrition = false;
                         }
-                        if (d != null) {
-                            Data data = new Data(parsed, DataCollectionType.GCALORIES, dp.getValue(field).toString());
-                            nutritionGeneral.add(data);
+                        if (dataCollectionType != null) {
+                            Data data = new Data(parsed, dataCollectionType, dp.getValue(field).toString());
+                            if (isNutrition) {
+                                nutritionGeneral.add(data);
+                            } else {
+                                fitnessGeneral.add(data);
+                            }
                         }
                     }
                 }
