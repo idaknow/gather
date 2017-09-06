@@ -10,7 +10,7 @@ enum DataCollectionType {
     FPOST{
         @Override
         public String toString() {
-            return "You interacted with status: ";
+            return "You posted the status: ";
         }
     },
     // Facebook Event
