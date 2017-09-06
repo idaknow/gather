@@ -791,7 +791,8 @@ public class MainActivity extends AppCompatActivity implements
                                 public void onConnected(Bundle bundle) {
                                     Log.d(TAG, "Connected!!!");
                                     subscribe(); // double check
-                                    displayLastWeeksData(isNutrition);
+                                    //displayLastWeeksData(isNutrition);
+                                    new GFTask().execute();
                                 }
 
                                 @Override
@@ -821,6 +822,14 @@ public class MainActivity extends AppCompatActivity implements
                     })
                     .build();
             mGoogleApiClient.connect();
+        }
+
+        private class GFTask extends AsyncTask<Void, Void, Void> {
+            @Override
+            protected Void doInBackground(Void... params) {
+                displayLastWeeksData(true);
+                return null;
+            }
         }
 
         private void displayLastWeeksData(boolean isNutrition){
