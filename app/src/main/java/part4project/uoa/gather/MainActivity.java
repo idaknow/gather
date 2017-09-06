@@ -446,7 +446,7 @@ public class MainActivity extends AppCompatActivity implements
             super.onPostExecute(aVoid);
             Log.d(TAG, "post execute");
 //            progress.dismiss();
-//            updateCalendarWithEvents();
+            updateCalendarWithEvents();
         }
     }
 
