@@ -10,7 +10,7 @@ enum DataCollectionType {
     FPOST{
         @Override
         public String toString() {
-            return "You interacted with status: ";
+            return "You posted the status: ";
         }
     },
     // Facebook Event
@@ -41,7 +41,7 @@ enum DataCollectionType {
             return "You interacted with tweet: ";
         }
     },
-    // GoogleFit Calories
+    // Google Fit Calories
     GCALORIES{
         @Override
         public String toString() {

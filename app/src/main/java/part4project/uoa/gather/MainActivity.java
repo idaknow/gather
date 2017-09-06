@@ -113,9 +113,6 @@ public class MainActivity extends AppCompatActivity implements
     public static final List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
 
-    boolean[] isFitness = new boolean[7];
-    boolean[] isNutrition = new boolean[7];
-
     WeekView mWeekView; // Calendar
     ProgressDialog progress; // loading
     TwitterSession session; // Twitter Session
@@ -454,12 +451,9 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * This re-initialises the weeks data into boolean functions and notifies the calendar of event changes
-     * this is called to update the UI Calendar
+     * This notifies the calendar of event changes, to update the UI Calendar
      */
     public void updateCalendarWithEvents(){
-        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
         mWeekView.notifyDatasetChanged();
     }
 
@@ -791,7 +785,8 @@ public class MainActivity extends AppCompatActivity implements
                                 public void onConnected(Bundle bundle) {
                                     Log.d(TAG, "Connected!!!");
                                     subscribe(); // double check
-                                    displayLastWeeksData(isNutrition);
+                                    //displayLastWeeksData(isNutrition);
+                                    new GFTask().execute();
                                 }
 
                                 @Override
@@ -821,6 +816,14 @@ public class MainActivity extends AppCompatActivity implements
                     })
                     .build();
             mGoogleApiClient.connect();
+        }
+
+        private class GFTask extends AsyncTask<Void, Void, Void> {
+            @Override
+            protected Void doInBackground(Void... params) {
+                displayLastWeeksData(true);
+                return null;
+            }
         }
 
         private void displayLastWeeksData(boolean isNutrition){
