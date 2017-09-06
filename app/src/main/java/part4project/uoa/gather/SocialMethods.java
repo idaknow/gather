@@ -8,18 +8,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Scanner;
 
 /**
  * Created by Ida on 1/08/2017.
@@ -142,12 +136,9 @@ class SocialMethods {
     * Checks if user posts, user likes and user events permissions are granted
     * @return true or false whether all 3 permissions are granted
     */
-    static boolean checkPermissionsFB(){
+    static boolean checkPermissionsFB() {
         List<String> grantedPermissions = getFBPermissions(true); // gets all granted permissions
-        if (grantedPermissions != null){
-            return grantedPermissions.contains("user_posts") || grantedPermissions.contains("user_likes") || grantedPermissions.contains("user_events");
-        }
-        return false;
+        return grantedPermissions != null && (grantedPermissions.contains("user_posts") || grantedPermissions.contains("user_likes") || grantedPermissions.contains("user_events"));
     }
 
     /**

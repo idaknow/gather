@@ -5,6 +5,7 @@
     <SwitchPreference
         android:defaultValue="false"
         android:key="fitbit_all"
+        android:icon="@drawable/fitbit_24"
         android:title="Fitbit"
         android:tag="fitbit_parent" />
 

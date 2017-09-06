@@ -7,7 +7,7 @@
     <SwitchPreference
         android:id="@+id/social_media_2_all"
         android:defaultValue="false"
-        android:icon="@drawable/tw__ic_logo_default"
+        android:icon="@drawable/twitter_24"
         android:key="social_media_2_all"
         android:title="@string/social_media_app_2_name" />
 

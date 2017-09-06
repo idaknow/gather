@@ -1,7 +1,5 @@
 package part4project.uoa.gather;
 
-import android.util.Log;
-
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
