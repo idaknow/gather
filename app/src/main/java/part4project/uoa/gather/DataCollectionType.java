@@ -47,5 +47,12 @@ enum DataCollectionType {
         public String toString() {
             return "Calories expended are: ";
         }
+    },
+    // Fitbit Calories
+    ACTIVITY{
+        @Override
+        public String toString() {
+            return "You logged an activity on Fitbit: ";
+        }
     }
 }

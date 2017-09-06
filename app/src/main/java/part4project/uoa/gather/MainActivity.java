@@ -66,6 +66,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -85,6 +86,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 import retrofit2.Call;
 
+import static part4project.uoa.gather.GeneralMethods.generalGetDate;
+import static part4project.uoa.gather.GeneralMethods.getWeekDates;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
@@ -123,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements
     public static Date today;
 
     //Get SharedPreferences for Fitbit to store access token and to store first_time flag
-    public static SharedPreferences mainPreferences = null;
+    public static SharedPreferences mainPreferences;
     final String PREFS_NAME = "MainPreferencesFile";
     public List<ApplicationInfo> installedPackages;
     public static boolean twitterInstalled = false;
@@ -167,22 +170,11 @@ public class MainActivity extends AppCompatActivity implements
         setupDates();
         setupProgressDialog();
 
-        // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
-        if (mGoogleApiClient == null){
-            Log.d(TAG,"Google client is null");
-            GoogleFit gf = new GoogleFit();
-            gf.buildAndConnectClient(); // TODO: Check switch pref
-            gf.subscribe();
-        } else {
-            mWeekView = (WeekView) findViewById(R.id.weekView);
-            updateCalendarWithEvents();
-        }
-
-        //Get user information from Fitbit by starting the Async Task
-        new FitbitSummaryTask().execute();
-
         // SOCIAL TASK
         new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+        //GENERAL TASK
+        new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         // Setup Calendar
         setupCalendar();
@@ -442,7 +434,7 @@ public class MainActivity extends AppCompatActivity implements
 //            progress.show();
         }
 
-        protected Void doInBackground(Void... params) { // called on a seperate thread
+        protected Void doInBackground(Void... params) { // called on a separate thread
             nutritionGeneral = new LinkedList<>();
             fitnessGeneral = new LinkedList<>();
             General generalNutritionClass = new General();
@@ -748,10 +740,90 @@ public class MainActivity extends AppCompatActivity implements
 
         private void displayGeneral(boolean isNutrition){
             this.isNutrition = isNutrition;
-            displayLastWeeksData();
+            Log.d(TAG, "display general method");
+
+            // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
+            if (mGoogleApiClient == null){
+                Log.d(TAG,"Google client is null");
+                GoogleFit gf = new GoogleFit();
+                gf.buildAndConnectClient(isNutrition); // TODO: Check switch pref
+                gf.subscribe();
+            } else {
+                mWeekView = (WeekView) findViewById(R.id.weekView);
+                updateCalendarWithEvents();
+            }
+
+            String accessToken = mainPreferences.getString("access_token", null);
+            if (accessToken != null) {
+                if (isNutrition) {
+
+                } else {
+                    retrieveFitbitData();
+                }
+            } else {
+
+            }
         }
 
-        private void displayLastWeeksData(){
+    }
+
+    /**
+     * Moved all GoogleFit instantiation into its own class
+     * NOTE: has to stay in this activity because it uses mGoogleAPIClient
+     * which doesn't work well connecting to in other classes
+     */
+    private class GoogleFit{
+        /**
+         * Builds to google client with the required scopes (permissions)
+         */
+        void buildAndConnectClient(final boolean isNutrition){
+            mGoogleApiClient = new GoogleApiClient.Builder(MainActivity.this)
+                    .addApi(Fitness.HISTORY_API)
+                    .addApi(Fitness.RECORDING_API)
+                    .addApi(Fitness.CONFIG_API)
+                    .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
+                    .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
+                    .addScope(new Scope(Scopes.FITNESS_BODY_READ))
+                    .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
+                    .addConnectionCallbacks(
+                            new GoogleApiClient.ConnectionCallbacks() {
+                                @Override
+                                public void onConnected(Bundle bundle) {
+                                    Log.d(TAG, "Connected!!!");
+                                    subscribe(); // double check
+                                    displayLastWeeksData(isNutrition);
+                                }
+
+                                @Override
+                                public void onConnectionSuspended(int i) {
+                                    // If your connection to the sensor gets lost at some point,
+                                    // you'll be able to determine the reason and react to it here.
+                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+                                        Log.d(TAG, "Connection lost.  Cause: Network Lost.");
+                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+                                        Log.d(TAG, "Connection lost.  Reason: Service Disconnected");
+                                    }
+                                }
+                            }
+
+                    )
+                    .enableAutoManage(MainActivity.this, 0, new GoogleApiClient.OnConnectionFailedListener() {
+                        @Override
+                        public void onConnectionFailed(@NonNull ConnectionResult result) {
+                            Log.i(TAG, "Google Play services connection failed. Cause: " +
+                                    result.toString());
+                            Snackbar.make(
+                                    MainActivity.this.findViewById(R.id.main_activity_view),
+                                    "Exception while connecting to Google Play services: " +
+                                            result.getErrorMessage(),
+                                    Snackbar.LENGTH_INDEFINITE).show();
+                        }
+                    })
+                    .build();
+            mGoogleApiClient.connect();
+        }
+
+        private void displayLastWeeksData(boolean isNutrition){
             // The read requests made to the list of datatypes
             DataReadRequest readRequest = GeneralMethods.queryData(isNutrition);
             DataReadResult dataReadResult = Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
@@ -799,63 +871,6 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Moved all GoogleFit instantiation into its own class
-     * NOTE: has to stay in this activity because it uses mGoogleAPIClient
-     * which doesn't work well connecting to in other classes
-     */
-    private class GoogleFit{
-        /**
-         * Builds to google client with the required scopes (permissions)
-         */
-        void buildAndConnectClient(){
-            mGoogleApiClient = new GoogleApiClient.Builder(MainActivity.this)
-                    .addApi(Fitness.HISTORY_API)
-                    .addApi(Fitness.RECORDING_API)
-                    .addApi(Fitness.CONFIG_API)
-                    .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
-                    .addScope(new Scope(Scopes.FITNESS_NUTRITION_READ))
-                    .addScope(new Scope(Scopes.FITNESS_BODY_READ))
-                    .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-                    .addConnectionCallbacks(
-                            new GoogleApiClient.ConnectionCallbacks() {
-                                @Override
-                                public void onConnected(Bundle bundle) {
-                                    Log.d(TAG, "Connected!!!");
-                                    subscribe(); // double check
-                                    new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                                }
-
-                                @Override
-                                public void onConnectionSuspended(int i) {
-                                    // If your connection to the sensor gets lost at some point,
-                                    // you'll be able to determine the reason and react to it here.
-                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-                                        Log.d(TAG, "Connection lost.  Cause: Network Lost.");
-                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-                                        Log.d(TAG, "Connection lost.  Reason: Service Disconnected");
-                                    }
-                                }
-                            }
-
-                    )
-                    .enableAutoManage(MainActivity.this, 0, new GoogleApiClient.OnConnectionFailedListener() {
-                        @Override
-                        public void onConnectionFailed(@NonNull ConnectionResult result) {
-                            Log.i(TAG, "Google Play services connection failed. Cause: " +
-                                    result.toString());
-                            Snackbar.make(
-                                    MainActivity.this.findViewById(R.id.main_activity_view),
-                                    "Exception while connecting to Google Play services: " +
-                                            result.getErrorMessage(),
-                                    Snackbar.LENGTH_INDEFINITE).show();
-                        }
-                    })
-                    .build();
-            mGoogleApiClient.connect();
         }
 
         /**
@@ -947,21 +962,7 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
-//FITBIT
-
-    private class FitbitSummaryTask extends AsyncTask<Void, Void, Void> {
-        protected Void doInBackground(Void... params) {
-            Log.d(TAG, "fitbit async");
-            retrieveFitbitData();
-            return null;
-        }
-    }
-
     public void retrieveFitbitData() {
-        try {
-
-            Log.d(TAG, "fitbit retrieval");
-
             //set up the connection with the Authorisation header containing the user
             //access token
             /*
@@ -972,62 +973,77 @@ public class MainActivity extends AppCompatActivity implements
             If the access token has expired, either open the browser for the user to reauthenticate,
             or uncheck the switch preference and state the permission needs to be given again.
              */
-            String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/date/2017-01-20.json";
-            URL url = new URL(dataRequestUrl);
-            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            conn.setReadTimeout(10000);//this is in milliseconds
-            conn.setConnectTimeout(15000);//this is in milliseconds
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
+            List<String> daysToAdd = new ArrayList<>();
+            daysToAdd = getWeekDates();
 
-            String access_token = mainPreferences.getString("access_token", null);
-            if (access_token != null) {
-                conn.addRequestProperty("Authorization", "Bearer " + access_token);
+            for (String date : daysToAdd){
+                String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate="
+                        + date + "&sort=asc&limit=20&offset=0";
+                URL url;
+                try {
+                    url = new URL(dataRequestUrl);
+                    HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                    conn.setReadTimeout(10000);//this is in milliseconds
+                    conn.setConnectTimeout(15000);//this is in milliseconds
+                    conn.setRequestMethod("GET");
+                    conn.setDoInput(true);
 
-                //Send the request
-                int responseCode = conn.getResponseCode();
-                String responseType = conn.getContentType();
-                Log.d(TAG, "\nResponse Type : " + responseType);
-                Log.d(TAG, "Response Code : " + responseCode);
+                    String access_token = mainPreferences.getString("access_token", null);
+                    if (access_token != null) {
 
-                //Check to make sure that the connection has been made successfully before trying to
-                //read data.
-                if (responseCode == 201) {
+                        conn.addRequestProperty("Authorization", "Bearer " + access_token);
 
-                    //Read the input received
-                    BufferedReader in = new BufferedReader(
-                            new InputStreamReader(conn.getInputStream()));
-                    String inputLine;
-                    StringBuffer response = new StringBuffer();
+                        //Send the request
+                        int responseCode = conn.getResponseCode();
 
-                    while ((inputLine = in.readLine()) != null) {
-                        response.append(inputLine);
+                        //Check to make sure that the connection has been made successfully before trying to
+                        //read data.
+                        if (responseCode == 200) {
+
+                            //Read the input received
+                            BufferedReader in = new BufferedReader(
+                                    new InputStreamReader(conn.getInputStream()));
+                            String inputLine;
+                            StringBuffer response = new StringBuffer();
+
+                            while ((inputLine = in.readLine()) != null) {
+                                response.append(inputLine);
+                            }
+                            in.close();
+
+//                    //Read the JSON response and process the results...
+                            JSONObject jsonResponse = new JSONObject(response.toString());
+                            JSONArray activities = jsonResponse.getJSONArray("activities");
+                            Log.d(TAG, "activity length: " + activities.length());
+                            for (int i = 0; i < activities.length(); i++){
+                                JSONObject activity = activities.getJSONObject(i);
+                                Date startDate = generalGetDate(activity.getString("originalStartTime"));
+                                if (isDateInWeek(startDate)){
+                                    Log.d(TAG, "date in week: " + isDateInWeek(startDate));
+                                    Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
+                                    fitnessGeneral.add(data);
+                                }
+                            }
+                        } else if (responseCode == 401 ){
+                            //401 is returned if the token has expired.
+                            //Either take user to authentication page by opening browser?
+                            SettingsActivity.browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.fitbitAuthLink));
+                            startActivity(SettingsActivity.browserIntent);
+                        } else {
+                            //Any other errors with the connection
+                            Log.e(TAG, "Fitbit: an error has occurred accessing user information");
+                        }
+                    } else {
+                        //If the user hasn't given authentication yet then display a message notifying them
+                        Log.e(TAG, "Fitbit token is null");
                     }
-                    in.close();
-                } else if (responseCode == 401 ){ //401 is returned if the token has expired.
-                    //Either take user to authentication page by opening browser?
-                    Log.e(TAG, "access token for fitbit has expired..needs to be requested again");
-                    SettingsActivity.browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.fitbitAuthLink));
-                    startActivity(SettingsActivity.browserIntent);
-                } else { //Any other errors with the connection
-                    Log.e(TAG, "an error has occured accessing user information, fitbit");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } else { //If the user hasn't given authentication yet then display a message notifying them
-                Log.e(TAG, "fitbit token is null");
+
             }
-
-            //Read the JSON response and process the results...
-//            JSONObject jsonResponse = JSONObject.parse(response.toString());
-//            Log.d(TAG, "first response: " + response);
-//            Log.d(TAG, response.getJSON);
-//            JSONObject goalSteps = response.getJSONObject('goals');
-//            Log.d(TAG, "steps " + goalSteps);
-
-
-        } catch (Exception e) {
-            Log.d("Fitbit", e.toString());
-        }
-
     }
-
 }
