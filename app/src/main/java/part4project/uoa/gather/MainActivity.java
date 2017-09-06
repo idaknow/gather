@@ -407,6 +407,7 @@ public class MainActivity extends AppCompatActivity implements
             // clear both the social lists
             nutritionSocial = new LinkedList<>();
             fitnessSocial = new LinkedList<>();
+            addSocialData();
             // Begins the social nutrition data collection
             Social socialNutritionClass = new Social();
             socialNutritionClass.displaySocial(true);
@@ -479,6 +480,31 @@ public class MainActivity extends AppCompatActivity implements
         cal.set(Calendar.HOUR_OF_DAY, 21);
         Data F_ACTIVITY_2 = new Data(cal.getTime(), DataCollectionType.ACTIVITY,"Swim");
         fitnessGeneral.add(F_ACTIVITY_2);
+
+    }
+
+    public void addSocialData(){
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
+        cal.setTime(startOfWeek);
+        cal.set(Calendar.HOUR_OF_DAY,12);
+        // Date createdAt, DataCollectionType type, String value
+        Data TWEET = new Data(cal.getTime(), DataCollectionType.TWEET,"Woke up this morning to this beautiful sunrise & went for a 14km run on the beach! Love productive mornings.");
+        fitnessSocial.add(TWEET);
+
+        cal.set(Calendar.DAY_OF_MONTH,5);
+        cal.set(Calendar.HOUR_OF_DAY, 14);
+        Data FEVENT = new Data(cal.getTime(), DataCollectionType.FEVENT,"Ocean Swim Series");
+        fitnessSocial.add(FEVENT);
+
+        cal.set(Calendar.HOUR_OF_DAY, 22);
+        cal.set(Calendar.MINUTE, 29);
+        Data FPOST = new Data(cal.getTime(), DataCollectionType.FPOST,"What a lovely evening for a walk with my hubby and puppy. #thelittlethings");
+        fitnessSocial.add(FPOST);
+
+        cal.set(Calendar.DAY_OF_MONTH,6);
+        cal.set(Calendar.HOUR_OF_DAY, 19);
+        Data FLIKE = new Data(cal.getTime(), DataCollectionType.FLIKE,"Making nutritious food choices");
+        nutritionSocial.add(FLIKE);
 
     }
 
