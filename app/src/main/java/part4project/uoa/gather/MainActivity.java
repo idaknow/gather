@@ -70,7 +70,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,9 +108,6 @@ public class MainActivity extends AppCompatActivity implements
     public static final List<DataType> NUTRITIONDATATYPES = Arrays.asList(DataType.AGGREGATE_CALORIES_EXPENDED, DataType.AGGREGATE_HYDRATION, DataType.AGGREGATE_NUTRITION_SUMMARY);
     public static final List<DataType> FITNESSDATATYPES = Arrays.asList(DataType.AGGREGATE_ACTIVITY_SUMMARY, DataType.AGGREGATE_STEP_COUNT_DELTA);
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
-
-    boolean[] isFitness = new boolean[7];
-    boolean[] isNutrition = new boolean[7];
 
     WeekView mWeekView; // Calendar
     ProgressDialog progress; // loading
@@ -432,12 +428,9 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * This re-initialises the weeks data into boolean functions and notifies the calendar of event changes
-     * this is called to update the UI Calendar
+     * This notifies the calendar of event changes, to update the UI Calendar
      */
     public void updateCalendarWithEvents(){
-        isFitness = DataCollection.getWeeksData(fitnessGeneral, fitnessSocial);
-        isNutrition = DataCollection.getWeeksData(nutritionGeneral, nutritionSocial);
         mWeekView.notifyDatasetChanged();
     }
 
@@ -749,7 +742,8 @@ public class MainActivity extends AppCompatActivity implements
                                 @Override
                                 public void onConnected(Bundle bundle) {
                                     subscribe(); // double check
-                                    displayLastWeeksData(isNutrition);
+                                    //displayLastWeeksData(isNutrition);
+                                    new GFTask().execute();
                                 }
 
                                 @Override
@@ -778,6 +772,14 @@ public class MainActivity extends AppCompatActivity implements
             mGoogleApiClient.connect();
         }
 
+        private class GFTask extends AsyncTask<Void, Void, Void> {
+            @Override
+            protected Void doInBackground(Void... params) {
+                displayLastWeeksData(true);
+                return null;
+            }
+        }
+
         private void displayLastWeeksData(boolean isNutrition){
             // The read requests made to the list of datatypes
             DataReadRequest readRequest = GeneralMethods.queryData(isNutrition);
@@ -798,20 +800,42 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         private void showDataSet(DataSet dataSet) {
-            DateFormat dateFormat = DateFormat.getDateInstance();
-            DateFormat timeFormat = DateFormat.getTimeInstance();
 
             for (DataPoint dp : dataSet.getDataPoints()) {
                 Date parsed = new Date(dp.getStartTime(TimeUnit.MILLISECONDS));
 
-                for(Field field : dp.getDataType().getFields()) {
+                for(Field field : dp.getDataType().getFields())
                     if (isDateInWeek(parsed)) {
-                        if (field.getName().equals("calories")) {
-                            Data data = new Data(parsed, DataCollectionType.GCALORIES, dp.getValue(field).toString());
-                            nutritionGeneral.add(data);
+                        DataCollectionType dataCollectionType = null;
+                        boolean isNutrition = true;
+                        switch (field.getName()) {
+                            case "calories":  // calories expended
+                                dataCollectionType = DataCollectionType.GCALORIES;
+                                break;
+                            case "field_volume":  // hydration
+                                dataCollectionType = DataCollectionType.GHYDRATION;
+                                break;
+                            case "activity":  // activity, (also inc. duration)
+                                dataCollectionType = DataCollectionType.GACTIVITY;
+                                isNutrition = false;
+                                break;
+                            case "food_item":  // nutrition summary
+                                dataCollectionType = DataCollectionType.GNUTRITION;
+                                break;
+                            case "steps":  // step count
+                                dataCollectionType = DataCollectionType.GSTEPS;
+                                isNutrition = false;
+                                break;
+                        }
+                        if (dataCollectionType != null) {
+                            Data data = new Data(parsed, dataCollectionType, dp.getValue(field).toString());
+                            if (isNutrition) {
+                                nutritionGeneral.add(data);
+                            } else {
+                                fitnessGeneral.add(data);
+                            }
                         }
                     }
-                }
             }
         }
 
@@ -967,12 +991,9 @@ public class MainActivity extends AppCompatActivity implements
                         //If the user hasn't given authentication yet then display a message notifying them
                     }
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
+                } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
-
             }
     }
 }
