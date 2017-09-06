@@ -48,6 +48,34 @@ enum DataCollectionType {
             return "Calories expended are: ";
         }
     },
+    // Google Fit Nutrition
+    GNUTRITION{
+        @Override
+        public String toString() {
+            return "You ate the following food item: ";
+        }
+    },
+    // Google Fit Hydration
+    GHYDRATION{
+        @Override
+        public String toString() {
+            return "Your water consumption (in liters): ";
+        }
+    },
+    // Google Fit Step Count
+    GSTEPS{
+        @Override
+        public String toString() {
+            return "You did the following amount of steps: ";
+        }
+    },
+    // Google Fit Activity
+    GACTIVITY{
+        @Override
+        public String toString() {
+            return "You did the following exercise: ";
+        }
+    },
     // Fitbit Calories
     ACTIVITY{
         @Override

@@ -867,7 +867,19 @@ public class MainActivity extends AppCompatActivity implements
                     Log.d(TAG, "\tField: " + field.getName() +
                             " Value: " + dp.getValue(field));
                     if (isDateInWeek(parsed)) {
-                        if (field.getName().equals("calories")) {
+                        DataCollectionType d = null;
+                        if (field.getName().equals("calories")) { // calories expended
+                            d = DataCollectionType.GCALORIES;
+                        } else if (field.getName().equals("field_volume")){ // hydration
+                            d = DataCollectionType.GHYDRATION;
+                        } else if (field.getName().equals("activity")){ // activity, (also inc. duration)
+                            d = DataCollectionType.GACTIVITY;
+                        } else if (field.getName().equals("food_item")){ // nutrition summary
+                            d = DataCollectionType.GNUTRITION;
+                        } else if (field.getName().equals("steps")){ // step count
+                            d = DataCollectionType.GSTEPS;
+                        }
+                        if (d != null) {
                             Data data = new Data(parsed, DataCollectionType.GCALORIES, dp.getValue(field).toString());
                             nutritionGeneral.add(data);
                         }
