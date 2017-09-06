@@ -70,7 +70,7 @@ class GeneralMethods {
         return parsed;
     }
 
-    static String generalGetDateOnly(String formattedDate){
+    private static String generalGetDateOnly(String formattedDate){
         String newDate;
         try {
             Date date = originalFormat.parse(formattedDate);
@@ -82,7 +82,7 @@ class GeneralMethods {
         return newDate;
     }
 
-    static String plusOneDay(String original){
+    private static String plusOneDay(String original){
         String newDate = "";
 
         Calendar c = Calendar.getInstance();

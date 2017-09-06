@@ -70,7 +70,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -852,22 +851,28 @@ public class MainActivity extends AppCompatActivity implements
             for (DataPoint dp : dataSet.getDataPoints()) {
                 Date parsed = new Date(dp.getStartTime(TimeUnit.MILLISECONDS));
 
-                for(Field field : dp.getDataType().getFields()) {
+                for(Field field : dp.getDataType().getFields())
                     if (isDateInWeek(parsed)) {
                         DataCollectionType dataCollectionType = null;
                         boolean isNutrition = true;
-                        if (field.getName().equals("calories")) { // calories expended
-                            dataCollectionType = DataCollectionType.GCALORIES;
-                        } else if (field.getName().equals("field_volume")){ // hydration
-                            dataCollectionType = DataCollectionType.GHYDRATION;
-                        } else if (field.getName().equals("activity")){ // activity, (also inc. duration)
-                            dataCollectionType = DataCollectionType.GACTIVITY;
-                            isNutrition = false;
-                        } else if (field.getName().equals("food_item")){ // nutrition summary
-                            dataCollectionType = DataCollectionType.GNUTRITION;
-                        } else if (field.getName().equals("steps")){ // step count
-                            dataCollectionType = DataCollectionType.GSTEPS;
-                            isNutrition = false;
+                        switch (field.getName()) {
+                            case "calories":  // calories expended
+                                dataCollectionType = DataCollectionType.GCALORIES;
+                                break;
+                            case "field_volume":  // hydration
+                                dataCollectionType = DataCollectionType.GHYDRATION;
+                                break;
+                            case "activity":  // activity, (also inc. duration)
+                                dataCollectionType = DataCollectionType.GACTIVITY;
+                                isNutrition = false;
+                                break;
+                            case "food_item":  // nutrition summary
+                                dataCollectionType = DataCollectionType.GNUTRITION;
+                                break;
+                            case "steps":  // step count
+                                dataCollectionType = DataCollectionType.GSTEPS;
+                                isNutrition = false;
+                                break;
                         }
                         if (dataCollectionType != null) {
                             Data data = new Data(parsed, dataCollectionType, dp.getValue(field).toString());
@@ -878,7 +883,6 @@ public class MainActivity extends AppCompatActivity implements
                             }
                         }
                     }
-                }
             }
         }
 
@@ -982,7 +986,7 @@ public class MainActivity extends AppCompatActivity implements
             If the access token has expired, either open the browser for the user to reauthenticate,
             or uncheck the switch preference and state the permission needs to be given again.
              */
-            List<String> daysToAdd = new ArrayList<>();
+            List<String> daysToAdd;
             daysToAdd = getWeekDates();
 
             for (String date : daysToAdd){
@@ -1047,12 +1051,9 @@ public class MainActivity extends AppCompatActivity implements
                         Log.e(TAG, "Fitbit token is null");
                     }
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
+                } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
-
             }
     }
 }
