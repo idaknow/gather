@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.alamkanak.weekview.DateTimeInterpreter;
 import com.alamkanak.weekview.MonthLoader;
@@ -37,9 +38,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
-import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
@@ -215,7 +214,6 @@ public class MainActivity extends AppCompatActivity implements
                 cal.set(Calendar.WEEK_OF_YEAR, cal.getWeeksInWeekYear());
             }
             cal.set(Calendar.WEEK_OF_YEAR,cal.get(Calendar.WEEK_OF_YEAR)-1);
-
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
@@ -672,7 +670,7 @@ public class MainActivity extends AppCompatActivity implements
                 }
             };
             // creates a batch request querying fitness.bikes, fitness.walk and fitness.runs
-            GraphRequestBatch batch = new GraphRequestBatch(
+            new GraphRequestBatch(
                     new GraphRequest(
                             facebookAccessToken,
                             "/me/fitness.bikes",
@@ -694,15 +692,7 @@ public class MainActivity extends AppCompatActivity implements
                             HttpMethod.GET
                             , callback
                     )
-            );
-            // adds a callback which uses the incremented count to output to the text on the front screen to the user
-            batch.addCallback(new GraphRequestBatch.Callback() {
-                @Override
-                public void onBatchCompleted(GraphRequestBatch graphRequests) {
-                    // Application code for when the batch finishes
-                }
-            });
-            batch.executeAsync();
+            ).executeAsync();
         }
 
         /**
@@ -778,8 +768,7 @@ public class MainActivity extends AppCompatActivity implements
                             new GoogleApiClient.ConnectionCallbacks() {
                                 @Override
                                 public void onConnected(Bundle bundle) {
-                                    subscribe(); // double check
-                                    //displayLastWeeksData(isNutrition);
+                                    subscribe();
                                     new GFTask().execute();
                                 }
 
@@ -787,9 +776,7 @@ public class MainActivity extends AppCompatActivity implements
                                 public void onConnectionSuspended(int i) {
                                     // If your connection to the sensor gets lost at some point,
                                     // you'll be able to determine the reason and react to it here.
-                                    if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-                                    } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-                                    }
+                                    Toast.makeText(MainActivity.this, "Google Fit Error", Toast.LENGTH_SHORT).show();
                                 }
                             }
 
@@ -797,12 +784,11 @@ public class MainActivity extends AppCompatActivity implements
                     .enableAutoManage(MainActivity.this, 0, new GoogleApiClient.OnConnectionFailedListener() {
                         @Override
                         public void onConnectionFailed(@NonNull ConnectionResult result) {
-                                    result.toString();
                             Snackbar.make(
                                     MainActivity.this.findViewById(R.id.main_activity_view),
                                     "Exception while connecting to Google Play services: " +
                                             result.getErrorMessage(),
-                                    Snackbar.LENGTH_INDEFINITE).show();
+                                    Snackbar.LENGTH_SHORT).show();
                         }
                     })
                     .build();
@@ -884,16 +870,7 @@ public class MainActivity extends AppCompatActivity implements
             newList.addAll(FITNESSDATATYPES);
             for (int i = 0; i < newList.size(); i++){
                 // Subscription using RecordingAPI to the Google API Client
-                Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i))
-                        .setResultCallback(new ResultCallback<Status>() {
-                            @Override
-                            public void onResult(@NonNull Status status) {
-                                if (status.isSuccess()) {
-                                    if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                    }
-                                }
-                            }
-                        });
+                Fitness.RecordingApi.subscribe(mGoogleApiClient, newList.get(i));
             }
         }
 
@@ -1045,7 +1022,6 @@ public class MainActivity extends AppCompatActivity implements
                                 });
                         expiryAlert.show();
                     }
-
                 } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }

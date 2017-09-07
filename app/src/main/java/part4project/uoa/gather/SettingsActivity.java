@@ -35,7 +35,6 @@ import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
-import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Subscription;
 import com.google.android.gms.fitness.result.ListSubscriptionsResult;
@@ -102,7 +101,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         mainPreferences.edit().putString("secret", "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3").apply();
-
     }
 
     /**
@@ -314,16 +312,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * @param data : The datatype that the user wants to unsubscribe from
          */
         private void unsubscribeToDataType(DataType data) {
-            Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data)
-                    .setResultCallback(new ResultCallback<Status>() {
-                        @Override
-                        public void onResult(@NonNull Status status) {
-                            if (status.isSuccess()) {
-                            } else {
-                                // Subscription not removed
-                            }
-                        }
-                    });
+            Fitness.RecordingApi.unsubscribe(MainActivity.mGoogleApiClient, data);
         }
 
         /**
@@ -332,17 +321,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          * @param data : This is the data type that wants the subscription
          */
         private void subscribeToDataType(DataType data) {
-            Fitness.RecordingApi.subscribe(MainActivity.mGoogleApiClient, data)
-                    .setResultCallback(new ResultCallback<Status>() {
-                        @Override
-                        public void onResult(@NonNull Status status) {
-                            if (status.isSuccess()) {
-                                if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                } else {
-                                }
-                            }
-                        }
-                    });
+            Fitness.RecordingApi.subscribe(MainActivity.mGoogleApiClient, data);
         }
 
         @Override
