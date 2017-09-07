@@ -11,16 +11,16 @@ import java.util.List;
  * Created by Ida on 31/08/2017.
  * Modified from : https://stackoverflow.com/questions/38415680/how-to-parse-csv-file-into-an-array-in-android-studio
  */
-public class CSVFile {
+class CSVFile {
 
-    InputStream inputStream;
+    private InputStream inputStream;
 
-    public CSVFile(InputStream inputStream){
+    CSVFile(InputStream inputStream){
         this.inputStream = inputStream;
     }
 
-    public List<String> read(){
-        List<String> resultList = new ArrayList();
+    List<String> read(){
+        ArrayList<String> resultList = new ArrayList<>();
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         try {
             String csvLine;
@@ -36,7 +36,7 @@ public class CSVFile {
                 inputStream.close();
             }
             catch (IOException e) {
-                throw new RuntimeException("Error while closing input stream: "+e);
+                e.printStackTrace();
             }
         }
         return resultList;
