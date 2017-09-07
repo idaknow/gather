@@ -3,12 +3,6 @@ package part4project.uoa.gather;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataReadRequest;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,9 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HttpsURLConnection;
-
-import static part4project.uoa.gather.MainActivity.mainPreferences;
 import static part4project.uoa.gather.MainActivity.startOfWeek;
 import static part4project.uoa.gather.MainActivity.today;
 
@@ -35,6 +26,8 @@ class GeneralMethods {
     private static final SimpleDateFormat fitbitDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
     private static final DateFormat originalFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH);
     private static final DateFormat targetFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+    private static final DateFormat nutritionFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+
 
     /**
      * This method builds a Data Read Request used by GoogleFit
@@ -54,10 +47,14 @@ class GeneralMethods {
         return builder.setTimeRange(startOfWeek.getTime(), today.getTime(), TimeUnit.MILLISECONDS).build();
     }
 
-    static Date generalGetDate(String time){
+    static Date generalGetDate(String time, boolean isNutrition){
         Date parsed;
         try {
-            parsed = fitbitDateFormat.parse(time);
+            if (isNutrition){
+                parsed = nutritionFormat.parse(time);
+            } else{
+                parsed = fitbitDateFormat.parse(time);
+            }
 
         } catch(ParseException pe) {
             throw new IllegalArgumentException(pe);
@@ -89,46 +86,6 @@ class GeneralMethods {
             e.printStackTrace();
         }
         return newDate;
-    }
-
-    static StringBuffer makeFitbitAPIRequest(String requestUrl) {
-        StringBuffer response = new StringBuffer();
-        URL url;
-        try {
-            url = new URL(requestUrl);
-            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            conn.setReadTimeout(10000);//this is in milliseconds
-            conn.setConnectTimeout(15000);//this is in milliseconds
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            conn.addRequestProperty("Authorization", "Bearer " + mainPreferences.getString("access_token", null));
-
-            int responseCode = conn.getResponseCode();
-
-            //Check to make sure that the connection has been made successfully before trying to
-            //read data.
-            if (responseCode == 200) {
-
-                //Read the input received
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-            } else if (responseCode == 401){
-                response.append("expired");
-            } else {
-                response.append("error");
-            }
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return response;
     }
 
     static ArrayList<String> getWeekDates(){

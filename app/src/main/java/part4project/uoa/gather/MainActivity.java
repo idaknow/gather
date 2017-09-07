@@ -2,11 +2,11 @@ package part4project.uoa.gather;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -215,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements
         cal.setTime(today); // sets todays date
         if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
-            if (cal.get(Calendar.WEEK_OF_YEAR) == cal.getFirstDayOfWeek()){ //TODO test
+            if (cal.get(Calendar.WEEK_OF_YEAR) == cal.getFirstDayOfWeek()){
                 cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) - 1);
                 cal.set(Calendar.WEEK_OF_YEAR, cal.getWeeksInWeekYear());
             }
@@ -471,7 +472,7 @@ public class MainActivity extends AppCompatActivity implements
                     public void onCompleted(GraphResponse response) {
                         if (response != null && response.getJSONObject()!= null) {
                             transformFacebookPostsEventsLikes(response.getJSONObject()); // this uses user_likes, user_posts and user_events
-                        } //TODO: Error checking
+                        }
                     }
                 };
                 GraphRequest req = new GraphRequest(
@@ -541,7 +542,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 }
             } catch (JSONException e){
-            } //TODO add error response
+            }
         }
 
         /**
@@ -605,7 +606,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 public void failure(TwitterException exception) {
-                    //TODO: Add an error
                 }
             };
         }
@@ -684,7 +684,7 @@ public class MainActivity extends AppCompatActivity implements
                 } else {
                 }
             } catch (JSONException e) {
-            } //TODO: Error handling
+            }
         }
     }
 
@@ -698,22 +698,19 @@ public class MainActivity extends AppCompatActivity implements
             // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
             if (mGoogleApiClient == null){
                 GoogleFit gf = new GoogleFit();
-                gf.buildAndConnectClient(isNutrition); // TODO: Check switch pref
+                gf.buildAndConnectClient(isNutrition);
                 gf.subscribe();
             } else {
                 mWeekView = (WeekView) findViewById(R.id.weekView);
                 updateCalendarWithEvents();
             }
 
+            //Retrieve the user's fitbit access token (if there is one).
             String accessToken = mainPreferences.getString("access_token", null);
             if (accessToken != null) {
-                if (isNutrition) {
-
-                } else {
-                    retrieveFitbitData();
-                }
+                retrieveFitbitData(isNutrition);
             } else {
-
+                //Don't retrieve data as permission has not been given by the user to access Fitbit.
             }
         }
 
@@ -922,17 +919,12 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
-    public void retrieveFitbitData() {
-            /*
-            Set up the HTTPS connection to pull data
-            The authorisation header needs to be set to contain the user access_token
-            If an access token doesn't exist because the user hasn't granted permissions yet, then
-            display an notification of this?
-            If the access token has expired, either open the browser for the user to reauthenticate,
-            or uncheck the switch preference and state the permission needs to be given again.
-             */
+    public void retrieveFitbitData(boolean isNutrition) {
+
+            //Gets a list of dates from the most recent Monday until today
             List<String> daysToAdd = getWeekDates();
 
+            //Loops through each date and requests activity data for that day.
             for (String date : daysToAdd){
                 String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate="
                         + date + "&sort=asc&limit=20&offset=0";
@@ -940,55 +932,81 @@ public class MainActivity extends AppCompatActivity implements
                 try {
                     url = new URL(dataRequestUrl);
                     HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-                    conn.setReadTimeout(10000);//this is in milliseconds
-                    conn.setConnectTimeout(15000);//this is in milliseconds
+                    conn.setReadTimeout(10000);
+                    conn.setConnectTimeout(15000);
                     conn.setRequestMethod("GET");
                     conn.setDoInput(true);
+                    conn.addRequestProperty("Authorization", "Bearer " + mainPreferences.getString("access_token", null));
 
-                    String access_token = mainPreferences.getString("access_token", null);
-                    if (access_token != null) {
+                    //Send the request
+                    int responseCode = conn.getResponseCode();
 
-                        conn.addRequestProperty("Authorization", "Bearer " + access_token);
+                    //Check to make sure that the connection has been made successfully before trying to
+                    //read data.
+                    if (responseCode == 200) {
 
-                        //Send the request
-                        int responseCode = conn.getResponseCode();
+                        //Read data from the API.
+                        BufferedReader in = new BufferedReader(
+                                new InputStreamReader(conn.getInputStream()));
+                        String inputLine;
+                        StringBuffer response = new StringBuffer();
 
-                        //Check to make sure that the connection has been made successfully before trying to
-                        //read data.
-                        if (responseCode == 200) {
+                        while ((inputLine = in.readLine()) != null) {
+                            response.append(inputLine);
+                        }
+                        in.close();
 
-                            //Read the input received
-                            BufferedReader in = new BufferedReader(
-                                    new InputStreamReader(conn.getInputStream()));
-                            String inputLine;
-                            StringBuffer response = new StringBuffer();
+                        //Process the JSON Response according to whether we are currently retrieving
+                        //fitness or nutrition data. Nutrition gets the calories logged that day, and
+                        //activity gets all activities logged in a day.
+                        if (isNutrition){
+                            JSONObject jsonResponse = new JSONObject(response.toString());
+                            JSONObject summaryObject = jsonResponse.getJSONObject("summary");
+                            String calories = summaryObject.getString("caloriesOut");
+                            Date startDate = generalGetDate(date + " 10:00:00", false);
+                            Data data = new Data(startDate, DataCollectionType.CALORIES, calories);
+                            nutritionGeneral.add(data);
 
-                            while ((inputLine = in.readLine()) != null) {
-                                response.append(inputLine);
-                            }
-                            in.close();
-
-//                          //Read the JSON response and process the results...
+                        } else {
                             JSONObject jsonResponse = new JSONObject(response.toString());
                             JSONArray activities = jsonResponse.getJSONArray("activities");
                             for (int i = 0; i < activities.length(); i++){
                                 JSONObject activity = activities.getJSONObject(i);
-                                Date startDate = generalGetDate(activity.getString("originalStartTime"));
-                                if (isDateInWeek(startDate)){
-                                    Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
-                                    fitnessGeneral.add(data);
+                                Date startDate = generalGetDate(activity.getString("originalStartTime"), false);
+                                Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
+                                fitnessGeneral.add(data);
                                 }
-                            }
-                        } else if (responseCode == 401 ){
-                            //401 is returned if the token has expired.
-                            //Either take user to authentication page by opening browser?
-                            SettingsActivity.browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.fitbitAuthLink));
-                            startActivity(SettingsActivity.browserIntent);
-                        } else {
-                            //Any other errors with the connection
                         }
+
+                    } else if (responseCode == 401 ){
+                        //401 is returned if the token has expired. Notify the user with a simple
+                        //alert pop up.
+                        AlertDialog expiryAlert = new AlertDialog.Builder(MainActivity.this).create();
+                        expiryAlert.setTitle("Fitbit Access");
+                        expiryAlert.setMessage("Access to Fitbit needs to be renewed. Please go to Settings" +
+                                " and reactivate Fitbit if you wish to see Fitbit data.");
+                        expiryAlert.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        expiryAlert.show();
                     } else {
-                        //If the user hasn't given authentication yet then display a message notifying them
+                        //Inform user that there has been an error connecting to Fitbit.
+                        AlertDialog expiryAlert = new AlertDialog.Builder(MainActivity.this).create();
+                        expiryAlert.setTitle("Fitbit");
+                        expiryAlert.setMessage("Response: " + responseCode + ". \n There has been an " +
+                                "error connecting to Fitbit. Try resetting Fitbit permissions in Settings.");
+                        expiryAlert.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        expiryAlert.show();
                     }
 
                 } catch (IOException | JSONException e) {

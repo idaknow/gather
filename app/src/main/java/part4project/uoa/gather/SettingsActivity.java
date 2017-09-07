@@ -15,7 +15,6 @@ import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -48,6 +47,7 @@ import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,18 +74,6 @@ import static part4project.uoa.gather.MainActivity.mainPreferences;
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
     static Uri data;
-    /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
-        @Override
-        public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = value.toString();
-            preference.setSummary(stringValue);
-            return true;
-        }
-    };
 
     /**
      * Helper method to determine if the device has an extra-large screen. For
@@ -104,6 +92,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         data = getIntent().getData();
         if (data != null) {
             String host = data.getHost();
+            //Checks if returning from fitbit authentication. If so, get the access token.
             if (host.equals("fitbit")){
                 String resultFragment = String.valueOf(data.getFragment());
                 FitbitPreferenceFragment.setToken(resultFragment);
@@ -111,6 +100,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Toast.makeText(this, "Changed permissions for Fitbit ", Toast.LENGTH_LONG).show();
             }
         }
+
+        mainPreferences.edit().putString("secret", "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3").apply();
+
     }
 
     /**
@@ -283,7 +275,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         Toast.makeText(getActivity(), "Disabled permissions for Google Fit", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getActivity(), "Could not disable permissions for Google Fit", Toast.LENGTH_LONG).show();
-                        //TODO: Change switch preference back
                     }
                 }
             });
@@ -349,7 +340,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
                                 } else {
                                 }
-                            } else {
                             }
                         }
                     });
@@ -375,7 +365,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public static Intent browserIntent; //Intent used to open the authentication page
     public static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=31536000";
     public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>(); //Array containing the permissions the user has granted
-    private static String encoded = "MjI4S1FXOjA0NDI4MDg0OGUzZGVmZTZiZGQyZGRmMzM3NDA2ODY3";
     public static String browserResponseFragment; //String response from the browser authentication intent
 
     /**
@@ -424,10 +413,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 public boolean onPreferenceClick(Preference preference) {
                     SwitchPreference pref = (SwitchPreference) preference;
                     if (pref.isChecked()) {
-                        try {
-                            requestToken();
-                        } catch (Exception e) {
-                        }
+                        requestToken();
                     } else {
                         grantedfitbitPermissions.clear();
                         for (int i = 0; i < PREFS.size(); i++) {
@@ -481,33 +467,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private static void setToken(String uriFragment){
             String temp = uriFragment.split("&")[0];
-            mainPreferences.edit().putString("access_token", temp.substring(13)).commit();
+            mainPreferences.edit().putString("access_token", temp.substring(13)).apply();
         }
 
         /*
         This method clears the token so that the app can no longer access the Web API.
          */
         private static void revokeToken(){
-            try {
 
-                // Send post request to revoke the user access token
+            try {
+                // Send post request to revoke the user access token to Fitbit.
                 String revoke = "https://api.fitbit.com/oauth2/revoke";
                 URL revokeUrl = new URL(revoke);
                 HttpsURLConnection revokeCon = (HttpsURLConnection) revokeUrl.openConnection();
                 revokeCon.setRequestMethod("POST");
-                revokeCon.setRequestProperty  ("Authorization", "Basic " + encoded);
+                revokeCon.setRequestProperty  ("Authorization", "Basic " + mainPreferences.getString("secret", null));
                 revokeCon.setDoOutput(true);
                 DataOutputStream wr = new DataOutputStream(revokeCon.getOutputStream());
                 wr.flush();
                 wr.close();
                 revokeCon.disconnect();
-
-                //Remove from MainActivity's SharedPreferences
-                MainActivity.mainPreferences.edit().remove("access_token");
-
-
-            } catch (Exception e) {
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+
+            //Remove from MainActivity's SharedPreferences
+            mainPreferences.edit().remove("access_token").apply();
 
         }
 
@@ -532,7 +517,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
                 browserResponseFragment = null;
             } catch (PatternSyntaxException ex) {
-                // error handling
+                ex.printStackTrace();
             }
         }
 
@@ -641,7 +626,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 public void onCompleted(GraphResponse response) {
                                     if (response.getError()== null && response.getJSONObject() != null){ // checks not cancelled or an error
                                         accessToken = AccessToken.getCurrentAccessToken();
-                                    } else { //TODO: Handle Errors & Test
                                     }
                                 }
                             };
@@ -705,7 +689,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
         }
 
-        // removest the fb access token and profile token tracker when the activity is destroyed
+        // removes the fb access token and profile token tracker when the activity is destroyed
         @Override
         public void onDestroy() {
             super.onDestroy();
@@ -732,14 +716,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 SwitchPreference granted_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                 if (granted_preference != null){
                     granted_preference.setChecked(true); // enables the switch preference
-                } else { // ERROR: permission granted doesn't exist as a switch preference
                 }
             }
             for (Object i : deniedFBPermissions){ // loops through all the denied permissions, disabling them accordingly
                 SwitchPreference denied_preference = (SwitchPreference) getPreferenceManager().findPreference(i.toString());
                 if (denied_preference != null){
                     denied_preference.setChecked(false);
-                } else { // ERROR: permission denied doesn't exist as a switch preference
                 }
             }
         }
@@ -770,7 +752,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 createTwitterLoginButton(); // this creates the login button component to perform clicks on when the parent switch preference is changed
                 createParentPreference(); // this calls the login/ logout methods initalised ^
-
                 createChildPreferences();
             }
         }
