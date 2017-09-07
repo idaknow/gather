@@ -1,7 +1,5 @@
 package part4project.uoa.gather;
 
-import android.util.Log;
-
 import com.facebook.AccessToken;
 
 import org.json.JSONArray;
@@ -67,7 +65,6 @@ class SocialMethods {
             object = (JSONObject) jsonObject.get(name);
             array = (JSONArray) object.get(object.names().getString(0));
         } catch (JSONException e){
-            Log.d("SOCIAL", e.toString());
             return null;
         }
         return array;
@@ -84,7 +81,6 @@ class SocialMethods {
         try {
             array = (JSONArray) jsonObject.get(jsonObject.names().getString(0));
         } catch (JSONException e){
-            Log.d("SOCIAL", e.toString());
             return null;
         }
         return array;
@@ -166,4 +162,3 @@ class SocialMethods {
         return list;
     }
 }
-
