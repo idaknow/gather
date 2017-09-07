@@ -1,16 +1,8 @@
 package part4project.uoa.gather;
 
-import android.util.Log;
-
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataReadRequest;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,9 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HttpsURLConnection;
-
-import static part4project.uoa.gather.MainActivity.mainPreferences;
 import static part4project.uoa.gather.MainActivity.startOfWeek;
 import static part4project.uoa.gather.MainActivity.today;
 
@@ -37,6 +26,8 @@ class GeneralMethods {
     private static final SimpleDateFormat fitbitDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
     private static final DateFormat originalFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH);
     private static final DateFormat targetFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+    private static final DateFormat nutritionFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+
 
     /**
      * This method builds a Data Read Request used by GoogleFit
@@ -53,16 +44,22 @@ class GeneralMethods {
         for (DataType dt : types) {
             builder.read(dt);
         }
-
-        Log.d("Time", startOfWeek.toString());
-        Log.d("Time", today.toString());
         return builder.setTimeRange(startOfWeek.getTime(), today.getTime(), TimeUnit.MILLISECONDS).build();
     }
 
-    static Date generalGetDate(String time){
+    /*
+    This method converts a date represented as a String into a Date type variable.
+    It is used when data is being added to the nutrition general and fitness general lists
+    to be displayed on the main screens.
+     */
+    static Date generalGetDate(String time, boolean isNutrition){
         Date parsed;
         try {
-            parsed = fitbitDateFormat.parse(time);
+            if (isNutrition){
+                parsed = nutritionFormat.parse(time);
+            } else{
+                parsed = fitbitDateFormat.parse(time);
+            }
 
         } catch(ParseException pe) {
             throw new IllegalArgumentException(pe);
@@ -70,6 +67,10 @@ class GeneralMethods {
         return parsed;
     }
 
+    /*
+    This method is used to get only the date from a String.
+    It returns a String in the format yyyy-MM-dd, and excludes the time.
+     */
     private static String generalGetDateOnly(String formattedDate){
         String newDate;
         try {
@@ -82,6 +83,10 @@ class GeneralMethods {
         return newDate;
     }
 
+    /*
+    This method is used to add one day to a date, so that each date from the most recent Monday
+    until today can be stored in an array.
+     */
     private static String plusOneDay(String original){
         String newDate = "";
 
@@ -96,49 +101,10 @@ class GeneralMethods {
         return newDate;
     }
 
-    static StringBuffer makeFitbitAPIRequest(String requestUrl) {
-        StringBuffer response = new StringBuffer();
-        URL url;
-        try {
-            url = new URL(requestUrl);
-            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            conn.setReadTimeout(10000);//this is in milliseconds
-            conn.setConnectTimeout(15000);//this is in milliseconds
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            conn.addRequestProperty("Authorization", "Bearer " + mainPreferences.getString("access_token", null));
-
-            int responseCode = conn.getResponseCode();
-
-            //Check to make sure that the connection has been made successfully before trying to
-            //read data.
-            if (responseCode == 200) {
-
-                //Read the input received
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                String inputLine;
-                Log.d("general", "reader input: " + in.readLine());
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                    Log.d("fitbit", "general method: " + response);
-                }
-                in.close();
-            } else if (responseCode == 401){
-                response.append("expired");
-            } else {
-                response.append("error");
-            }
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Log.d("fitbit", "general method return: " + response);
-        return response;
-    }
-
+    /*
+    This method gets all of the dates from the most recent Monday until today, and stores them in
+    an array. It is used to make an HTTP request to the Fitbit API for each date in MainActivity.
+     */
     static ArrayList<String> getWeekDates(){
 
         ArrayList<String> daysToAdd = new ArrayList<>();
@@ -159,8 +125,6 @@ class GeneralMethods {
             currentDate = plusOneDay(currentDate);
             daysToAdd.add(currentDate);
         }
-
         return daysToAdd;
     }
-
 }
