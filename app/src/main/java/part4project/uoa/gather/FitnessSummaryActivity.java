@@ -11,6 +11,8 @@ import android.widget.Spinner;
 
 import java.util.List;
 
+import static part4project.uoa.gather.R.layout.activity_listview;
+
 public class FitnessSummaryActivity extends AppCompatActivity {
 
     private static final String[] items = new String[]{"General","Social"};
@@ -57,7 +59,7 @@ public class FitnessSummaryActivity extends AppCompatActivity {
     private void setListViewContent(boolean isSocial){
         List<String> list = DataCollection.getListToShow(false,isSocial);
         ListView view = (ListView) findViewById(R.id.listView);
-        ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.activity_listview, list);
+        ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), activity_listview, list);
         view.setAdapter(adapter);
     }
 

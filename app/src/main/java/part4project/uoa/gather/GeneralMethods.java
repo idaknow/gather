@@ -28,7 +28,6 @@ class GeneralMethods {
     private static final DateFormat targetFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
     private static final DateFormat nutritionFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 
-
     /**
      * This method builds a Data Read Request used by GoogleFit
      * @param isNutrition : Uses the appropriate datatypes depending on whether its nutrition or fitness
