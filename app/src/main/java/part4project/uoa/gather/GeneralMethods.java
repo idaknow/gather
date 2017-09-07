@@ -47,6 +47,11 @@ class GeneralMethods {
         return builder.setTimeRange(startOfWeek.getTime(), today.getTime(), TimeUnit.MILLISECONDS).build();
     }
 
+    /*
+    This method converts a date represented as a String into a Date type variable.
+    It is used when data is being added to the nutrition general and fitness general lists
+    to be displayed on the main screens.
+     */
     static Date generalGetDate(String time, boolean isNutrition){
         Date parsed;
         try {
@@ -62,6 +67,10 @@ class GeneralMethods {
         return parsed;
     }
 
+    /*
+    This method is used to get only the date from a String.
+    It returns a String in the format yyyy-MM-dd, and excludes the time.
+     */
     private static String generalGetDateOnly(String formattedDate){
         String newDate;
         try {
@@ -74,6 +83,10 @@ class GeneralMethods {
         return newDate;
     }
 
+    /*
+    This method is used to add one day to a date, so that each date from the most recent Monday
+    until today can be stored in an array.
+     */
     private static String plusOneDay(String original){
         String newDate = "";
 
@@ -88,6 +101,10 @@ class GeneralMethods {
         return newDate;
     }
 
+    /*
+    This method gets all of the dates from the most recent Monday until today, and stores them in
+    an array. It is used to make an HTTP request to the Fitbit API for each date in MainActivity.
+     */
     static ArrayList<String> getWeekDates(){
 
         ArrayList<String> daysToAdd = new ArrayList<>();

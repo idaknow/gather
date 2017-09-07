@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements
             for (int i = 0; i < keywordsIndexList.size(); i++){
                 InputStream inputStream = getResources().openRawResource(keywordsIndexList.get(i));
                 CSVFile csvFile = new CSVFile(inputStream);
-                List keywordsList = csvFile.read();
+                List<String> keywordsList = csvFile.read();
                 if (i == 0){
                     SocialMethods.setFitnessKeywords(keywordsList);
                 } else {
@@ -189,12 +189,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //TODO: used when the user resumes after accepting/ denying permissions
     }
 
     /**
@@ -542,6 +536,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 }
             } catch (JSONException e){
+                e.printStackTrace();
             }
         }
 
@@ -678,12 +673,11 @@ public class MainActivity extends AppCompatActivity implements
                         if (isDateInWeek(parsed)){
                             Data data = new Data(parsed, DataCollectionType.FFITNESS, obj.getString("type"));
                             fitnessSocial.add(data);
-                        } else {
                         }
                     }
-                } else {
                 }
             } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -698,7 +692,7 @@ public class MainActivity extends AppCompatActivity implements
             // GOOGLEFIT builds the client and requests the appropriate permissions and subscribes to datatypes accordingly
             if (mGoogleApiClient == null){
                 GoogleFit gf = new GoogleFit();
-                gf.buildAndConnectClient(isNutrition);
+                gf.buildAndConnectClient();
                 gf.subscribe();
             } else {
                 mWeekView = (WeekView) findViewById(R.id.weekView);
@@ -707,10 +701,8 @@ public class MainActivity extends AppCompatActivity implements
 
             //Retrieve the user's fitbit access token (if there is one).
             String accessToken = mainPreferences.getString("access_token", null);
-            if (accessToken != null) {
+            if (accessToken != null) { //If the user has given permission then retrieve their data.
                 retrieveFitbitData(isNutrition);
-            } else {
-                //Don't retrieve data as permission has not been given by the user to access Fitbit.
             }
         }
 
@@ -725,7 +717,7 @@ public class MainActivity extends AppCompatActivity implements
         /**
          * Builds to google client with the required scopes (permissions)
          */
-        void buildAndConnectClient(final boolean isNutrition){
+        void buildAndConnectClient(){
             mGoogleApiClient = new GoogleApiClient.Builder(MainActivity.this)
                     .addApi(Fitness.HISTORY_API)
                     .addApi(Fitness.RECORDING_API)
@@ -838,7 +830,6 @@ public class MainActivity extends AppCompatActivity implements
 
         /**
          * The initial subscription to all data types to record the output
-         * TODO: Call this only on the very startup
          */
         void subscribeToDataTypes(){
             List<DataType> newList = new ArrayList<>(NUTRITIONDATATYPES);
@@ -851,9 +842,7 @@ public class MainActivity extends AppCompatActivity implements
                             public void onResult(@NonNull Status status) {
                                 if (status.isSuccess()) {
                                     if (status.getStatusCode() == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                    } else {
                                     }
-                                } else {
                                 }
                             }
                         });
@@ -949,7 +938,7 @@ public class MainActivity extends AppCompatActivity implements
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(conn.getInputStream()));
                         String inputLine;
-                        StringBuffer response = new StringBuffer();
+                        StringBuilder response = new StringBuilder();
 
                         while ((inputLine = in.readLine()) != null) {
                             response.append(inputLine);
