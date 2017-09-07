@@ -12,7 +12,7 @@ import android.widget.Spinner;
 import java.util.List;
 
 
-public class NutritionSummaryActivity extends AppCompatActivity {
+class NutritionSummaryActivity extends AppCompatActivity {
 
     private static final String[] items = new String[]{"General","Social"};
 
