@@ -69,6 +69,11 @@ import static part4project.uoa.gather.MainActivity.mainPreferences;
  * Android Design: Settings</a> for design guidelines and the <a
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
+ *
+ *  This class was developed guided by the apps documentation:
+ *  - Google Fit: https://github.com/googlesamples/android-fit
+ *  - Twitter: https://dev.twitter.com/twitterkit/android/overview
+ *  - Facebook: https://developers.facebook.com/docs/android
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
