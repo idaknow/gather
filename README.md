@@ -5,7 +5,7 @@ By Ida De Smet & Brittany Walker
 
 ## Proposed Project:
 
-> The aim of the project is to create a prototype application that can extract health data from different sources. This would enable health professionals to access useful data about the patient’s lifestyle. This application will give the user the ability to holistically view health data from multiple sources in one streamlined application. These sources may include health apps (such as Nike + Run Club), social apps (such as Facebook) and phone sensors. The two main goals will be to design a visually pleasing and highly usable GUI, and to figure out how best to collect the data from the these sources.
+> The aim of the project is to create a prototype application that can extract health data from different sources. This would enable health professionals to access useful data about the patient’s lifestyle. This application will give the user the ability to holistically view health data from multiple sources in one streamlined application. These sources may include health apps (such as Nike + Run Club), social apps (such as Facebook) and phone sensors. The two main goals will be to design a visually pleasing and highly usable GUI, and to figure out how best to collect the data from these sources.
 
 ## Outcome
 
