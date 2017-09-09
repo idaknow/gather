@@ -90,6 +90,13 @@ import static part4project.uoa.gather.GeneralMethods.getWeekDates;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
 
+/**
+ * Main screen shown to the user with all the functionality to collect data from Facebook, Google Fit, Fitbit and Twitter.
+ * This class was developed guided by the apps documentation:
+ *  - Google Fit: https://github.com/googlesamples/android-fit
+ *  - Twitter: https://dev.twitter.com/twitterkit/android/overview
+ *  - Facebook: https://developers.facebook.com/docs/android
+ */
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
