@@ -14,23 +14,23 @@ By Ida De Smet & Brittany Walker
 
 ### Image Credit 
 
-[Gather Logo Maker Credit](http://logomakr.com/)
+[Gather Logo Maker Credit](http://logomakr.com/) </br>
 [Icon credit](https://material.io/)
 
 ### Code Credit
 
-[Calendar](https://github.com/alamkanak/Android-Week-View)
-[Sliding Animation](https://github.com/ShohanAhmed/Android-Activity-Transition-Custom-Animation)
-[Google Fit](https://github.com/googlesamples/android-fit)
-[Facebook](https://developers.facebook.com/docs/android)
-[Twitter](https://developers.facebook.com/docs/android)
+[Calendar](https://github.com/alamkanak/Android-Week-View)</br>
+[Sliding Animation](https://github.com/ShohanAhmed/Android-Activity-Transition-Custom-Animation)</br>
+[Google Fit](https://github.com/googlesamples/android-fit)</br>
+[Facebook](https://developers.facebook.com/docs/android)</br>
+[Twitter](https://developers.facebook.com/docs/android)</br>
 [CSV File](https://stackoverflow.com/questions/38415680/how-to-parse-csv-file-into-an-array-in-android-studio)
 
 ## Documentation
 
-[Privacy Policy](https://drive.google.com/file/d/0B776b_7zozgVNVhOQVQ3dU9RLVE/view?usp=sharing)
-[Google Drive](https://docs.google.com/a/aucklanduni.ac.nz/spreadsheets/d/1ZVCb3fbKvT68AAD5nvwB-Fmw98Mf62cp3ruaGa7mVH4/edit?usp=sharing)
-[Minimum Viable Product](https://drive.google.com/open?id=1ZUTnQAo5yofHU61HhddYQo_lBYDtAW_9B-KwhVJzIHY)
+[Privacy Policy](https://drive.google.com/file/d/0B776b_7zozgVNVhOQVQ3dU9RLVE/view?usp=sharing)</br>
+[Google Drive](https://docs.google.com/a/aucklanduni.ac.nz/spreadsheets/d/1ZVCb3fbKvT68AAD5nvwB-Fmw98Mf62cp3ruaGa7mVH4/edit?usp=sharing)</br>
+[Minimum Viable Product](https://drive.google.com/open?id=1ZUTnQAo5yofHU61HhddYQo_lBYDtAW_9B-KwhVJzIHY)</br>
 [Trello](https://trello.com/invite/b/oIvsQL27/d263810aa5ea3e2ec1ec9797e1a580f7/p4p)
 
 
