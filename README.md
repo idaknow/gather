@@ -1,6 +1,6 @@
 # GA+HER
 
-ECE Part 4 Project, # 66: Medical Data Collection
+ECE Part 4 Project, # 66: Medical Data Collection </br>
 By Ida De Smet & Brittany Walker
 
 ## Proposed Project:
