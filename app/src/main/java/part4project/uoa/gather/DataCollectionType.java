@@ -34,11 +34,18 @@ enum DataCollectionType {
             return "You did fb fitness activity: ";
         }
     },
-    // Twitter Tweet (could be favourite or status)
-    TWEET{
+    // Twitter Favourite Tweet
+    TFAVOURITE{
         @Override
         public String toString() {
-            return "You interacted with tweet: ";
+            return "You favourited tweet: ";
+        }
+    },
+    // Twitter Status Tweet
+    TTWEET{
+        @Override
+        public String toString() {
+            return "You posted tweet: ";
         }
     },
     // Google Fit Calories

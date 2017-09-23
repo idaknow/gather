@@ -573,7 +573,7 @@ public class MainActivity extends AppCompatActivity implements
         private void displayFavouritedTweets(TwitterApiClient twitterApiClient){
             FavoriteService service = twitterApiClient.getFavoriteService();
             Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
-            call.enqueue(getTwitterCallback());
+            call.enqueue(getTwitterCallback(DataCollectionType.TFAVOURITE));
         }
 
         /**
@@ -582,13 +582,13 @@ public class MainActivity extends AppCompatActivity implements
         private void displayStatusTweets(TwitterApiClient twitterApiClient){
             StatusesService service = twitterApiClient.getStatusesService();
             Call<List<Tweet>> call = service.userTimeline(null,null,null,null,null,null,null,null,null);
-            call.enqueue(getTwitterCallback());
+            call.enqueue(getTwitterCallback(DataCollectionType.TTWEET));
         }
 
         /**
          * This initialised the twitterCallback that is used to print the results from either a status or favourite request
          */
-        private Callback<List<Tweet>> getTwitterCallback(){
+        private Callback<List<Tweet>> getTwitterCallback(final DataCollectionType type){
             return new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> result) {
@@ -598,7 +598,7 @@ public class MainActivity extends AppCompatActivity implements
                         Date parsed = getDate(data.get(i).createdAt, false);
                         if (isDateInWeek(parsed)) {
                             if (doesStringContainKeyword(data.get(i).text, isNutrition)){
-                                Data tweetData = new Data(parsed, DataCollectionType.TWEET, data.get(i).text);
+                                Data tweetData = new Data(parsed, type, data.get(i).text);
                                 if (isNutrition){
                                     nutritionSocial.add(tweetData);
                                 } else {

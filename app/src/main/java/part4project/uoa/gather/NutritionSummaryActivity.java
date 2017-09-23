@@ -11,8 +11,9 @@ import android.widget.Spinner;
 
 import java.util.List;
 
+import static part4project.uoa.gather.R.layout.activity_listview;
 
-class NutritionSummaryActivity extends AppCompatActivity {
+public class NutritionSummaryActivity extends AppCompatActivity {
 
     private static final String[] items = new String[]{"General","Social"};
 
@@ -62,9 +63,8 @@ class NutritionSummaryActivity extends AppCompatActivity {
     private void setListViewContent(boolean isSocial){
         // Gets the appropriate data list depending on whether social or general is enabled
         List<String> list = DataCollection.getListToShow(true,isSocial);
-        // Sets the UI as the created list of strings
-        ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.activity_listview, list);
         ListView view = (ListView) findViewById(R.id.listView);
+        ArrayAdapter adapter = new ArrayAdapter<>(getApplicationContext(), activity_listview, list); // Sets the UI as the created list of strings
         view.setAdapter(adapter);
     }
 }
