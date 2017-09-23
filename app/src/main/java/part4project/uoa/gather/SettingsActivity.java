@@ -124,9 +124,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            if (!super.onMenuItemSelected(featureId, item)) {
-                NavUtils.navigateUpFromSameTask(this);
-            }
+            this.finish();
+//            if (!super.onMenuItemSelected(featureId, item)) {
+//                NavUtils.navigateUpFromSameTask(this);
+//            }
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
             return true;
         }

@@ -1,5 +1,6 @@
 package part4project.uoa.gather;
 
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -168,20 +170,51 @@ public class MainActivity extends AppCompatActivity implements
         setupDates();
         setupProgressDialog();
 
+        // Setup Calendar
+        setupCalendar();
+
+        executeTasks();
+
+//        // SOCIAL TASK
+//        new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//
+//        //GENERAL TASK
+//        new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//
+//        if (mGoogleApiClient != null){
+//            mWeekView = (WeekView) findViewById(R.id.weekView);
+//            updateCalendarWithEvents();
+//        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        executeTasks();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();  // Always call the superclass method first
+        executeTasks();
+    }
+
+    private void executeTasks(){
+        super.onResume();  // Always call the superclass method first
         // SOCIAL TASK
         new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         //GENERAL TASK
         new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        // Setup Calendar
-        setupCalendar();
-
         if (mGoogleApiClient != null){
             mWeekView = (WeekView) findViewById(R.id.weekView);
             updateCalendarWithEvents();
         }
     }
+
+
+
 
     /**
      * Loops through the fitness and nutrition CSV files to retrieve their data and put it in the lists
@@ -215,6 +248,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Sets up the start and end dates
      */
+    @TargetApi(Build.VERSION_CODES.N)
     private void setupDates(){
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
