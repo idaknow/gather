@@ -1,5 +1,6 @@
 package part4project.uoa.gather;
 
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -130,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements
     final String PREFS_NAME = "MainPreferencesFile";
     public List<ApplicationInfo> installedPackages;
     public static boolean twitterInstalled = false;
+    private boolean onCreateCalled = false; // used to make sure execution doesn't happen twice
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,14 +171,38 @@ public class MainActivity extends AppCompatActivity implements
         setupDates();
         setupProgressDialog();
 
+        // Setup Calendar
+        setupCalendar();
+
+        // Request & Collect data
+        executeTasks();
+        onCreateCalled = true;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!onCreateCalled){ // hasn't been created
+            executeTasks(); // re-collect data from each app
+        }
+        onCreateCalled = false;
+    }
+
+    /**
+     * This is called so activities on the main page's calendar are refreshed
+     * This is done from main creation, resume and start
+     */
+    private void executeTasks(){
         // SOCIAL TASK
         new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         //GENERAL TASK
         new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        // Setup Calendar
-        setupCalendar();
+        if (mGoogleApiClient != null){
+            mWeekView = (WeekView) findViewById(R.id.weekView);
+            updateCalendarWithEvents();
+        }
     }
 
     /**
@@ -210,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Sets up the start and end dates
      */
+    @TargetApi(Build.VERSION_CODES.N)
     private void setupDates(){
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
@@ -568,7 +596,7 @@ public class MainActivity extends AppCompatActivity implements
         private void displayFavouritedTweets(TwitterApiClient twitterApiClient){
             FavoriteService service = twitterApiClient.getFavoriteService();
             Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
-            call.enqueue(getTwitterCallback());
+            call.enqueue(getTwitterCallback(DataCollectionType.TFAVOURITE));
         }
 
         /**
@@ -576,14 +604,14 @@ public class MainActivity extends AppCompatActivity implements
          */
         private void displayStatusTweets(TwitterApiClient twitterApiClient){
             StatusesService service = twitterApiClient.getStatusesService();
-            Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
-            call.enqueue(getTwitterCallback());
+            Call<List<Tweet>> call = service.userTimeline(null,null,null,null,null,null,null,null,null);
+            call.enqueue(getTwitterCallback(DataCollectionType.TTWEET));
         }
 
         /**
          * This initialised the twitterCallback that is used to print the results from either a status or favourite request
          */
-        private Callback<List<Tweet>> getTwitterCallback(){
+        private Callback<List<Tweet>> getTwitterCallback(final DataCollectionType type){
             return new Callback<List<Tweet>>() {
                 @Override
                 public void success(Result<List<Tweet>> result) {
@@ -593,7 +621,7 @@ public class MainActivity extends AppCompatActivity implements
                         Date parsed = getDate(data.get(i).createdAt, false);
                         if (isDateInWeek(parsed)) {
                             if (doesStringContainKeyword(data.get(i).text, isNutrition)){
-                                Data tweetData = new Data(parsed, DataCollectionType.TWEET, data.get(i).text);
+                                Data tweetData = new Data(parsed, type, data.get(i).text);
                                 if (isNutrition){
                                     nutritionSocial.add(tweetData);
                                 } else {
@@ -691,9 +719,6 @@ public class MainActivity extends AppCompatActivity implements
                 GoogleFit gf = new GoogleFit();
                 gf.buildAndConnectClient();
                 gf.subscribe();
-            } else {
-                mWeekView = (WeekView) findViewById(R.id.weekView);
-                updateCalendarWithEvents();
             }
 
             //Retrieve the user's fitbit access token (if there is one).
@@ -702,7 +727,6 @@ public class MainActivity extends AppCompatActivity implements
                 retrieveFitbitData(isNutrition);
             }
         }
-
     }
 
     /**

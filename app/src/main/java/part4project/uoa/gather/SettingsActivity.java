@@ -13,7 +13,6 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -123,9 +122,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            if (!super.onMenuItemSelected(featureId, item)) {
-                NavUtils.navigateUpFromSameTask(this);
-            }
+            this.finish();
+//            if (!super.onMenuItemSelected(featureId, item)) {
+//                NavUtils.navigateUpFromSameTask(this);
+//            }
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
             return true;
         }
@@ -342,12 +342,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     //Fitbit variables
-    private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition","fitbit_heartrate"); //Names of the preferences
-    private static List<String> SCOPES = Arrays.asList("activity", "nutrition", "heartrate"); //Scopes that can be requested from Fitbit
+    private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition"); //Names of the preferences
+    private static List<String> SCOPES = Arrays.asList("activity", "nutrition"); //Scopes that can be requested from Fitbit
     private static Preference.OnPreferenceClickListener fitbitPreferenceListener;
     private static Preference.OnPreferenceClickListener fitbitParentListener;
     public static Intent browserIntent; //Intent used to open the authentication page
-    public static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=31536000";
+    public static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20nutrition&expires_in=31536000";
     public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>(); //Array containing the permissions the user has granted
     public static String browserResponseFragment; //String response from the browser authentication intent
 
@@ -477,7 +477,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             //Remove from MainActivity's SharedPreferences
             mainPreferences.edit().remove("access_token").apply();
-
         }
 
         /*
@@ -863,6 +862,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);
             toast.show();
             createParentPreference();
+            createChildPreferences();
         }
 
         /**
@@ -871,17 +871,30 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void createParentPreference(){
             Preference pref = getPreferenceManager().findPreference("social_media_2_all");
+            SwitchPreference switchPref = (SwitchPreference) pref;
+            switchPref.setChecked(false);
+            switchPref.setEnabled(false);
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    SwitchPreference switchpref = (SwitchPreference) preference;
                     Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);
                     toast.show();
-                    switchpref.setEnabled(false);
                     return true;
                 }
             });
+        }
+
+        /**
+         * Changes the variable boolean in shared preferences
+         */
+        private void createChildPreferences(){
+            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
+            for (String i : TWITTERPREFERENCES){
+                SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference(i);
+                switchPref.setChecked(false);
+                switchPref.setEnabled(false);
+            }
         }
 
         @Override

@@ -61,7 +61,7 @@
             android:label="Gather Fitness Summary" />
         <activity
             android:name=".NutritionSummaryActivity"
-            android:label="Gather Nutrition Summary"></activity>
+            android:label="Gather Nutrition Summary"/>
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
 
