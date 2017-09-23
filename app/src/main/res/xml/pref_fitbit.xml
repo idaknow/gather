@@ -21,22 +21,4 @@
         android:key="fitbit_nutrition"
         android:title="Nutrition" />
 
-    <SwitchPreference
-        android:defaultValue="false"
-        android:dependency="fitbit_all"
-        android:key="fitbit_heartrate"
-        android:title="Heart Rate" />
-
-    <!--<SwitchPreference-->
-        <!--android:defaultValue="false"-->
-        <!--android:dependency="fitbit_all"-->
-        <!--android:key="fitbit_weight"-->
-        <!--android:title="Weight" />-->
-
-    <!--<SwitchPreference-->
-        <!--android:defaultValue="false"-->
-        <!--android:dependency="fitbit_all"-->
-        <!--android:key="fitbit_sleep"-->
-        <!--android:title="Sleep" />-->
-
 </PreferenceScreen>

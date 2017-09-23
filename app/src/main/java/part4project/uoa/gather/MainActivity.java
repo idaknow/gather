@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements
     final String PREFS_NAME = "MainPreferencesFile";
     public List<ApplicationInfo> installedPackages;
     public static boolean twitterInstalled = false;
+    private boolean onCreateCalled = false; // used to make sure execution doesn't happen twice
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,34 +174,25 @@ public class MainActivity extends AppCompatActivity implements
         // Setup Calendar
         setupCalendar();
 
+        // Request & Collect data
         executeTasks();
-
-//        // SOCIAL TASK
-//        new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//
-//        //GENERAL TASK
-//        new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//
-//        if (mGoogleApiClient != null){
-//            mWeekView = (WeekView) findViewById(R.id.weekView);
-//            updateCalendarWithEvents();
-//        }
+        onCreateCalled = true;
     }
 
     @Override
     public void onResume() {
-        super.onResume();  // Always call the superclass method first
-        executeTasks();
+        super.onResume();
+        if (!onCreateCalled){ // hasn't been created
+            executeTasks(); // re-collect data from each app
+        }
+        onCreateCalled = false;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();  // Always call the superclass method first
-        executeTasks();
-    }
-
+    /**
+     * This is called so activities on the main page's calendar are refreshed
+     * This is done from main creation, resume and start
+     */
     private void executeTasks(){
-        super.onResume();  // Always call the superclass method first
         // SOCIAL TASK
         new SocialTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
@@ -212,9 +204,6 @@ public class MainActivity extends AppCompatActivity implements
             updateCalendarWithEvents();
         }
     }
-
-
-
 
     /**
      * Loops through the fitness and nutrition CSV files to retrieve their data and put it in the lists
@@ -738,7 +727,6 @@ public class MainActivity extends AppCompatActivity implements
                 retrieveFitbitData(isNutrition);
             }
         }
-
     }
 
     /**

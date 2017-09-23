@@ -344,12 +344,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     //Fitbit variables
-    private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition","fitbit_heartrate"); //Names of the preferences
-    private static List<String> SCOPES = Arrays.asList("activity", "nutrition", "heartrate"); //Scopes that can be requested from Fitbit
+    private static List<String> PREFS = Arrays.asList("fitbit_activity", "fitbit_nutrition"); //Names of the preferences
+    private static List<String> SCOPES = Arrays.asList("activity", "nutrition"); //Scopes that can be requested from Fitbit
     private static Preference.OnPreferenceClickListener fitbitPreferenceListener;
     private static Preference.OnPreferenceClickListener fitbitParentListener;
     public static Intent browserIntent; //Intent used to open the authentication page
-    public static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20heartrate%20nutrition&expires_in=31536000";
+    public static String fitbitAuthLink = "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228KQW&redirect_uri=gather%3A%2F%2Ffitbit&scope=activity%20nutrition&expires_in=31536000";
     public static ArrayList<String> grantedfitbitPermissions = new ArrayList<>(); //Array containing the permissions the user has granted
     public static String browserResponseFragment; //String response from the browser authentication intent
 
@@ -479,7 +479,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             //Remove from MainActivity's SharedPreferences
             mainPreferences.edit().remove("access_token").apply();
-
         }
 
         /*
