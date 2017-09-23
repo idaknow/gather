@@ -891,10 +891,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         private void createChildPreferences(){
             // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
             for (String i : TWITTERPREFERENCES){
-                Preference permission = getPreferenceManager().findPreference(i);
-                SwitchPreference spref = (SwitchPreference) permission;
-                spref.setChecked(false);
-                spref.setEnabled(false);
+                SwitchPreference switchPref = (SwitchPreference) getPreferenceManager().findPreference(i);
+                switchPref.setChecked(false);
+                switchPref.setEnabled(false);
             }
         }
 
