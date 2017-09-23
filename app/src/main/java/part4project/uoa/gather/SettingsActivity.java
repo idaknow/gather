@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -863,6 +864,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);
             toast.show();
             createParentPreference();
+            createChildPreferences();
         }
 
         /**
@@ -871,17 +873,31 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
          */
         private void createParentPreference(){
             Preference pref = getPreferenceManager().findPreference("social_media_2_all");
+            SwitchPreference switchPref = (SwitchPreference) pref;
+            switchPref.setChecked(false);
+            switchPref.setEnabled(false);
             pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    SwitchPreference switchpref = (SwitchPreference) preference;
                     Toast toast = Toast.makeText(getActivity(), "You must have Twitter installed on your device for Gather to collect information.", Toast.LENGTH_LONG);
                     toast.show();
-                    switchpref.setEnabled(false);
                     return true;
                 }
             });
+        }
+
+        /**
+         * Changes the variable boolean in shared preferences
+         */
+        private void createChildPreferences(){
+            // this loops through all the permissions that have switch preferences in settings, adding click listeners to each one
+            for (String i : TWITTERPREFERENCES){
+                Preference permission = getPreferenceManager().findPreference(i);
+                SwitchPreference spref = (SwitchPreference) permission;
+                spref.setChecked(false);
+                spref.setEnabled(false);
+            }
         }
 
         @Override

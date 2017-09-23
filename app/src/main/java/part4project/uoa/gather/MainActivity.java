@@ -176,6 +176,11 @@ public class MainActivity extends AppCompatActivity implements
 
         // Setup Calendar
         setupCalendar();
+
+        if (mGoogleApiClient != null){
+            mWeekView = (WeekView) findViewById(R.id.weekView);
+            updateCalendarWithEvents();
+        }
     }
 
     /**
@@ -576,7 +581,7 @@ public class MainActivity extends AppCompatActivity implements
          */
         private void displayStatusTweets(TwitterApiClient twitterApiClient){
             StatusesService service = twitterApiClient.getStatusesService();
-            Call<List<Tweet>> call = service.homeTimeline(null,null,null,null,null,null,null);
+            Call<List<Tweet>> call = service.userTimeline(null,null,null,null,null,null,null,null,null);
             call.enqueue(getTwitterCallback());
         }
 
@@ -691,9 +696,6 @@ public class MainActivity extends AppCompatActivity implements
                 GoogleFit gf = new GoogleFit();
                 gf.buildAndConnectClient();
                 gf.subscribe();
-            } else {
-                mWeekView = (WeekView) findViewById(R.id.weekView);
-                updateCalendarWithEvents();
             }
 
             //Retrieve the user's fitbit access token (if there is one).
