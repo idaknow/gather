@@ -69,6 +69,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,6 +86,7 @@ import javax.net.ssl.HttpsURLConnection;
 import retrofit2.Call;
 
 import static part4project.uoa.gather.GeneralMethods.generalGetDate;
+import static part4project.uoa.gather.GeneralMethods.generalGetDateOnly;
 import static part4project.uoa.gather.GeneralMethods.getWeekDates;
 import static part4project.uoa.gather.SocialMethods.doesStringContainKeyword;
 import static part4project.uoa.gather.SocialMethods.getDate;
@@ -889,13 +891,17 @@ public class MainActivity extends AppCompatActivity implements
 
     public void retrieveFitbitData(boolean isNutrition) {
 
+        //Get the date of the start of the week as a string and in the correct format.
+        String formattedDate = DateFormat.getDateInstance().format(startOfWeek);
+        String date = generalGetDateOnly(formattedDate);
+        String dataRequestUrl;
+
+        if (isNutrition){
             //Gets a list of dates from the most recent Monday until today
             List<String> daysToAdd = getWeekDates();
-
-            //Loops through each date and requests activity data for that day.
-            for (String date : daysToAdd){
-                String dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate="
-                        + date + "&sort=asc&limit=20&offset=0";
+            for (String currentDate : daysToAdd){
+                dataRequestUrl = "https://api.fitbit.com/1/user/-/foods/log/date/" + currentDate + ".json";
+                //Requests activity and calorie data for each day in the current week.
                 URL url;
                 try {
                     url = new URL(dataRequestUrl);
@@ -905,6 +911,7 @@ public class MainActivity extends AppCompatActivity implements
                     conn.setRequestMethod("GET");
                     conn.setDoInput(true);
                     conn.addRequestProperty("Authorization", "Bearer " + mainPreferences.getString("access_token", null));
+                    conn.addRequestProperty("Accept-Locale", "en_NZ");
 
                     //Send the request
                     int responseCode = conn.getResponseCode();
@@ -914,8 +921,7 @@ public class MainActivity extends AppCompatActivity implements
                     if (responseCode == 200) {
 
                         //Read data from the API.
-                        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(conn.getInputStream()));
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                         String inputLine;
                         StringBuilder response = new StringBuilder();
 
@@ -927,26 +933,14 @@ public class MainActivity extends AppCompatActivity implements
                         //Process the JSON Response according to whether we are currently retrieving
                         //fitness or nutrition data. Nutrition gets the calories logged that day, and
                         //activity gets all activities logged in a day.
-                        if (isNutrition){
-                            JSONObject jsonResponse = new JSONObject(response.toString());
-                            JSONObject summaryObject = jsonResponse.getJSONObject("summary");
-                            String calories = summaryObject.getString("caloriesOut");
-                            Date startDate = generalGetDate(date + " 10:00:00", false);
-                            Data data = new Data(startDate, DataCollectionType.CALORIES, calories);
-                            nutritionGeneral.add(data);
+                        JSONObject jsonResponse = new JSONObject(response.toString());
+                        JSONObject summaryObject = jsonResponse.getJSONObject("summary");
+                        String calories = summaryObject.getString("calories");
+                        Date startDate = generalGetDate(date + "T10:00:00.000Z", false);
+                        Data data = new Data(startDate, DataCollectionType.CALORIES, calories);
+                        nutritionGeneral.add(data);
 
-                        } else {
-                            JSONObject jsonResponse = new JSONObject(response.toString());
-                            JSONArray activities = jsonResponse.getJSONArray("activities");
-                            for (int i = 0; i < activities.length(); i++){
-                                JSONObject activity = activities.getJSONObject(i);
-                                Date startDate = generalGetDate(activity.getString("originalStartTime"), false);
-                                Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
-                                fitnessGeneral.add(data);
-                                }
-                        }
-
-                    } else if (responseCode == 401 ){
+                    } else if (responseCode == 401) {
                         //401 is returned if the token has expired. Notify the user with a simple
                         //alert pop up.
                         AlertDialog expiryAlert = new AlertDialog.Builder(MainActivity.this).create();
@@ -979,6 +973,90 @@ public class MainActivity extends AppCompatActivity implements
                 } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
+
             }
+        } else {
+            dataRequestUrl = "https://api.fitbit.com/1/user/-/activities/list.json?user-id=-&afterDate="
+                    + date + "&sort=asc&limit=20&offset=0";
+
+            //Requests activity and calorie data for each day in the current week.
+            URL url;
+            try {
+                url = new URL(dataRequestUrl);
+                HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
+                conn.addRequestProperty("Authorization", "Bearer " + mainPreferences.getString("access_token", null));
+                conn.addRequestProperty("Accept-Locale", "en_NZ");
+
+                //Send the request
+                int responseCode = conn.getResponseCode();
+
+                //Check to make sure that the connection has been made successfully before trying to
+                //read data.
+                if (responseCode == 200) {
+
+                    //Read data from the API.
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    String inputLine;
+                    StringBuilder response = new StringBuilder();
+
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                    in.close();
+
+                    //Process the JSON Response to get activities logged each day for the week.
+                    JSONObject jsonResponse = new JSONObject(response.toString());
+                    JSONArray activities = jsonResponse.getJSONArray("activities");
+                    for (int i = 0; i < activities.length(); i++) {
+                        JSONObject activity = activities.getJSONObject(i);
+                        Date startDate = generalGetDate(activity.getString("originalStartTime"), false);
+                        Calendar cal = Calendar.getInstance(); // creates calendar
+                        cal.setTime(startDate); // sets calendar time/date
+                        cal.add(Calendar.HOUR_OF_DAY, -12); // removes 12 hours as timing is out
+                        startDate = cal.getTime();
+                        Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
+                        fitnessGeneral.add(data);
+                    }
+
+
+                } else if (responseCode == 401) {
+                    //401 is returned if the token has expired. Notify the user with a simple
+                    //alert pop up.
+                    AlertDialog expiryAlert = new AlertDialog.Builder(MainActivity.this).create();
+                    expiryAlert.setTitle("Fitbit Access");
+                    expiryAlert.setMessage("Access to Fitbit needs to be renewed. Please go to Settings" +
+                            " and reactivate Fitbit if you wish to see Fitbit data.");
+                    expiryAlert.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                    expiryAlert.show();
+                } else {
+                    //Inform user that there has been an error connecting to Fitbit.
+                    AlertDialog expiryAlert = new AlertDialog.Builder(MainActivity.this).create();
+                    expiryAlert.setTitle("Fitbit");
+                    expiryAlert.setMessage("Response: " + responseCode + ". \n There has been an " +
+                            "error connecting to Fitbit. Try resetting Fitbit permissions in Settings.");
+                    expiryAlert.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                    expiryAlert.show();
+                }
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 }
