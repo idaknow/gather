@@ -954,6 +954,7 @@ public class MainActivity extends AppCompatActivity implements
                         Date startDate = generalGetDate(activity.getString("originalStartTime"), false);
                         Calendar cal = Calendar.getInstance(); // creates calendar
                         cal.setTime(startDate); // sets calendar time/date
+                        cal.add(Calendar.HOUR_OF_DAY, -12); // removes 12 hours as timing is out
                         startDate = cal.getTime();
                         Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
                         fitnessGeneral.add(data);
