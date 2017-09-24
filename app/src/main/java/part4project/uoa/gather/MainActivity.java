@@ -1,7 +1,5 @@
 package part4project.uoa.gather;
 
-import android.annotation.TargetApi;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -119,7 +117,6 @@ public class MainActivity extends AppCompatActivity implements
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
 
     WeekView mWeekView; // Calendar
-    ProgressDialog progress; // loading
     TwitterSession session; // Twitter Session
 
     // Week Date
@@ -140,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements
         setKeywords();
         mainPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         installedPackages = getPackageManager().getInstalledApplications(0);
+        twitterInstalled = false;
         for (ApplicationInfo appInfo : installedPackages){
             String appName = (String)appInfo.loadLabel(getPackageManager());
             if (appName.equals("Twitter")){
@@ -169,7 +167,6 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         setupDates();
-        setupProgressDialog();
 
         // Setup Calendar
         setupCalendar();
@@ -199,10 +196,10 @@ public class MainActivity extends AppCompatActivity implements
         //GENERAL TASK
         new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        if (mGoogleApiClient != null){
-            mWeekView = (WeekView) findViewById(R.id.weekView);
-            updateCalendarWithEvents();
-        }
+//        if (mGoogleApiClient != null){
+//
+//            updateCalendarWithEvents();
+//        }
     }
 
     /**
@@ -225,19 +222,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * Sets up the progress spinning dialog
-     */
-    private void setupProgressDialog(){
-        progress = new ProgressDialog(this);
-        progress.setTitle("Loading");
-        progress.setMessage("Please wait while loading...");
-        progress.setCancelable(false);
-    }
-
-    /**
      * Sets up the start and end dates
      */
-    @TargetApi(Build.VERSION_CODES.N)
     private void setupDates(){
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
@@ -248,7 +234,6 @@ public class MainActivity extends AppCompatActivity implements
                 cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) - 1);
                 cal.set(Calendar.WEEK_OF_YEAR, cal.getWeeksInWeekYear());
             }
-            cal.set(Calendar.WEEK_OF_YEAR,cal.get(Calendar.WEEK_OF_YEAR)-1);
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
@@ -263,6 +248,7 @@ public class MainActivity extends AppCompatActivity implements
 
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
+        Log.d("Twitter","Date start " + startOfWeek.toString() + ", end " + endOfWeek.toString());
     }
 
     /**
@@ -406,10 +392,6 @@ public class MainActivity extends AppCompatActivity implements
      * This tasks executes getting data from facebook & twitter
      */
     private class SocialTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
             // clear both the social lists
@@ -427,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            progress.dismiss();
+            updateCalendarWithEvents();
         }
     }
 
@@ -582,9 +564,11 @@ public class MainActivity extends AppCompatActivity implements
                 SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // shared preferences
 
                 if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){ // checks if the user gave permission to favourites
+                    Log.d("Twitter","yes, display twitter");
                     displayFavouritedTweets(twitterApiClient);
                 }
                 if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false)){ // checks if the user gave permission to statuses
+                    Log.d("Twitter","yes, display twitter");
                     displayStatusTweets(twitterApiClient);
                 }
             }
@@ -594,6 +578,7 @@ public class MainActivity extends AppCompatActivity implements
          * This method displays all the users's favourited tweets
          */
         private void displayFavouritedTweets(TwitterApiClient twitterApiClient){
+            Log.d("Twitter","called favourites");
             FavoriteService service = twitterApiClient.getFavoriteService();
             Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
             call.enqueue(getTwitterCallback(DataCollectionType.TFAVOURITE));
@@ -603,6 +588,7 @@ public class MainActivity extends AppCompatActivity implements
          * This method displays all the user's statuses
          */
         private void displayStatusTweets(TwitterApiClient twitterApiClient){
+            Log.d("Twitter","called statuses");
             StatusesService service = twitterApiClient.getStatusesService();
             Call<List<Tweet>> call = service.userTimeline(null,null,null,null,null,null,null,null,null);
             call.enqueue(getTwitterCallback(DataCollectionType.TTWEET));
@@ -617,15 +603,21 @@ public class MainActivity extends AppCompatActivity implements
                 public void success(Result<List<Tweet>> result) {
                     // loops through the data and prints each tweet to the debug console
                     List<Tweet> data = result.data;
+                    Log.d("Twitter",data.toString());
                     for (int i = 0; i < data.size(); i++){
+                        Log.d("Twitter", data.get(i).createdAt + "  " + data.get(i).text);
                         Date parsed = getDate(data.get(i).createdAt, false);
+                        Log.d("Twitter", "is in the week: " + isDateInWeek(parsed));
                         if (isDateInWeek(parsed)) {
+                            Log.d("Twitter","date is in the week");
                             if (doesStringContainKeyword(data.get(i).text, isNutrition)){
                                 Data tweetData = new Data(parsed, type, data.get(i).text);
                                 if (isNutrition){
                                     nutritionSocial.add(tweetData);
+                                    Log.d("Twitter",nutritionSocial.toString());
                                 } else {
                                     fitnessSocial.add(tweetData);
+                                    Log.d("Twitter",fitnessSocial.toString());
                                 }
                             }
                         }
