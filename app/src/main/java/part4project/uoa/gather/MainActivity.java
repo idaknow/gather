@@ -1,7 +1,5 @@
 package part4project.uoa.gather;
 
-import android.annotation.TargetApi;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,7 +7,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -119,7 +116,6 @@ public class MainActivity extends AppCompatActivity implements
     public static GoogleApiClient mGoogleApiClient = null; // The API Client
 
     WeekView mWeekView; // Calendar
-    ProgressDialog progress; // loading
     TwitterSession session; // Twitter Session
 
     // Week Date
@@ -140,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements
         setKeywords();
         mainPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         installedPackages = getPackageManager().getInstalledApplications(0);
+        twitterInstalled = false;
         for (ApplicationInfo appInfo : installedPackages){
             String appName = (String)appInfo.loadLabel(getPackageManager());
             if (appName.equals("Twitter")){
@@ -169,7 +166,6 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         setupDates();
-        setupProgressDialog();
 
         // Setup Calendar
         setupCalendar();
@@ -198,11 +194,6 @@ public class MainActivity extends AppCompatActivity implements
 
         //GENERAL TASK
         new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
-        if (mGoogleApiClient != null){
-            mWeekView = (WeekView) findViewById(R.id.weekView);
-            updateCalendarWithEvents();
-        }
     }
 
     /**
@@ -225,30 +216,14 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * Sets up the progress spinning dialog
-     */
-    private void setupProgressDialog(){
-        progress = new ProgressDialog(this);
-        progress.setTitle("Loading");
-        progress.setMessage("Please wait while loading...");
-        progress.setCancelable(false);
-    }
-
-    /**
      * Sets up the start and end dates
      */
-    @TargetApi(Build.VERSION_CODES.N)
     private void setupDates(){
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
-        cal.setTime(today); // sets todays date
+        cal.setTime(today); // sets today's date
         if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
-            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
-            if (cal.get(Calendar.WEEK_OF_YEAR) == cal.getFirstDayOfWeek()){
-                cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) - 1);
-                cal.set(Calendar.WEEK_OF_YEAR, cal.getWeeksInWeekYear());
-            }
-            cal.set(Calendar.WEEK_OF_YEAR,cal.get(Calendar.WEEK_OF_YEAR)-1);
+            cal.add(Calendar.DAY_OF_WEEK, -6);
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
@@ -260,7 +235,6 @@ public class MainActivity extends AppCompatActivity implements
         cal.set(Calendar.MILLISECOND, 0);
 
         startOfWeek = cal.getTime();
-
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
     }
@@ -406,10 +380,6 @@ public class MainActivity extends AppCompatActivity implements
      * This tasks executes getting data from facebook & twitter
      */
     private class SocialTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
 
         protected Void doInBackground(Void... params) { // called on a seperate thread
             // clear both the social lists
@@ -427,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            progress.dismiss();
+            updateCalendarWithEvents();
         }
     }
 
@@ -729,6 +699,15 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private class GFTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            GoogleFit gf = new GoogleFit();
+            gf.displayLastWeeksData(true);
+            return null;
+        }
+    }
+
     /**
      * Moved all GoogleFit instantiation into its own class
      * NOTE: has to stay in this activity because it uses mGoogleAPIClient
@@ -776,14 +755,6 @@ public class MainActivity extends AppCompatActivity implements
                     })
                     .build();
             mGoogleApiClient.connect();
-        }
-
-        private class GFTask extends AsyncTask<Void, Void, Void> {
-            @Override
-            protected Void doInBackground(Void... params) {
-                displayLastWeeksData(true);
-                return null;
-            }
         }
 
         private void displayLastWeeksData(boolean isNutrition){
