@@ -32,7 +32,11 @@ class DataCollection {
                 cal.setTime(list.get(i).getCreatedAt());
                 int day = cal.get(Calendar.DAY_OF_MONTH);
                 int month = cal.get(Calendar.MONTH) + 1;
-                listToPrint.add(day + "/" + month + " | " + list.get(i).getType().toString() + list.get(i).getValue());
+                if (list.get(i).getType() == DataCollectionType.CALORIES || list.get(i).getType() == DataCollectionType.ACTIVITY){
+                    listToPrint.add((day-1) + "/" + month + " | " + list.get(i).getType().toString() + list.get(i).getValue());
+                } else {
+                    listToPrint.add(day + "/" + month + " | " + list.get(i).getType().toString() + list.get(i).getValue());
+                }
             }
 
             if (listToPrint.size() == 0){
