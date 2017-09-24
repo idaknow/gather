@@ -223,12 +223,7 @@ public class MainActivity extends AppCompatActivity implements
         today = new Date();
         cal.setTime(today); // sets todays date
         if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
-//            int weekOfYear = cal.get(Calendar.WEEK_OF_YEAR);
             cal.add(Calendar.DAY_OF_WEEK, -6);
-//            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
-//            if (android.os.Build.VERSION.SDK_INT == 23){
-//                cal.set(Calendar.WEEK_OF_YEAR, weekOfYear - 1);
-//            }
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
