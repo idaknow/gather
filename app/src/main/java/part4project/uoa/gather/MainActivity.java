@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements
     private void setupDates(){
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("NZ"));
         today = new Date();
-        cal.setTime(today); // sets todays date
+        cal.setTime(today); // sets today's date
         if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
             cal.add(Calendar.DAY_OF_WEEK, -6);
         } else {
@@ -235,10 +235,8 @@ public class MainActivity extends AppCompatActivity implements
         cal.set(Calendar.MILLISECOND, 0);
 
         startOfWeek = cal.getTime();
-
         cal.add(Calendar.DAY_OF_WEEK, 6); // add 6 days, not 7 or it goes mon -> mon
         endOfWeek = cal.getTime();
-        Log.d("Twitter","Date start " + startOfWeek.toString() + ", end " + endOfWeek.toString());
     }
 
     /**
