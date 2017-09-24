@@ -26,7 +26,6 @@ class GeneralMethods {
     private static final SimpleDateFormat fitbitDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
     private static final DateFormat originalFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH);
     private static final DateFormat targetFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-    private static final DateFormat nutritionFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 
     /**
      * This method builds a Data Read Request used by GoogleFit
@@ -54,11 +53,8 @@ class GeneralMethods {
     static Date generalGetDate(String time, boolean isNutrition){
         Date parsed;
         try {
-            if (isNutrition){
-                parsed = nutritionFormat.parse(time);
-            } else{
-                parsed = fitbitDateFormat.parse(time);
-            }
+
+            parsed = fitbitDateFormat.parse(time);
 
         } catch(ParseException pe) {
             throw new IllegalArgumentException(pe);
@@ -70,7 +66,7 @@ class GeneralMethods {
     This method is used to get only the date from a String.
     It returns a String in the format yyyy-MM-dd, and excludes the time.
      */
-    private static String generalGetDateOnly(String formattedDate){
+    public static String generalGetDateOnly(String formattedDate){
         String newDate;
         try {
             Date date = originalFormat.parse(formattedDate);
