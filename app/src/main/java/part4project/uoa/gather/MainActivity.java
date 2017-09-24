@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.RectF;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -195,11 +194,6 @@ public class MainActivity extends AppCompatActivity implements
 
         //GENERAL TASK
         new GeneralTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
-//        if (mGoogleApiClient != null){
-//
-//            updateCalendarWithEvents();
-//        }
     }
 
     /**
@@ -229,11 +223,12 @@ public class MainActivity extends AppCompatActivity implements
         today = new Date();
         cal.setTime(today); // sets todays date
         if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY){
-            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
-            if (cal.get(Calendar.WEEK_OF_YEAR) == cal.getFirstDayOfWeek()){
-                cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) - 1);
-                cal.set(Calendar.WEEK_OF_YEAR, cal.getWeeksInWeekYear());
-            }
+//            int weekOfYear = cal.get(Calendar.WEEK_OF_YEAR);
+            cal.add(Calendar.DAY_OF_WEEK, -6);
+//            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
+//            if (android.os.Build.VERSION.SDK_INT == 23){
+//                cal.set(Calendar.WEEK_OF_YEAR, weekOfYear - 1);
+//            }
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY); // gets monday for the week
         }
@@ -564,11 +559,9 @@ public class MainActivity extends AppCompatActivity implements
                 SharedPreferences prefs = getSharedPreferences("MainPreferences", Context.MODE_PRIVATE); // shared preferences
 
                 if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(0), false)){ // checks if the user gave permission to favourites
-                    Log.d("Twitter","yes, display twitter");
                     displayFavouritedTweets(twitterApiClient);
                 }
                 if (prefs.getBoolean(SettingsActivity.TWITTERPREFERENCES.get(1), false)){ // checks if the user gave permission to statuses
-                    Log.d("Twitter","yes, display twitter");
                     displayStatusTweets(twitterApiClient);
                 }
             }
@@ -578,7 +571,6 @@ public class MainActivity extends AppCompatActivity implements
          * This method displays all the users's favourited tweets
          */
         private void displayFavouritedTweets(TwitterApiClient twitterApiClient){
-            Log.d("Twitter","called favourites");
             FavoriteService service = twitterApiClient.getFavoriteService();
             Call<List<Tweet>> call = service.list(null,null,null,null,null,null);
             call.enqueue(getTwitterCallback(DataCollectionType.TFAVOURITE));
@@ -588,7 +580,6 @@ public class MainActivity extends AppCompatActivity implements
          * This method displays all the user's statuses
          */
         private void displayStatusTweets(TwitterApiClient twitterApiClient){
-            Log.d("Twitter","called statuses");
             StatusesService service = twitterApiClient.getStatusesService();
             Call<List<Tweet>> call = service.userTimeline(null,null,null,null,null,null,null,null,null);
             call.enqueue(getTwitterCallback(DataCollectionType.TTWEET));
@@ -603,21 +594,15 @@ public class MainActivity extends AppCompatActivity implements
                 public void success(Result<List<Tweet>> result) {
                     // loops through the data and prints each tweet to the debug console
                     List<Tweet> data = result.data;
-                    Log.d("Twitter",data.toString());
                     for (int i = 0; i < data.size(); i++){
-                        Log.d("Twitter", data.get(i).createdAt + "  " + data.get(i).text);
                         Date parsed = getDate(data.get(i).createdAt, false);
-                        Log.d("Twitter", "is in the week: " + isDateInWeek(parsed));
                         if (isDateInWeek(parsed)) {
-                            Log.d("Twitter","date is in the week");
                             if (doesStringContainKeyword(data.get(i).text, isNutrition)){
                                 Data tweetData = new Data(parsed, type, data.get(i).text);
                                 if (isNutrition){
                                     nutritionSocial.add(tweetData);
-                                    Log.d("Twitter",nutritionSocial.toString());
                                 } else {
                                     fitnessSocial.add(tweetData);
-                                    Log.d("Twitter",fitnessSocial.toString());
                                 }
                             }
                         }
@@ -721,6 +706,15 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private class GFTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            GoogleFit gf = new GoogleFit();
+            gf.displayLastWeeksData(true);
+            return null;
+        }
+    }
+
     /**
      * Moved all GoogleFit instantiation into its own class
      * NOTE: has to stay in this activity because it uses mGoogleAPIClient
@@ -768,14 +762,6 @@ public class MainActivity extends AppCompatActivity implements
                     })
                     .build();
             mGoogleApiClient.connect();
-        }
-
-        private class GFTask extends AsyncTask<Void, Void, Void> {
-            @Override
-            protected Void doInBackground(Void... params) {
-                displayLastWeeksData(true);
-                return null;
-            }
         }
 
         private void displayLastWeeksData(boolean isNutrition){
