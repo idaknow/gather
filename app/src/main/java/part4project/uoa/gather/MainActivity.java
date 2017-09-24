@@ -952,6 +952,9 @@ public class MainActivity extends AppCompatActivity implements
                     for (int i = 0; i < activities.length(); i++){
                         JSONObject activity = activities.getJSONObject(i);
                         Date startDate = generalGetDate(activity.getString("originalStartTime"), false);
+                        Calendar cal = Calendar.getInstance(); // creates calendar
+                        cal.setTime(startDate); // sets calendar time/date
+                        startDate = cal.getTime();
                         Data data = new Data(startDate, DataCollectionType.ACTIVITY, activity.getString("activityName"));
                         fitnessGeneral.add(data);
                         }
